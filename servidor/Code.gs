@@ -1,7 +1,7 @@
 /*
   Servidor das pesquisas Maxipark — Google Apps Script ligado a uma Planilha Google.
-  Recebe as respostas dos tablets (pesquisa com clientes e pesquisa com a equipe) e devolve todas elas para
-  qualquer aparelho que tenha a mesma chave. Uma linha por resposta, em duas abas: "Clientes" e "Equipe".
+  Recebe as respostas dos tablets (pesquisa com clientes, pesquisa com a equipe e avaliação do conselho) e devolve todas elas para
+  qualquer aparelho que tenha a mesma chave. Uma linha por resposta, em três abas: "Clientes", "Equipe" e "Conselho".
   Instalação passo a passo: LEIA-ME.md, seção 11.
 
   Como funciona:
@@ -10,7 +10,7 @@
     GET   ?op=ping&chave=...                                -> teste de ligação
 */
 const CHAVE = 'TROQUE-ESTA-CHAVE';   // a MESMA chave de sincronização digitada nas Configurações dos apps (letras e números, sem espaços)
-const ABAS = { 'pesquisa-clientes-maxipark': 'Clientes', 'pesquisa-equipe-maxipark': 'Equipe' };
+const ABAS = { 'pesquisa-clientes-maxipark': 'Clientes', 'pesquisa-equipe-maxipark': 'Equipe', 'pesquisa-conselho-maxipark': 'Conselho' };
 const FIXAS = ['recebido_em', 'app', 'id', 'unidade', 'data', 'hora_ou_rodada', 'json'];   // colunas fixas; depois vem uma coluna por campo da resposta
 const CHAVE_EXEMPLO = 'TROQUE-ESTA-CHAVE';
 

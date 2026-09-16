@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Avaliação da reunião do conselho Maxipark</title>
+<meta name="theme-color" content="#6B4A98">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Conselho Maxipark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{
+    --roxo:#6B4A98; --roxo-escuro:#4E3572; --roxo-claro:#EEE8F5; --acento:#9935F4; --bg:#F5F3F9; --card:#FFFFFF;
+    --texto:#221C2E; --cinza:#5E5670; --linha:#DED8EA; --sel:#FFD54F; --sel-texto:#3A2E00; --perigo:#B23A3A; --ok:#2E7D32; --raio:18px;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:18px;line-height:1.35}
+  button{font-family:inherit;color:var(--texto)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:#fff;border-bottom:3px solid var(--roxo)}
+  .top .marca{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--roxo-escuro);font-size:17px}
+  .top .marca img{height:40px;width:auto}
+  .top .passo{font-size:15px;color:var(--roxo-escuro);font-weight:600;text-align:right}
+  .barra{height:6px;background:var(--linha)} .barra > div{height:100%;background:linear-gradient(90deg,var(--roxo),var(--acento));transition:width .25s}
+  .wrap{max-width:900px;margin:0 auto;padding:16px 18px 80px}
+  .card{background:var(--card);border-radius:var(--raio);padding:20px 22px;box-shadow:0 2px 10px rgba(34,28,46,.06)}
+  h1{font-size:28px;line-height:1.2;margin:0 0 10px;color:var(--roxo-escuro)}
+  h2{font-size:23px;line-height:1.25;margin:0 0 12px}
+  h3{font-size:19px;margin:18px 0 8px;color:var(--roxo-escuro)}
+  p{margin:0 0 12px}
+  .small{font-size:14px} .muted{color:var(--cinza)} .legenda{font-size:13px;color:var(--cinza);margin:6px 0 0}
+  .pergunta{font-size:27px;font-weight:600;line-height:1.3;margin:4px 0 18px}
+  .opcoes{display:grid;gap:12px}
+  .opt{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:12px 18px;border:2px solid var(--linha);border-radius:14px;background:#fff;font-size:20px;text-align:left;cursor:pointer}
+  .opt.sel{background:var(--sel);border-color:#E0B400;color:var(--sel-texto);font-weight:700}
+  .opt .num{min-width:36px;height:36px;border-radius:50%;background:var(--roxo-claro);color:var(--roxo-escuro);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+  .escala{display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:10px;margin:8px 0 6px}
+  .escala .opt .rot{font-size:14px;color:var(--cinza);line-height:1.2;text-align:center} .escala .opt.sel .rot{color:var(--sel-texto)}
+  .escala.n3 .opt{min-height:112px} .escala.n3 .opt .rot{font-size:18px;font-weight:600}
+  .pergunta-cfg{border:1px solid var(--linha);border-radius:12px;padding:10px 14px 14px;margin:10px 0;background:#FAFBFB}
+  .pergunta-cfg label{font-size:14px;margin:8px 0 4px} .pergunta-cfg input,.pergunta-cfg textarea,.pergunta-cfg select{font-size:16px;padding:8px 10px} .pergunta-cfg textarea{min-height:0}
+  .escala .opt{flex-direction:column;justify-content:center;text-align:center;gap:6px;padding:12px 6px;min-height:92px}
+  .escala .opt .n{font-size:30px;font-weight:700;color:var(--roxo-escuro)} .escala .opt.sel .n{color:var(--sel-texto)}
+  .escala .opt .face{font-size:30px;line-height:1}
+  .opt.chip{width:auto;display:inline-flex;min-height:48px;font-size:16px;padding:8px 16px;border-color:transparent;background:var(--roxo-claro);color:var(--roxo-escuro)}
+  .opt.destaque{min-height:76px;font-weight:700;border-color:var(--roxo)}
+  .nps{display:grid;grid-template-columns:repeat(11,1fr);gap:8px;margin:8px 0 6px}
+  .nps .opt{justify-content:center;min-height:64px;padding:8px 4px;font-size:22px;font-weight:700}
+  .pontas{display:flex;justify-content:space-between;font-size:14px;color:var(--cinza);margin:2px 2px 10px}
+  .na{margin-top:12px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:58px;padding:12px 22px;border:0;border-radius:14px;background:var(--roxo);color:#fff;font-size:20px;font-weight:700;cursor:pointer}
+  .btn:disabled{opacity:.4;cursor:default}
+  .btn.ghost{background:var(--roxo-claro);color:var(--roxo-escuro)} .btn.light{background:#fff;border:2px solid var(--roxo);color:var(--roxo-escuro)}
+  .btn.perigo{background:var(--perigo)} .btn.block{width:100%} .btn.grande{min-height:110px;font-size:30px;border-radius:22px}
+  .linha{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px} .espaco{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  textarea,input,select{width:100%;font:inherit;font-size:19px;padding:12px 14px;border:2px solid var(--linha);border-radius:14px;background:#fff;color:var(--texto)}
+  textarea{min-height:120px;resize:vertical}
+  label{display:block;font-weight:600;margin:14px 0 6px}
+  .check{display:flex;gap:12px;align-items:flex-start;font-weight:500;margin:12px 0 4px;font-size:16px} .check input{width:26px;height:26px;margin-top:2px;flex:none}
+  .logo-hero{display:flex;justify-content:center;margin:2px 0 14px} .logo-hero img{height:64px;width:auto;max-width:80%}
+  a.home{display:inline-flex;align-items:center;border-radius:8px} a.home:active{opacity:.7}
+  .boasvindas{text-align:center;padding:26px 22px}
+  .boasvindas h1{font-size:36px;margin:12px 0 10px}
+  .boasvindas p{font-size:20px;color:var(--cinza)}
+  .rodape-kiosk{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:center;padding:8px 18px;font-size:13px;color:var(--cinza);background:transparent}
+  .rodape-kiosk button{background:none;border:0;color:var(--cinza);font-size:13px;text-decoration:underline;cursor:pointer;padding:10px}
+  .obrigado{text-align:center;padding:30px 20px}
+  .obrigado .ok{width:96px;height:96px;border-radius:50%;background:var(--ok);color:#fff;font-size:56px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+  .kpi div{background:var(--roxo-claro);border-radius:14px;padding:12px;text-align:center} .kpi b{display:block;font-size:30px;color:var(--roxo-escuro)} .kpi span{font-size:13px;color:var(--cinza)}
+  table{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0} th,td{padding:8px 8px;border-bottom:1px solid var(--linha);text-align:center;vertical-align:top} th{background:var(--roxo-claro);color:var(--roxo-escuro)} td.l,th.l{text-align:left}
+  .tabela-wrap{overflow-x:auto}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700} .tag.ok{background:#E6F4EA;color:#1B5E20} .tag.pend{background:#FFF4D6;color:#7A5A00}
+  .aviso{background:#FFF4D6;border-left:5px solid #E0B400;padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  .ruim{background:#FBE3E3;border-left:5px solid var(--perigo);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  .bom{background:#E6F4EA;border:1px solid #9CCFA9;border-radius:12px;padding:12px 14px;margin:10px 0 14px;font-size:16px;color:#1B3D26}
+  .filtros{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0} .filtros label{margin:0 0 4px;font-size:13px;color:var(--cinza)} .filtros select,.filtros input{font-size:16px;padding:8px 10px}
+  .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:12px auto} .pinpad button{min-height:64px;font-size:26px;border-radius:14px;border:2px solid var(--linha);background:#fff}
+  .pininput{display:block;max-width:320px;margin:8px auto 6px;text-align:center;font-size:30px;letter-spacing:12px;min-height:60px;-webkit-text-security:disc}
+  details{margin:8px 0 14px} details summary{color:var(--roxo-escuro);cursor:pointer;font-weight:600}
+  ul.lista{padding-left:20px;font-size:16px} ul.lista li{margin:6px 0}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#221C2E;color:#fff;padding:12px 18px;border-radius:12px;font-size:16px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:9}
+  .toast.show{opacity:1}
+  @media (max-width:640px){ .pergunta{font-size:22px} .escala .opt{min-height:80px;padding:10px 4px} .escala .opt .n{font-size:24px} .escala .opt .rot{font-size:12px} .nps{gap:5px} .nps .opt{min-height:52px;font-size:18px} .boasvindas h1{font-size:28px} .wrap{padding:12px 12px 80px} .card{padding:16px} }
+  @media (max-height:600px) and (orientation:landscape){ .pergunta{font-size:21px;margin:2px 0 10px} .opt{min-height:52px;font-size:18px} .escala .opt{min-height:76px} .wrap{padding:8px 16px 70px} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+/* =========================================================
+   Avaliação da REUNIÃO DO CONSELHO — Maxipark
+   Executivos e sócios avaliam, sem nome, a reunião do conselho e os conselheiros independentes, ao fim de cada reunião.
+   Mesma estrutura das outras pesquisas: respostas ficam no aparelho (ou vão para a nuvem), área do avaliador com PIN,
+   consolidado por reunião, Excel/PDF/CSV com o logo, perguntas/respostas/pesos editáveis. LEIA-ME, seção 12.
+   ========================================================= */
+const VERSAO = '1.0.0';
+const PIN_PADRAO = '2819';   // mesmo PIN das outras pesquisas; troca em Configurações. Atenção: este código é público.
+const IDLE_MS = 180000;      // avaliação abandonada: descarta e volta à tela inicial
+const OBRIGADO_MS = 7000;
+const PIN_MAX_FALHAS = 5, PIN_BLOQUEIO_MS = 60000;
+const N_IDENTIFICAVEL = 3;   // abaixo disto, o resultado identifica quem respondeu: uso restrito
+const LOGO_B64 = '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';
+
+/* ---------------- perguntas ---------------- */
+// Questionário B1 (10/09/2026 — desenhado com base em práticas de avaliação de conselho: IBGC, BoardSource, AHA, DirectorPrep, Diligent).
+// Blocos: Reunião (r1…r7) · Conselheiro 1 (g1…g5) · Conselheiro 2 (m1…m5) · Fechamento (nota 0-10 opcional, o que manter, o que mudar). r8 (condução de quem presidiu) existe mas vem desligada.
+// Os dois conselheiros são avaliados nos MESMOS 5 critérios; os nomes ficam em CONSELHEIROS_PADRAO e são editáveis (Configurações → Editar perguntas).
+// tipo: 'escala' (1..N; N = ESC, 3 por padrão: Não / Em parte / Sim; na = "não sei", grava 'NA') | 'nps' (0 a 10) | 'single' | 'textos' (campos abertos, opcional)
+const PESQ_VER = 'B1';
+const ROTULOS = { 3: { conc: ['Não', 'Em parte', 'Sim'] }, 5: { conc: ['Não', 'Pouco', 'Em parte', 'Em grande parte', 'Sim'] } };
+const CONSELHEIROS_PADRAO = [
+  { c: 'g', nome: 'Gustavo Succi', titulo: 'Conselheiro independente' },
+  { c: 'm', nome: 'Maristella Lannuzzi', titulo: 'Conselheira independente' },
+];
+const CRITERIOS_CONSELHEIRO = [   // os MESMOS 5 critérios para cada conselheiro; {nome} é trocado pelo nome (redação neutra de gênero)
+  { n: 1, fator: 'Preparo e entendimento do negócio', peso: 2, texto: '{nome} demonstrou preparo: leu o material e mostrou conhecer o negócio e a estratégia da Maxipark.', na: 'Não consigo avaliar' },
+  { n: 2, fator: 'Contribuição', peso: 3, texto: '{nome} trouxe experiência, visão externa ou conhecimento que o grupo não teria de outra forma.', na: 'Não consigo avaliar' },
+  { n: 3, fator: 'Perguntas que qualificam as decisões', peso: 3, texto: 'As perguntas e questionamentos de {nome} ajudaram a qualificar as decisões desta reunião.', na: 'Não houve decisão relevante nesta reunião' },
+  { n: 4, fator: 'Independência construtiva', peso: 3, texto: '{nome} se posicionou com independência, discordando de forma construtiva quando foi o caso.', na: 'Não houve ocasião nesta reunião' },
+  { n: 5, fator: 'Escuta', peso: 2, texto: '{nome} ouviu e considerou as opiniões dos demais, sem monopolizar a discussão.' },
+];
+const QUESTOES_PADRAO = [
+  { codigo: 'r1', tipo: 'escala', bloco: 'reuniao', fator: 'Pauta e materiais com antecedência', peso: 2, obrigatoria: true, texto: 'A pauta e os materiais chegaram com antecedência suficiente para você se preparar.' },
+  { codigo: 'r2', tipo: 'escala', bloco: 'reuniao', fator: 'Clareza dos materiais', peso: 2, obrigatoria: true, texto: 'Os materiais eram claros e focados no que importava para as decisões.', na: 'Não consigo avaliar' },
+  { codigo: 'r3', tipo: 'escala', bloco: 'reuniao', fator: 'Foco estratégico', peso: 3, obrigatoria: true, texto: 'O tempo da reunião foi dedicado aos assuntos mais importantes para a Maxipark, e não a detalhes operacionais.' },
+  { codigo: 'r4', tipo: 'escala', bloco: 'reuniao', fator: 'Tempo para discutir', peso: 2, obrigatoria: true, texto: 'Houve tempo suficiente para discutir cada item relevante da pauta.' },
+  { codigo: 'r5', tipo: 'escala', bloco: 'reuniao', fator: 'Espaço para divergência', peso: 2, obrigatoria: true, texto: 'Houve espaço para opiniões diferentes serem colocadas e debatidas.' },
+  { codigo: 'r6', tipo: 'escala', bloco: 'reuniao', fator: 'Decisões claras', peso: 3, obrigatoria: true, texto: 'A reunião terminou com decisões claras, com próximos passos e responsáveis definidos.', na: 'Não se aplica a esta reunião' },
+  { codigo: 'r7', tipo: 'escala', bloco: 'reuniao', fator: 'Acompanhamento das pendências', peso: 2, obrigatoria: true, texto: 'As decisões e pendências da reunião anterior foram retomadas e acompanhadas nesta reunião.', na: 'Não sei / primeira reunião que acompanho' },
+  { codigo: 'r8', tipo: 'escala', bloco: 'reuniao', fator: 'Condução (quem presidiu)', peso: 3, obrigatoria: true, ativa: false, texto: 'Quem presidiu a reunião manteve o foco na pauta, estimulou a participação e conduziu o grupo às decisões.', na: 'Não se aplica' },   // desligada por padrão; liga em Configurações → Editar perguntas
+  { codigo: 'nota', tipo: 'nps', obrigatoria: false, texto: 'Pensando na reunião como um todo: de 0 a 10, quanto ela valeu o seu tempo?', pontas: ['Não valeu', 'Valeu totalmente'] },
+  { codigo: 'fim', tipo: 'textos', obrigatoria: false, texto: 'Para terminar (opcional)', campos: [{ c: 'mais', t: 'O que funcionou bem nesta reunião e deve ser mantido?' }, { c: 'mudar', t: 'O que você mudaria para a próxima reunião? Pode citar pauta, materiais, tempo, dinâmica da discussão ou a participação dos conselheiros.' }] },
+];
+// as perguntas dos conselheiros (g1…g5, m1…m5) entram entre a reunião e a nota, geradas a partir de CRITERIOS_CONSELHEIRO
+function perguntasConselheiros(lista){ return lista.flatMap(cs => CRITERIOS_CONSELHEIRO.map(cr => ({ codigo: cs.c + cr.n, tipo: 'escala', bloco: cs.c, fator: cr.fator, peso: cr.peso, obrigatoria: true, texto: cr.texto.replace('{nome}', cs.nome), na: cr.na }))); }
+function montarPadrao(lista){ const i = QUESTOES_PADRAO.findIndex(q => q.codigo === 'nota'); return QUESTOES_PADRAO.slice(0, i).concat(perguntasConselheiros(lista), QUESTOES_PADRAO.slice(i)); }
+const TODAS_PADRAO = montarPadrao(CONSELHEIROS_PADRAO);
+const COLS_RESP = TODAS_PADRAO.flatMap(q => q.campos ? q.campos.map(c => c.c) : [q.codigo]);   // r1…r8, g1…g5, m1…m5, nota, mais, mudar
+const NUMERICAS = new Set(TODAS_PADRAO.filter(q => q.tipo === 'escala' || q.tipo === 'nps').map(q => q.codigo));
+let QUESTOES = [], FATORES = [], CONSELHEIROS = [], ESC = 3;
+function perguntasCfg(){ const c = LS.get('mpco_perguntas', null); return (c && typeof c === 'object') ? c : {}; }
+function aplicarPerguntas(){
+  const cfg = perguntasCfg(); ESC = cfg.esc === 5 ? 5 : 3; const s = cfg.q || {}; const cc = cfg.conselheiros || {};
+  CONSELHEIROS = CONSELHEIROS_PADRAO.map(p => ({ c: p.c, nome: (cc[p.c] && typeof cc[p.c].nome === 'string' && cc[p.c].nome.trim()) ? cc[p.c].nome.trim() : p.nome, titulo: (cc[p.c] && typeof cc[p.c].titulo === 'string' && cc[p.c].titulo.trim()) ? cc[p.c].titulo.trim() : p.titulo }));
+  QUESTOES = montarPadrao(CONSELHEIROS).map(p => { const c = Object.assign({}, p); const x = s[p.codigo] || {};
+    if (p.codigo === 'r8') c.ativa = cfg.r8 === true;
+    if (typeof x.texto === 'string' && x.texto.trim()) c.texto = x.texto.trim();
+    if (p.tipo === 'escala') { c.rotulos = (Array.isArray(x.rotulos) && x.rotulos.length === ESC && x.rotulos.every(t => String(t).trim())) ? x.rotulos.map(t => String(t).trim()) : ROTULOS[ESC].conc.slice(); if (typeof x.na === 'string') c.na = x.na.trim() || undefined; const pz = parseInt(x.peso, 10); if (pz >= 1 && pz <= 3) c.peso = pz; }
+    if (p.opcoes) c.opcoes = p.opcoes.map(o => ({ c: o.c, t: (x.opcoes && typeof x.opcoes[o.c] === 'string' && x.opcoes[o.c].trim()) ? x.opcoes[o.c].trim() : o.t }));
+    if (p.campos) c.campos = p.campos.map(o => ({ c: o.c, t: (x.campos && typeof x.campos[o.c] === 'string' && x.campos[o.c].trim()) ? x.campos[o.c].trim() : o.t }));
+    return c; });
+  FATORES = QUESTOES.filter(q => q.tipo === 'escala' && q.ativa !== false);
+}
+function perguntasAlteradas(){ const c = perguntasCfg(); return c.esc === 5 || c.r8 === true || !!(c.q && Object.keys(c.q).length) || !!(c.conselheiros && Object.keys(c.conselheiros).length); }
+function blocoNome(b){ if (b === 'reuniao') return 'Reunião'; const cs = CONSELHEIROS.find(x => x.c === b); return cs ? cs.nome : b; }
+function rotulo(codigo, v){ const q = QUESTOES.find(x => x.codigo === codigo); if (!q || !q.opcoes) return v; const o = q.opcoes.find(o => o.c === v); return o ? o.t : (v === 'NA' ? 'não informado' : v); }
+function escDe(rec){ return (rec && (rec.esc === 3 || rec.esc === 5)) ? rec.esc : ESC; }
+function positivo(v, e){ return num(v) && (e === 3 ? v === 3 : v >= 4); }
+function negativo(v, e){ return num(v) && (e === 3 ? v === 1 : v <= 2); }
+
+/* ---------------- utilidades ---------------- */
+const LS = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } } };
+const DEFAULT_SETTINGS = { pin: '', unidade: '', presentes: {}, webhook: '', chave: '', ultimaSync: '', exported: {}, pinFails: 0, lockUntil: 0, autoAvanca: true };   // unidade = código da reunião (data AAAA-MM-DD); presentes = { g: true, m: false } por reunião (ausente = bloco pulado)
+let settings = Object.assign({}, DEFAULT_SETTINGS, LS.get('mpco_settings', {}));
+function saveSettings(){ LS.set('mpco_settings', settings); }
+function allResponses(){ return LS.get('mpco_respostas', []); }
+function saveResponses(l){ return LS.set('mpco_respostas', l); }
+function histResponses(){ return LS.get('mpco_hist', []); }
+function currentResponses(){ return allResponses().filter(r => r.unidade === settings.unidade); }
+function reunioes(){ return LS.get('mpco_reunioes', {}); }   // { 'AAAA-MM-DD': 'nome' }
+function reuniaoNome(c){ return reunioes()[c] || ''; }
+function unidadeLabel(c){ if (!c) return ''; const n = reuniaoNome(c); return `Reunião de ${dataLabel(c)}${n ? ' — ' + n : ''}`; }
+function unidadePorCodigo(c){ return { codigo: c, nome: reuniaoNome(c) }; }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function hojeISO(d){ d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function horaHM(d){ d = d || new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function dataLabel(iso){ if (!iso || iso.length < 10) return iso || ''; return iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4); }
+function mesLabel(m){ if (!m) return ''; const n = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; return n[parseInt(m.slice(5, 7), 10) - 1] + '/' + m.slice(0, 4); }
+function shuffle(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function pinAtual(){ return settings.pin || PIN_PADRAO; }
+function num(v){ return typeof v === 'number' && !isNaN(v); }
+let toastT; function toast(m){ const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
+function abandonos(){ return LS.get('mpco_abandonos', {}); }
+function registrarAbandono(){ if (state.r && state.r.r1 !== undefined) { const a = abandonos(); a[settings.unidade] = (a[settings.unidade] || 0) + 1; LS.set('mpco_abandonos', a); } }
+aplicarPerguntas();
+
+/* ---------------- estado e navegação ---------------- */
+const state = { screen: settings.unidade ? 'welcome' : 'setup', i: 0, r: {}, pin: '', pinPara: 'admin', cf: null, confirma: null };
+let idleT = null, obrigadoT = null, autoT = null;
+function resetIdle(){ clearTimeout(idleT); if (state.screen === 'q') idleT = setTimeout(() => { registrarAbandono(); state.r = {}; go('welcome'); toast('Avaliação reiniciada por inatividade.'); }, IDLE_MS); }
+function go(screen, extra){ state.screen = screen; Object.assign(state, extra || {}); clearTimeout(obrigadoT); if (screen !== 'pin') state.pin = ''; state.confirma = null; render(); window.scrollTo(0, 0); resetIdle(); if (screen === 'thanks') obrigadoT = setTimeout(() => go('welcome'), OBRIGADO_MS); }
+function presente(c){ const p = settings.presentes || {}; return p[c] !== false; }   // conselheiro ausente (marcado na preparação): o bloco dele é pulado e grava 'NA'
+function visiveis(){   // reunião → blocos dos conselheiros PRESENTES em ordem sorteada por respondente → fechamento
+  const ordem = state.ordem || CONSELHEIROS.map(cs => cs.c);
+  const base = QUESTOES.filter(q => q.ativa !== false && (!q.bloco || q.bloco === 'reuniao' || presente(q.bloco)));
+  const reuniao = base.filter(q => q.bloco === 'reuniao'); const fecho = base.filter(q => !q.bloco);
+  return reuniao.concat(ordem.flatMap(c => base.filter(q => q.bloco === c)), fecho);
+}
+function perguntaAtual(){ return visiveis()[state.i] || null; }
+
+/* ---------------- telas ---------------- */
+function header(passo){ return `<div class="top"><div class="marca"><a href="../" class="home" title="Página inicial: escolher a pesquisa" aria-label="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a><span>Reunião do conselho</span></div><div class="passo">${esc(passo || '')}</div></div>`; }
+function barra(p){ return `<div class="barra"><div style="width:${p}%"></div></div>`; }
+function logoHero(){ return `<div class="logo-hero"><a href="../" class="home" title="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a></div>`; }
+
+function viewSetup(){
+  const u = settings.unidade || hojeISO(); const nome = reuniaoNome(settings.unidade) || '';
+  const anteriores = [...new Set(allResponses().concat(histResponses()).map(r => r.unidade))].sort().reverse().slice(0, 6);
+  return header('Preparar a avaliação') + `<div class="wrap"><div class="card">${logoHero()}
+    <h1>Avaliação da reunião do conselho — preparar</h1>
+    <p class="muted">Informe a data da reunião (e um nome, se quiser) e toque em <b>Iniciar avaliação</b>. Passe o tablet para cada executivo ou sócio ao fim da reunião; a tela volta sozinha ao início depois de cada resposta. Para ver resultados, <i>Área do avaliador</i> (PIN).</p>
+    <label>Data da reunião</label><input type="date" id="s-data" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(u) ? u : hojeISO())}">
+    <label>Nome da reunião (opcional)</label><input type="text" id="s-nome" value="${esc(nome)}" placeholder="ex.: Reunião ordinária de setembro" maxlength="80">
+    <label>Conselheiros independentes presentes nesta reunião</label>
+    ${CONSELHEIROS.map(cs => `<label class="check" style="margin:6px 0"><input type="checkbox" id="s-pres-${cs.c}" ${presente(cs.c) ? 'checked' : ''}> ${esc(cs.nome)} <span class="small muted">— desmarque se faltou: o bloco sobre ${esc(cs.nome)} não é perguntado</span></label>`).join('')}
+    ${anteriores.length ? `<p class="small muted" style="margin:8px 0 0">Reuniões já avaliadas neste aparelho: ${anteriores.map(c => `<button class="btn ghost" data-action="reabrir" data-cod="${esc(c)}" style="min-height:36px;font-size:14px;padding:6px 10px;margin:2px">${esc(dataLabel(c))}</button>`).join(' ')}</p>` : ''}
+    ${settings.unidade && currentResponses().length ? `<div class="bom">Esta reunião já tem <b>${currentResponses().length}</b> resposta(s) neste aparelho${settings.exported[settings.unidade] ? ' (exportadas)' : ' <b>(ainda não exportadas)</b>'}.</div>` : ''}
+    <div class="linha"><button class="btn block" data-action="start">Iniciar avaliação</button></div>
+    <div class="linha"><button class="btn ghost" data-action="admin">Área do avaliador (resultados e exportar)</button><button class="btn ghost" data-action="config">Configurações</button></div>
+    <p class="legenda" style="margin-top:14px">Versão ${VERSAO} · funciona sem internet · anônima: não grava nome nem aparelho · com menos de ${N_IDENTIFICAVEL} respostas o resultado identifica quem respondeu (uso restrito).</p>
+  </div></div>`;
+}
+function viewWelcome(){
+  return header(esc(dataLabel(settings.unidade))) + `<div class="wrap"><div class="card boasvindas">${logoHero()}
+    <h1>Como foi a reunião do conselho de hoje?</h1>
+    <p>${esc(unidadeLabel(settings.unidade))}. Sua avaliação é <b>anônima</b> e leva <b>uns 3 minutos</b>: a reunião, os conselheiros independentes e o que manter ou mudar.</p>
+    <div class="linha" style="justify-content:center"><button class="btn grande block" data-action="begin">Toque aqui para começar</button></div>
+  </div></div>
+  <div class="rodape-kiosk"><span>Maxipark · Governança</span><button data-action="pinadmin">Área do avaliador</button></div>`;
+}
+function viewQ(){
+  const vis = visiveis(); const q = vis[state.i]; if (!q) { return viewThanks(); }
+  const v = state.r[q.codigo]; const n = vis.length; const pct = Math.round((state.i) / n * 100);
+  let corpo = '', titulo = q.texto, cabecalho = '';
+  if (q.bloco) { const grupo = vis.filter(x => x.bloco === q.bloco); const k = grupo.indexOf(q) + 1; const cs = CONSELHEIROS.find(x => x.c === q.bloco);
+    cabecalho = `<p class="small muted" style="margin:0 0 4px"><b>${cs ? esc(cs.titulo) + ' · ' + esc(cs.nome) : 'A reunião'}</b> — ${k} de ${grupo.length}${k === 1 ? (settings.autoAvanca !== false ? ' · toque na resposta e a próxima aparece' : '') : ''}</p>`; }
+  if (q.tipo === 'single') corpo = `<div class="opcoes">${q.opcoes.map(o => `<button class="opt ${v === o.c ? 'sel' : ''}" data-action="ans" data-v="${esc(o.c)}">${esc(o.t)}</button>`).join('')}</div>`;
+  else if (q.tipo === 'escala') { const N = q.rotulos.length; corpo = `<div class="escala n${N}" style="--n:${N}">${q.rotulos.map((rt, i) => { const k = i + 1; return `<button class="opt ${v === k ? 'sel' : ''}" data-action="ans" data-v="${k}"><span class="n">${k}</span><span class="rot">${esc(rt)}</span></button>`; }).join('')}</div>${q.na ? `<div class="na"><button class="opt chip ${v === 'NA' ? 'sel' : ''}" data-action="ans" data-v="NA">${esc(q.na)}</button></div>` : ''}`; }
+  else if (q.tipo === 'nps') corpo = `<div class="nps">${Array.from({ length: 11 }, (_, k) => `<button class="opt ${v === k ? 'sel' : ''}" data-action="ans" data-v="${k}">${k}</button>`).join('')}</div><div class="pontas"><span>0 — ${esc(q.pontas[0])}</span><span>10 — ${esc(q.pontas[1])}</span></div>`;
+  else if (q.tipo === 'textos') corpo = q.campos.map(cp => `<label>${esc(cp.t)}</label><textarea id="txt-${cp.c}" maxlength="500" placeholder="Escreva aqui, se quiser">${esc(state.r[cp.c] || '')}</textarea>`).join('') + `<p class="legenda">Não escreva seu nome. Os comentários aparecem em ordem embaralhada, sem ligação com as notas de quem escreveu.</p>`;
+  const respondida = !q.obrigatoria || q.tipo === 'textos' || (v !== undefined && v !== null);
+  return header(`${state.i + 1} de ${n}`) + barra(pct) + `<div class="wrap"><div class="card">
+    ${cabecalho}<div class="pergunta">${esc(titulo)}</div>
+    ${corpo}${!q.obrigatoria && q.tipo !== 'textos' ? '<p class="legenda">Opcional: se preferir, toque em Próxima sem responder.</p>' : ''}
+    <div class="linha espaco" style="margin-top:22px">
+      <span>${state.i > 0 ? `<button class="btn ghost" data-action="back">‹ Voltar</button> ` : ''}<button class="btn light" data-action="cancel">Cancelar</button></span>
+      <button class="btn" data-action="next" ${respondida ? '' : 'disabled'}>${state.i === n - 1 ? 'Enviar' : 'Próxima'}</button>
+    </div>
+  </div></div>`;
+}
+function viewThanks(){
+  return header('') + `<div class="wrap"><div class="card obrigado">${logoHero()}<div class="ok">✓</div><h1>Obrigado!</h1><p style="font-size:20px">Sua avaliação foi registrada. Passe o tablet para o próximo participante.</p><p class="small muted">Esta tela volta ao início em alguns segundos.</p><div class="linha" style="justify-content:center"><button class="btn ghost" data-action="welcome">Voltar ao início</button></div></div></div>`;
+}
+function viewSaveError(){
+  return header('') + `<div class="wrap"><div class="card" style="max-width:640px;margin:0 auto">${logoHero()}<h1>Não foi possível gravar a avaliação</h1>
+    <div class="ruim">A memória deste aparelho está cheia ou bloqueada. A avaliação <b>não foi perdida ainda</b>: chame o avaliador para exportar e apagar respostas antigas e toque em <i>Tentar de novo</i>.</div>
+    <div class="linha"><button class="btn" data-action="retrysave">Tentar de novo</button><button class="btn ghost" data-action="pinadmin">Área do avaliador</button><button class="btn light" data-action="cancel">Descartar e voltar ao início</button></div></div></div>`;
+}
+function viewPin(){
+  const bloqueado = settings.lockUntil && Date.now() < settings.lockUntil;
+  return header('Área do avaliador') + `<div class="wrap"><div class="card" style="max-width:520px;margin:0 auto;text-align:center">${logoHero()}
+    <h2>Digite o PIN do avaliador</h2>
+    ${bloqueado ? `<div class="ruim">Muitas tentativas. Aguarde ${Math.ceil((settings.lockUntil - Date.now()) / 1000)} s.</div>` : ''}
+    <input class="pininput" id="pin-input" type="text" inputmode="numeric" autocomplete="off" value="${esc(state.pin)}" ${bloqueado ? 'disabled' : ''} aria-label="PIN">
+    <div class="pinpad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button data-action="pinkey" data-k="${k}" ${bloqueado ? 'disabled' : ''}>${k}</button>`).join('')}<button data-action="pinkey" data-k="del">⌫</button><button data-action="pinkey" data-k="0" ${bloqueado ? 'disabled' : ''}>0</button><button data-action="pinok" ${bloqueado ? 'disabled' : ''} style="background:var(--roxo);color:#fff">OK</button></div>
+    <div class="linha" style="justify-content:center"><button class="btn ghost" data-action="welcomeorsetup">Voltar</button></div>
+  </div></div>`;
+}
+
+/* ---------------- cálculos ---------------- */
+function agregar(list){
+  const g = { n: list.length, fatores: [], blocos: {}, nBloco: {}, nota: null, notaN: 0, nota9: null, papeis: {}, mais: [], mudar: [], durMed: null, escs: {} };
+  CONSELHEIROS.forEach(cs => { g.nBloco[cs.c] = list.filter(x => !x.presentes || String(x.presentes).split(' ').includes(cs.c)).length; });   // respostas em que o conselheiro estava presente (avaliável)
+  list.forEach(x => { const e = escDe(x); g.escs[e] = (g.escs[e] || 0) + 1; }); const escUnica = Object.keys(g.escs).every(k => Number(k) === ESC); g.escMista = !escUnica;
+  const media = vs => vs.length ? Math.round(vs.reduce((a, b) => a + b, 0) / vs.length * 10) / 10 : null;
+  const notas = list.map(r => r.r.nota).filter(num); if (notas.length) { g.notaN = notas.length; g.nota = media(notas); g.nota9 = Math.round(notas.filter(v => v >= 9).length / notas.length * 100); }
+  const pond = {};
+  g.fatores = FATORES.map(q => { const xs = list.filter(x => num(x.r[q.codigo])); const na = list.filter(x => x.r[q.codigo] === 'NA').length; const pos = xs.filter(x => positivo(x.r[q.codigo], escDe(x))).length; const neg = xs.filter(x => negativo(x.r[q.codigo], escDe(x))).length;
+    const dist = Array.from({ length: ESC }, (_, i) => xs.filter(x => escDe(x) === ESC && x.r[q.codigo] === i + 1).length);
+    const p = pond[q.bloco] = pond[q.bloco] || { num: 0, den: 0 }; p.num += q.peso * pos; p.den += q.peso * xs.length;
+    return { codigo: q.codigo, bloco: q.bloco, fator: q.fator, texto: q.texto, peso: q.peso, n: xs.length, na, dist, pct: xs.length ? Math.round(pos / xs.length * 100) : null, insat: xs.length ? Math.round(neg / xs.length * 100) : null, media: (xs.length && escUnica) ? media(xs.map(x => x.r[q.codigo])) : null }; });
+  Object.keys(pond).forEach(b => { g.blocos[b] = pond[b].den ? Math.round(pond[b].num / pond[b].den * 100) : null; });   // índice ponderado (% positivo × peso) por bloco: reunião e cada conselheiro
+  list.forEach(r => { ['mais', 'mudar'].forEach(k => { const t = r.r[k]; if (t && t !== 'NA' && String(t).trim()) g[k].push({ texto: String(t).trim(), unidade: r.unidade }); }); });
+  g.identificavel = g.n > 0 && g.n < N_IDENTIFICAVEL;
+  return g;
+}
+function poolTodas(){ const loc = allResponses(); const ids = new Set(loc.map(r => r.id)); return loc.concat(histResponses().filter(r => !ids.has(r.id))); }
+function cfDefault(){ return { unidade: '', mes: '' }; }
+function filtrar(pool, cf){ return pool.filter(r => (!cf.unidade || r.unidade === cf.unidade) && (!cf.mes || (r.unidade || '').slice(0, 7) === cf.mes)); }
+function calcConsolidado(cf){
+  const pool = poolTodas(); const filt = filtrar(pool, cf); const geral = agregar(filt);
+  const porR = {}; filt.forEach(r => { (porR[r.unidade] = porR[r.unidade] || []).push(r); });
+  const reunioesT = Object.keys(porR).sort().reverse().map(u => Object.assign({ unidade: u, nome: reuniaoNome(u) }, agregar(porR[u])));
+  const meses = [...new Set(pool.map(r => (r.unidade || '').slice(0, 7)).filter(Boolean))].sort().reverse();
+  const unidadesOpt = [...new Set(pool.map(r => r.unidade))].sort().reverse();
+  const filtroTxt = [cf.unidade ? 'reunião de ' + dataLabel(cf.unidade) : 'todas as reuniões', cf.mes ? mesLabel(cf.mes) : 'todos os meses'].join(' · ');
+  return { cf, pool, filt, geral, reunioesT, meses, unidadesOpt, filtroTxt, importadas: histResponses().length };
+}
+function fmtPct(v){ return v == null ? '—' : v + '%'; }
+
+/* ---------------- área do avaliador ---------------- */
+function legendaEscala(g){ return `Positivo = ${ESC === 3 ? 'a melhor resposta ("Sim")' : 'as duas melhores respostas (4 e 5)'}; negativo = ${ESC === 3 ? 'a pior ("Não")' : 'as duas piores (1 e 2)'}. O índice de cada bloco é o % positivo ponderado pelo peso de cada item (1 a 3; Configurações → Editar perguntas).${g && g.escMista ? ` Há respostas gravadas com outra escala (${Object.keys(g.escs).join(' e ')} opções; a atual tem ${ESC}): os percentuais valem para todas; médias e distribuição só saem quando tudo está na escala atual.` : ''}`; }
+function avisoN(g){ if (!g.n) return ''; if (g.identificavel) return `<div class="ruim"><b>${g.n} resposta${g.n === 1 ? '' : 's'}: o resultado identifica quem respondeu.</b> Uso restrito da governança — não mostre nem discuta individualmente.</div>`; if (g.n < 5) return `<div class="aviso">Poucas respostas (${g.n}): leia como indicação, não como medida.</div>`; return ''; }
+function kpis(g){
+  return `<div class="kpi"><div><b>${g.n}</b><span>respostas</span></div><div><b>${fmtPct(g.blocos.reuniao)}</b><span>índice da reunião</span></div>${CONSELHEIROS.map(cs => `<div><b>${fmtPct(g.blocos[cs.c])}</b><span>índice · ${esc(cs.nome)}${g.nBloco[cs.c] !== g.n ? ` (${g.nBloco[cs.c]} resp.)` : ''}</span></div>`).join('')}<div><b>${g.nota == null ? '—' : g.nota}</b><span>nota média "valeu o tempo" (0-10)${g.notaN && g.notaN !== g.n ? ` · ${g.notaN} nota(s)` : ''}</span></div><div><b>${fmtPct(g.nota9)}</b><span>deram 9 ou 10</span></div></div>
+  <p class="small muted">${legendaEscala(g)}</p>`;
+}
+function tabelaFatores(g, bloco){
+  const fs = g.fatores.filter(f => f.bloco === bloco);
+  return `<div class="tabela-wrap"><table><tr><th class="l">Item</th><th>Peso</th><th>Responderam</th><th>Não sei / n.a.</th><th>% positivo</th><th>% negativo</th><th>Média (1-${ESC})</th>${Array.from({ length: ESC }, (_, i) => `<th>${i + 1}</th>`).join('')}</tr>
+    ${fs.map(f => `<tr><td class="l"><b>${esc(f.fator)}</b> <span class="small muted">${esc(f.texto)}</span></td><td>${f.peso}</td><td>${f.n}</td><td>${f.na}</td><td><b>${fmtPct(f.pct)}</b></td><td>${fmtPct(f.insat)}</td><td>${f.media == null ? '—' : f.media}</td>${f.dist.map(d => `<td>${d}</td>`).join('')}</tr>`).join('')}</table></div>`;
+}
+function distTabela(obj, titulo, codigo){ const tot = Object.values(obj).reduce((a, b) => a + b, 0); return `<div class="tabela-wrap"><table><tr><th class="l">${esc(titulo)}</th><th>Respostas</th><th>%</th></tr>${Object.keys(obj).map(k => `<tr><td class="l">${esc(codigo ? rotulo(codigo, k) : k)}</td><td>${obj[k]}</td><td>${tot ? Math.round(obj[k] / tot * 100) + '%' : '—'}</td></tr>`).join('') || '<tr><td colspan="3" class="muted">—</td></tr>'}</table></div>`; }
+function comentariosHtml(g){
+  const bloco = (lista, titulo) => `<h3 style="font-size:17px">${titulo} (${lista.length})</h3>` + (lista.length ? `<ul class="lista">${shuffle(lista).map(c => `<li>${esc(c.texto)} <span class="small muted">— ${esc(dataLabel(c.unidade))}</span></li>`).join('')}</ul>` : '<p class="muted">Nenhum comentário.</p>');
+  return bloco(g.mais, 'O que funcionou bem') + bloco(g.mudar, 'O que mudar');
+}
+function blocosHtml(g){
+  return `<h3>A reunião</h3>${tabelaFatores(g, 'reuniao')}` + CONSELHEIROS.map(cs => `<h3>${esc(cs.titulo)} · ${esc(cs.nome)} <span class="small muted">índice ${fmtPct(g.blocos[cs.c])}</span></h3>${tabelaFatores(g, cs.c)}`).join('');
+}
+function viewAdmin(){
+  const list = currentResponses(); const g = agregar(list); const u = settings.unidade;
+  const exported = !!settings.exported[u]; const unsent = allResponses().filter(r => !r.sent).length; const outras = allResponses().filter(r => r.unidade !== u).length;
+  return header('Área do avaliador') + `<div class="wrap"><div class="card">
+    <div class="espaco"><h1 style="margin:0">Resultados — ${esc(unidadeLabel(u) || 'sem reunião')}</h1><button class="btn" data-action="welcome">Voltar à avaliação</button></div>
+    <p class="small muted">Respostas desta reunião guardadas <b>neste aparelho</b>. O histórico de todas as reuniões (e dos outros aparelhos) fica em <i>Consolidado</i>.</p>
+    ${avisoN(g)}
+    ${list.length ? kpis(g) + blocosHtml(g) + `<details><summary>Ler os ${g.mais.length + g.mudar.length} comentários (ordem embaralhada)</summary>${comentariosHtml(g)}</details>` : '<div class="aviso">Ainda não há respostas nesta reunião.</div>'}
+    ${abandonos()[u] ? `<p class="small muted">${abandonos()[u]} avaliação(ões) começaram e não terminaram — não entram nas contas.</p>` : ''}
+    <h3>Exportar</h3>
+    <div class="linha"><button class="btn" data-action="csv" ${list.length ? '' : 'disabled'}>Baixar CSV (esta reunião)</button><button class="btn" data-action="xlsx" data-modo="atual" ${list.length ? '' : 'disabled'}>Baixar Excel (esta reunião)</button><button class="btn" data-action="pdf" data-modo="atual" ${list.length ? '' : 'disabled'}>Baixar PDF (esta reunião)</button></div>
+    ${syncOk() ? `<div class="linha"><button class="btn light" data-action="resend" ${unsent ? '' : 'disabled'}>Enviar para a nuvem agora (${unsent} pendente${unsent === 1 ? '' : 's'})</button><span class="small muted" style="align-self:center">${unsent ? '' : 'Tudo deste aparelho já está na nuvem.'}</span></div>` : '<p class="legenda">Sincronização online desligada: as respostas ficam só neste aparelho. Para ver tudo de qualquer aparelho, configure o servidor em Configurações (LEIA-ME, seção 11).</p>'}
+    <p class="legenda">${exported ? 'Esta reunião já foi exportada (novas respostas depois disso exigem exportar de novo).' : 'Ainda não exportada.'} Excel e PDF precisam de internet na primeira vez; sem internet, use o CSV.</p>
+    <h3>Outras ações</h3>
+    <div class="linha"><button class="btn ghost" data-action="consolidado">Consolidado de todas as reuniões</button><button class="btn ghost" data-action="config">Configurações</button><button class="btn ghost" data-action="tosetup">Trocar reunião</button></div>
+    <div class="linha"><button class="btn perigo" data-action="wipe" ${list.length ? '' : 'disabled'}>Apagar respostas desta reunião</button>${outras ? `<button class="btn perigo" data-action="wipeothers">Apagar as ${outras} respostas de outras reuniões</button>` : ''}</div>
+    ${state.confirma ? `<div class="ruim"><b>${esc(state.confirma.msg)}</b><div class="linha"><button class="btn perigo" data-action="confirmyes">Sim, apagar</button><button class="btn ghost" data-action="confirmno">Não</button></div></div>` : ''}
+  </div></div>`;
+}
+function viewConfig(){
+  return header('Configurações') + `<div class="wrap"><div class="card">
+    <h1>Configurações</h1>
+    <h3 style="margin-top:6px">Sincronização online — ver as respostas de todos os aparelhos em qualquer lugar</h3>
+    <label>URL do servidor (Apps Script — LEIA-ME, seção 11)</label>
+    <input type="url" id="s-webhook" value="${esc(settings.webhook)}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+    <label>Chave de sincronização (a mesma digitada no servidor)</label>
+    <input type="text" id="s-chave" value="${esc(settings.chave || '')}" placeholder="letras e números, sem espaços" autocomplete="off">
+    <div class="linha" style="margin-top:8px"><button class="btn light" data-action="testarservidor">Testar ligação</button>${settings.ultimaSync ? `<span class="small muted" style="align-self:center">Última atualização da nuvem: ${esc(dataLabel(settings.ultimaSync.slice(0, 10)))} ${esc(settings.ultimaSync.slice(11, 16))}</span>` : ''}</div>
+    <p class="legenda">Com URL e chave, cada avaliação é enviada assim que termina e o <i>Consolidado</i> baixa as avaliações dos outros aparelhos. É o mesmo servidor das outras pesquisas (aba "Conselho" na planilha).</p>
+    <label>Trocar PIN do avaliador (4 a 8 dígitos; vazio = manter)</label>
+    <input type="text" id="s-pin" inputmode="numeric" autocomplete="off" placeholder="novo PIN" style="-webkit-text-security:disc">
+    <label class="check" style="margin-top:16px"><input type="checkbox" id="s-auto" ${settings.autoAvanca !== false ? 'checked' : ''}> Avançar sozinho ao tocar na resposta. Desmarque para exigir o toque em <i>Próxima</i>.</label>
+    <label>Perguntas, respostas, pesos e nomes dos conselheiros</label>
+    <div class="linha" style="margin-top:4px"><button class="btn light" data-action="perguntas">Editar perguntas, respostas e pesos${perguntasAlteradas() ? ' (alteradas neste aparelho)' : ''}</button></div>
+    <p class="legenda">Escala atual: <b>${ESC} respostas</b> (padrão 3: Não / Em parte / Sim). Dá para mudar textos, rótulos, "não sei", pesos (1 a 3), os nomes dos conselheiros e trocar para 5 respostas.</p>
+    <div class="linha"><button class="btn" data-action="saveconfig">Salvar</button><button class="btn ghost" data-action="admin">Voltar</button></div>
+    <p class="legenda">Versão ${VERSAO}. PIN padrão: o mesmo das outras pesquisas — troque se isso for um problema (este código é público).</p>
+  </div></div>`;
+}
+function tipoNome(t){ return { escala: 'escala', nps: 'nota de 0 a 10', single: 'escolha única', textos: 'campos abertos' }[t] || t; }
+function viewPerguntas(){
+  const bloco = q => {
+    let campos = `<label>Pergunta</label><input type="text" id="pt-${q.codigo}" value="${esc(q.texto)}" maxlength="260">`;
+    if (q.tipo === 'escala') campos += `<label>Rótulos das ${ESC} respostas, da pior para a melhor (um por linha)</label><textarea id="pr-${q.codigo}" rows="${ESC}">${esc(q.rotulos.join('\n'))}</textarea><label>Botão "não sei / não se aplica" (vazio = não mostra)</label><input type="text" id="pn-${q.codigo}" value="${esc(q.na || '')}" maxlength="80">`;
+    if (q.opcoes) campos += `<label>Respostas (o código à esquerda não muda)</label>` + q.opcoes.map(o => `<div class="espaco" style="margin:6px 0;flex-wrap:nowrap"><code style="min-width:100px">${esc(o.c)}</code><input type="text" id="po-${q.codigo}-${o.c}" value="${esc(o.t)}" maxlength="120" style="flex:1"></div>`).join('');
+    if (q.campos) campos += q.campos.map(cp => `<label>Campo "${esc(cp.c)}"</label><input type="text" id="pf-${q.codigo}-${cp.c}" value="${esc(cp.t)}" maxlength="260">`).join('');
+    const peso = q.tipo === 'escala' ? `<label style="display:inline-flex;align-items:center;gap:8px;margin:0">Peso <select id="pp-${q.codigo}" style="width:auto">${[1, 2, 3].map(k => `<option value="${k}" ${q.peso === k ? 'selected' : ''}>${k}</option>`).join('')}</select></label>` : '';
+    return `<div class="pergunta-cfg"><div class="espaco"><div><b>${esc(q.codigo)}</b> <span class="small muted">${q.fator ? blocoNome(q.bloco) + ' · ' + esc(q.fator) : tipoNome(q.tipo)}</span></div>${peso}</div>${campos}</div>`;
+  };
+  return header('Perguntas') + `<div class="wrap"><div class="card" style="max-width:900px">
+    <div class="espaco"><h1 style="margin:0">Editar perguntas, respostas e pesos</h1><button class="btn ghost" data-action="config">Voltar</button></div>
+    <p class="small muted">Mude os nomes dos conselheiros, os textos, os rótulos das respostas, o botão "não sei", o peso de cada item (1 a 3, usado no índice ponderado) e quantas respostas as escalas têm. A estrutura (códigos, ordem) não muda. Alterar textos não altera respostas já gravadas; cada resposta guarda a versão (<code>ver</code>) e a escala (<code>esc</code>). Vale só neste aparelho — use <i>Exportar JSON</i> / <i>Importar JSON</i> para repetir nos outros.</p>
+    <h3>Conselheiros independentes avaliados</h3>
+    ${CONSELHEIROS.map(cs => `<div class="pergunta-cfg"><div class="espaco"><b>${esc(cs.c)}1…${esc(cs.c)}5</b></div><label>Nome</label><input type="text" id="pc-nome-${cs.c}" value="${esc(cs.nome)}" maxlength="80"><label>Título (ex.: Conselheiro independente / Conselheira independente)</label><input type="text" id="pc-titulo-${cs.c}" value="${esc(cs.titulo)}" maxlength="60"></div>`).join('')}
+    <p class="legenda">Os 5 critérios são os mesmos para os dois conselheiros; edite o texto de um deles abaixo e o outro segue igual (o nome é trocado automaticamente onde estiver escrito <code>{nome}</code>).</p>
+    <label>Respostas por pergunta de escala</label>
+    <select id="p-esc"><option value="3" ${ESC === 3 ? 'selected' : ''}>3 respostas (padrão — Não / Em parte / Sim)</option><option value="5" ${ESC === 5 ? 'selected' : ''}>5 respostas (Discordo totalmente … Concordo totalmente)</option></select>
+    <p class="legenda">Ao mudar de 3 para 5 (ou de 5 para 3), os rótulos voltam ao padrão daquele tamanho — salve e ajuste depois, se quiser.</p>
+    <label class="check"><input type="checkbox" id="p-r8" ${perguntasCfg().r8 === true ? 'checked' : ''}> Incluir a pergunta <b>r8</b> sobre quem presidiu a reunião (desligada por padrão: em grupo pequeno, avaliar o presidente nominalmente pode inibir respostas — ligue se o próprio presidente pedir).</label>
+    ${QUESTOES.map(bloco).join('')}
+    <div class="linha"><button class="btn" data-action="savepergs">Salvar</button><button class="btn ghost" data-action="resetpergs">Restaurar padrão</button><button class="btn light" data-action="exportpergs">Exportar JSON</button><label class="btn light" style="cursor:pointer">Importar JSON<input type="file" id="file-pergs" accept=".json,application/json" style="display:none"></label></div>
+  </div></div>`;
+}
+function lerPerguntas(){
+  const val = id => ((document.getElementById(id) || { value: '' }).value || '').trim();
+  const novoEsc = parseInt(val('p-esc'), 10) === 5 ? 5 : 3; const mudouEsc = novoEsc !== ESC;
+  const cfg = { esc: novoEsc, r8: !!((document.getElementById('p-r8') || {}).checked), conselheiros: {}, q: {} }; const erros = [];
+  CONSELHEIROS_PADRAO.forEach(p => { const nome = val('pc-nome-' + p.c), titulo = val('pc-titulo-' + p.c); if (!nome) erros.push('Nome do conselheiro ' + p.c + ' não pode ficar vazio'); const x = {}; if (nome && nome !== p.nome) x.nome = nome; if (titulo && titulo !== p.titulo) x.titulo = titulo; if (Object.keys(x).length) cfg.conselheiros[p.c] = x; });
+  const novos = CONSELHEIROS_PADRAO.map(p => ({ c: p.c, nome: (cfg.conselheiros[p.c] && cfg.conselheiros[p.c].nome) || p.nome, titulo: p.titulo }));
+  const padrao = montarPadrao(novos);   // textos padrão já com os nomes novos: só grava o que for diferente disso
+  const antigoPadrao = montarPadrao(CONSELHEIROS);   // textos padrão com os nomes atuais: se o campo ainda mostra o texto padrão antigo, não é edição — o nome novo entra sozinho
+  padrao.forEach(p => { const x = {}; const t = val('pt-' + p.codigo); const antigo = antigoPadrao.find(a => a.codigo === p.codigo); if (!t) erros.push(p.codigo + ': a pergunta não pode ficar vazia'); else if (t !== p.texto && !(antigo && t === antigo.texto)) x.texto = t;
+    if (p.tipo === 'escala') { if (!mudouEsc) { const linhas = val('pr-' + p.codigo).split(/\r?\n/).map(s => s.trim()).filter(Boolean); if (linhas.length !== novoEsc) erros.push(`${p.codigo}: são necessários ${novoEsc} rótulos (há ${linhas.length})`); else if (linhas.join('|') !== ROTULOS[novoEsc].conc.join('|')) x.rotulos = linhas; }
+      const na = val('pn-' + p.codigo); if (na !== (p.na || '')) x.na = na; const pz = parseInt(val('pp-' + p.codigo), 10); if (pz >= 1 && pz <= 3 && pz !== p.peso) x.peso = pz; }
+    if (p.opcoes) { const op = {}; p.opcoes.forEach(o => { const v = val(`po-${p.codigo}-${o.c}`); if (!v) erros.push(`${p.codigo} / ${o.c}: a resposta não pode ficar vazia`); else if (v !== o.t) op[o.c] = v; }); if (Object.keys(op).length) x.opcoes = op; }
+    if (p.campos) { const cp = {}; p.campos.forEach(o => { const v = val(`pf-${p.codigo}-${o.c}`); if (!v) erros.push(`${p.codigo} / ${o.c}: o texto não pode ficar vazio`); else if (v !== o.t) cp[o.c] = v; }); if (Object.keys(cp).length) x.campos = cp; }
+    if (Object.keys(x).length) cfg.q[p.codigo] = x; });
+  if (erros.length) { toast(erros[0]); return; }
+  if (!LS.set('mpco_perguntas', cfg)) { toast('Não consegui salvar (memória do aparelho).'); return; }
+  aplicarPerguntas(); toast(mudouEsc ? `Salvo: escala com ${novoEsc} respostas. Os rótulos voltaram ao padrão — revise se quiser.` : 'Perguntas, respostas e pesos salvos.'); go(mudouEsc ? 'perguntas' : 'config');
+}
+async function importarPerguntas(file){
+  try { const cfg = JSON.parse(await file.text()); if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) throw new Error('Arquivo inválido.'); if (cfg.app && cfg.app !== APP_ID) throw new Error('Este arquivo não é das perguntas da avaliação do conselho.'); if (cfg.esc === undefined && !cfg.q && !cfg.conselheiros) throw new Error('Arquivo sem perguntas.'); if (cfg.esc !== undefined && cfg.esc !== 3 && cfg.esc !== 5) throw new Error('Escala inválida (use 3 ou 5).');
+    if (!LS.set('mpco_perguntas', { esc: cfg.esc === 5 ? 5 : 3, r8: cfg.r8 === true, q: (cfg.q && typeof cfg.q === 'object') ? cfg.q : {}, conselheiros: (cfg.conselheiros && typeof cfg.conselheiros === 'object') ? cfg.conselheiros : {} })) throw new Error('Não consegui salvar.'); aplicarPerguntas(); toast('Perguntas importadas.'); render(); }
+  catch(e) { toast(e.message || 'Não consegui ler o arquivo.'); }
+}
+function viewConsolidado(){
+  if (!state.cf) state.cf = cfDefault();
+  const C = calcConsolidado(state.cf); const { cf, geral, reunioesT, meses, unidadesOpt, filtroTxt } = C;
+  const opt = (arr, sel, fmt) => arr.map(v => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(fmt ? fmt(v) : v)}</option>`).join('');
+  return header('Consolidado') + `<div class="wrap"><div class="card" style="max-width:1100px">
+    <div class="espaco"><h1 style="margin:0">Consolidado — reuniões do conselho</h1><button class="btn" data-action="admin">← Voltar (Área do avaliador)</button></div>
+    <div class="linha" style="margin-top:4px">${syncOk() ? `<button class="btn" data-action="sync">Atualizar da nuvem</button><span class="small muted" style="align-self:center">${settings.ultimaSync ? 'Última atualização: ' + esc(dataLabel(settings.ultimaSync.slice(0, 10))) + ' ' + esc(settings.ultimaSync.slice(11, 16)) + ' · ' : 'Ainda não atualizado · '}<button class="btn ghost" data-action="syncfull" style="min-height:36px;font-size:14px;padding:6px 10px">baixar tudo de novo</button></span>` : '<span class="small muted">Sincronização online desligada — configure o servidor em Configurações (LEIA-ME, seção 11) para ver as avaliações de todos os aparelhos aqui.</span>'}</div>
+    <p class="small muted">Junta as avaliações deste aparelho com as da <b>nuvem</b> e com CSVs importados à mão.${C.importadas ? ` ${C.importadas} resposta(s) de outros aparelhos.` : ' <b>Ainda não há respostas de outros aparelhos.</b>'}</p>
+    <h3>Filtros</h3>
+    <div class="filtros">
+      <div><label>Reunião</label><select data-cf="unidade"><option value="">Todas</option>${opt(unidadesOpt, cf.unidade, v => unidadeLabel(v))}</select></div>
+      <div><label>Mês</label><select data-cf="mes"><option value="">Todos</option>${opt(meses, cf.mes, mesLabel)}</select></div>
+    </div>
+    <p class="small muted">Mostrando: ${esc(filtroTxt)}.</p>
+    ${avisoN(geral)}${kpis(geral)}
+    <h3>Evolução por reunião</h3>
+    <div class="tabela-wrap"><table><tr><th class="l">Reunião</th><th>Respostas</th><th>Índice da reunião</th>${CONSELHEIROS.map(cs => `<th>${esc(cs.nome)}</th>`).join('')}<th>Nota média (0-10)</th><th>Deram 9-10</th></tr>
+    ${reunioesT.map(u => `<tr><td class="l"><b>${esc(dataLabel(u.unidade))}</b> <span class="small muted">${esc(u.nome || '')}</span>${u.identificavel ? ' <span class="tag pend">identificável</span>' : ''}</td><td>${u.n}</td><td><b>${fmtPct(u.blocos.reuniao)}</b></td>${CONSELHEIROS.map(cs => `<td>${fmtPct(u.blocos[cs.c])}</td>`).join('')}<td>${u.nota == null ? '—' : u.nota}</td><td>${fmtPct(u.nota9)}</td></tr>`).join('') || `<tr><td colspan="${5 + CONSELHEIROS.length}" class="muted">Sem respostas no filtro.</td></tr>`}</table></div>
+    <p class="legenda">Índices = % positivo ponderado pelos pesos. Compare a tendência ao longo das reuniões; "identificável" = menos de ${N_IDENTIFICAVEL} respostas.</p>
+    ${geral.n ? blocosHtml(geral) + `<details><summary>Ler os ${geral.mais.length + geral.mudar.length} comentários (ordem embaralhada)</summary>${comentariosHtml(geral)}</details>` : ''}
+    <h3>Exportar e juntar aparelhos</h3>
+    <div class="linha"><button class="btn" data-action="xlsx" data-modo="tudo" ${geral.n ? '' : 'disabled'}>Baixar Excel (tudo, filtro atual)</button><button class="btn" data-action="pdf" data-modo="tudo" ${geral.n ? '' : 'disabled'}>Baixar PDF (relatório, filtro atual)</button><button class="btn light" data-action="csvtudo" ${geral.n ? '' : 'disabled'}>Baixar CSV (tudo, filtro atual)</button></div>
+    <div class="linha"><label class="btn light" style="cursor:pointer">Importar CSV de outro aparelho (sem nuvem)<input type="file" id="file-hist" accept=".csv,.txt" style="display:none"></label>${C.importadas ? `<button class="btn ghost" data-action="wipehist">Apagar as ${C.importadas} de outros aparelhos</button>` : ''}</div>
+    <div class="linha"><button class="btn" data-action="admin">← Voltar (Área do avaliador)</button></div>
+  </div></div>`;
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  const app = document.getElementById('app');
+  const map = { setup: viewSetup, welcome: viewWelcome, q: viewQ, thanks: viewThanks, saveerror: viewSaveError, pin: viewPin, admin: viewAdmin, config: viewConfig, perguntas: viewPerguntas, consolidado: viewConsolidado };
+  app.innerHTML = (map[state.screen] || viewSetup)();
+  const pi = document.getElementById('pin-input'); if (pi && state.screen === 'pin' && !pi.disabled) { pi.focus(); try { pi.setSelectionRange(pi.value.length, pi.value.length); } catch(e) {} }
+}
+
+/* ---------------- gravação ---------------- */
+function lerCamposLivres(){ const q = perguntaAtual(); if (!q || q.tipo !== 'textos') return; q.campos.forEach(cp => { const t = document.getElementById('txt-' + cp.c); state.r[cp.c] = t ? t.value.replace(/\r?\n|\r/g, ' ').trim().slice(0, 500) : ''; }); }
+function podeAvancar(q){ if (!q.obrigatoria) return true; const v = state.r[q.codigo]; return v !== undefined && v !== null; }
+function avancar(){
+  lerCamposLivres(); const q = perguntaAtual(); if (!q) return; if (!podeAvancar(q)) return;
+  if (state.i >= visiveis().length - 1) gravar(); else { state.i++; go('q'); }
+}
+function gravar(){
+  const r = {}; COLS_RESP.forEach(c => { r[c] = state.r[c]; }); r.mais = r.mais || ''; r.mudar = r.mudar || '';
+  const vis = new Set(visiveis().flatMap(q => q.campos ? q.campos.map(c => c.c) : [q.codigo]));
+  QUESTOES.forEach(q => { (q.campos ? q.campos.map(c => c.c) : [q.codigo]).forEach(c => { if (!vis.has(c)) r[c] = 'NA'; }); });   // bloco de conselheiro ausente e r8 desligada gravam 'NA'
+  if (r.nota === undefined) r.nota = '';   // nota opcional em branco
+  const now = new Date();
+  // anonimato em grupo pequeno: não grava hora nem duração da resposta; só a data da reunião
+  const rec = { id: uid(), versao: VERSAO, ver: PESQ_VER, esc: ESC, unidade: settings.unidade, reuniao: reuniaoNome(settings.unidade), presentes: CONSELHEIROS.filter(cs => presente(cs.c)).map(cs => cs.c).join(' '), data: hojeISO(now), r, sent: false };
+  const list = allResponses(); list.push(rec);
+  if (!saveResponses(list)) { go('saveerror'); return; }
+  if (settings.exported[settings.unidade]) { delete settings.exported[settings.unidade]; saveSettings(); }
+  state.r = {}; go('thanks'); sendPending();
+}
+
+/* ---------------- sincronização online (servidor/Code.gs) ---------------- */
+const APP_ID = 'pesquisa-conselho-maxipark';
+function syncOk(){ return !!(settings.webhook && settings.chave); }
+function payloadDe(r){ const p = { app: APP_ID, versao: r.versao, ver: r.ver || PESQ_VER, esc: escDe(r), id: r.id, unidade: r.unidade, reuniao: r.reuniao || reuniaoNome(r.unidade), presentes: r.presentes || '', data: r.data }; COLS_RESP.forEach(c => { p[c] = r.r[c] === undefined || r.r[c] === null ? '' : r.r[c]; }); return p; }
+function registroDe(p){
+  if (!p || !p.id) return null; const r = {};
+  COLS_RESP.forEach(k => { let v = p[k]; if (v === undefined || v === null || v === '') return; if (NUMERICAS.has(k) && v !== 'NA') { const n = parseInt(v, 10); v = isNaN(n) ? v : n; } r[k] = v; });
+  r.mais = r.mais || ''; r.mudar = r.mudar || ''; const escv = parseInt(p.esc, 10);
+  const unidade = String(p.unidade || ''); if (p.reuniao && unidade && !reuniaoNome(unidade)) { const m = reunioes(); m[unidade] = String(p.reuniao); LS.set('mpco_reunioes', m); }
+  return { id: String(p.id), versao: p.versao || '', ver: p.ver || PESQ_VER, esc: (escv === 3 || escv === 5) ? escv : undefined, unidade, reuniao: p.reuniao || '', presentes: p.presentes || '', data: p.data || '', r, sent: true, nuvem: true };
+}
+async function apiPost(body){ const res = await fetch(settings.webhook, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ chave: settings.chave }, body)) }); if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }
+async function apiGet(params){ const u = new URL(settings.webhook); Object.entries(Object.assign({ chave: settings.chave }, params)).forEach(([k, v]) => u.searchParams.set(k, v)); const res = await fetch(u.toString()); if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }
+function erroServidor(j){ if (!j) return 'Resposta inesperada do servidor.'; if (j.erro === 'chave') return 'Chave de sincronização diferente da do servidor (Configurações).'; if (j.erro === 'configurar-chave') return 'O servidor ainda está com a chave de exemplo: troque CHAVE no Code.gs e implante de novo.'; return 'Resposta inesperada do servidor' + (j.erro ? ' (' + j.erro + ')' : '') + '.'; }
+let sending = false, syncing = false;
+async function sendPending(){
+  if (sending || !syncOk() || !navigator.onLine) return 0; sending = true; let enviadas = 0;
+  try {
+    const pend = allResponses().filter(r => !r.sent);
+    for (let i = 0; i < pend.length; i += 25) {
+      const lote = pend.slice(i, i + 25); let ok = false;
+      try { const j = await apiPost({ op: 'add', itens: lote.map(payloadDe) }); ok = !!(j && j.ok); if (j && j.ok === false) { toast(erroServidor(j)); break; } } catch(e) { ok = false; }
+      if (!ok) break;
+      const list = allResponses(); lote.forEach(r => { const it = list.find(x => x.id === r.id); if (it) it.sent = true; }); saveResponses(list); enviadas += lote.length;
+    }
+  } finally { sending = false; }
+  if (enviadas && state.screen === 'admin') render(); return enviadas;
+}
+async function sincronizar(silencioso, tudo){
+  if (!syncOk()) { if (!silencioso) toast('Configure a URL e a chave do servidor em Configurações.'); return; }
+  if (syncing) return; if (!navigator.onLine) { if (!silencioso) toast('Sem internet agora; tento de novo quando voltar.'); return; }
+  syncing = true; if (!silencioso) toast('Atualizando da nuvem…');
+  try {
+    await sendPending();
+    const incremental = !tudo && !!settings.ultimaSync; const params = { op: 'list', app: APP_ID }; if (incremental) params.desde = new Date(new Date(settings.ultimaSync).getTime() - 15 * 60 * 1000).toISOString();
+    const j = await apiGet(params); if (!j || !j.ok) throw new Error(erroServidor(j));
+    const anteriores = histResponses(); const manuais = anteriores.filter(h => !h.nuvem); const nuvem = incremental ? anteriores.filter(h => h.nuvem) : [];
+    const locais = new Set(allResponses().map(r => r.id)); const manuaisIds = new Set(manuais.map(h => h.id)); const porId = new Map(nuvem.map(h => [h.id, h]));
+    let novas = 0; (j.itens || []).map(registroDe).forEach(x => { if (!x || locais.has(x.id) || manuaisIds.has(x.id)) return; if (!porId.has(x.id)) novas++; porId.set(x.id, x); });
+    if (!LS.set('mpco_hist', manuais.concat([...porId.values()]))) throw new Error('Não coube na memória do aparelho: exporte e apague respostas antigas.');
+    settings.ultimaSync = new Date().toISOString(); saveSettings();
+    if (!silencioso) toast(`Nuvem atualizada: ${novas} nova(s); ${porId.size} resposta(s) de outros aparelhos no total.`); render();
+  } catch(e) { console.warn('sincronizar', e); if (!silencioso) toast(e.message || 'Não consegui falar com o servidor.'); }
+  finally { syncing = false; }
+}
+async function testarServidor(){
+  const url = ((document.getElementById('s-webhook') || {}).value || '').trim(), chave = ((document.getElementById('s-chave') || {}).value || '').trim();
+  if (!url || !chave) { toast('Preencha a URL e a chave antes de testar.'); return; } toast('Testando…');
+  try { const u = new URL(url); u.searchParams.set('op', 'ping'); u.searchParams.set('chave', chave); const res = await fetch(u.toString()); const j = await res.json(); toast(j && j.ok ? 'Ligação OK: o servidor respondeu.' : erroServidor(j)); }
+  catch(e) { toast('Não consegui falar com o servidor: confira a URL (termina em /exec), a implantação "Qualquer pessoa" e a internet.'); }
+}
+window.addEventListener('online', () => sendPending());
+
+/* ---------------- CSV ---------------- */
+const CSV_FIXAS = ['versao', 'ver', 'esc', 'id', 'unidade', 'reuniao', 'presentes', 'data'];   // sem hora: em grupo pequeno, a hora identificaria quem respondeu
+function csvCols(){ return CSV_FIXAS.concat(COLS_RESP); }
+function celula(r, c){ if (c === 'reuniao') return r.reuniao || reuniaoNome(r.unidade); if (CSV_FIXAS.includes(c)) return r[c]; return r.r[c]; }
+function csvCell(v){ if (v === undefined || v === null) return ''; let s = String(v).replace(/\r?\n|\r/g, ' '); return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function csvText(list){ const cols = csvCols(); return '﻿' + cols.join(';') + '\n' + shuffle(list).map(r => cols.map(c => csvCell(celula(r, c))).join(';')).join('\n') + '\n'; }   // linhas embaralhadas: a ordem de resposta também identificaria
+function parseDelimited(text){
+  text = text.replace(/^﻿/, ''); const sep = (text.split('\n')[0].split(';').length >= text.split('\n')[0].split(',').length) ? ';' : ',';
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) { const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"') q = true; else if (ch === sep) { row.push(cell); cell = ''; } else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; } else cell += ch; }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(c => c !== ''));
+}
+function csvToResponses(text){
+  const rows = parseDelimited(text); if (rows.length < 2) return [];
+  const head = rows[0].map(h => h.trim()); const idx = n => head.indexOf(n);
+  if (idx('id') < 0 || idx('unidade') < 0 || idx('r1') < 0 || idx('g1') < 0) throw new Error('Este arquivo não é um CSV da avaliação do conselho (precisa das colunas id, unidade, r1 e g1).');
+  const out = [];
+  rows.slice(1).forEach(c => { const g = n => { const i = idx(n); return i >= 0 ? (c[i] || '').trim() : ''; };
+    const r = {}; COLS_RESP.forEach(k => { const v = g(k); if (v === '') return; if (NUMERICAS.has(k)) r[k] = v === 'NA' ? 'NA' : (isNaN(parseInt(v, 10)) ? v : parseInt(v, 10)); else r[k] = v; }); r.mais = r.mais || ''; r.mudar = r.mudar || '';
+    const escv = parseInt(g('esc'), 10); const unidade = g('unidade'); const nome = g('reuniao'); if (nome && unidade && !reuniaoNome(unidade)) { const m = reunioes(); m[unidade] = nome; LS.set('mpco_reunioes', m); }
+    out.push({ id: g('id') || uid(), versao: g('versao') || VERSAO, ver: g('ver') || PESQ_VER, esc: (escv === 3 || escv === 5) ? escv : undefined, unidade, reuniao: nome, presentes: g('presentes'), data: g('data'), r, sent: true }); });
+  return out;
+}
+
+/* ---------------- download / compartilhar ---------------- */
+async function shareOrDownload(name, data, mime){
+  const blob = data instanceof Blob ? data : new Blob([data], { type: mime || 'text/csv;charset=utf-8' });
+  try { if (navigator.canShare && navigator.canShare({ files: [new File([blob], name, { type: blob.type })] })) { await navigator.share({ files: [new File([blob], name, { type: blob.type })], title: name }); return true; } } catch(e) { if (e && e.name === 'AbortError') return false; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); return true;
+}
+function markExported(){ settings.exported[settings.unidade] = true; saveSettings(); }
+const _scriptP = {};
+function loadScript(src){ if (!_scriptP[src]) _scriptP[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('sem internet')); document.head.appendChild(s); }).catch(e => { delete _scriptP[src]; throw e; }); return _scriptP[src]; }
+async function loadExcelJS(){ if (!window.ExcelJS) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'); return window.ExcelJS; }
+async function loadSheetJS(){ if (!window.XLSX) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'); return window.XLSX; }
+async function loadJsPDF(){ if (!(window.jspdf && window.jspdf.jsPDF)) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'); if (!(window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable)) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'); return window.jspdf.jsPDF; }
+let exportando = false;
+
+/* ---------------- tabelas para Excel/PDF ---------------- */
+function dadosExport(modo){
+  const atual = modo === 'atual'; const cf = atual ? { unidade: settings.unidade, mes: '' } : (state.cf || cfDefault());
+  const filt = atual ? currentResponses() : filtrar(poolTodas(), cf); const g = agregar(filt);
+  const titulo = atual ? `Avaliação da reunião do conselho Maxipark — ${unidadeLabel(settings.unidade)}` : 'Avaliação das reuniões do conselho Maxipark — Consolidado';
+  const escopo = atual ? `${unidadeLabel(settings.unidade)} — só respostas deste aparelho` : `Filtros: ${calcConsolidado(cf).filtroTxt}`;
+  const aband = atual ? (abandonos()[settings.unidade] || 0) : Object.values(abandonos()).reduce((a, b) => a + b, 0);
+  const resumo = [[titulo], ['Gerado em', dataLabel(hojeISO())], [atual ? 'Reunião' : 'Filtros', escopo], ['Versão do app / do questionário', `${VERSAO} / ${PESQ_VER}`], [],
+    ['Indicador', 'Valor', 'Observação'], ['Respostas', g.n, g.identificavel ? `menos de ${N_IDENTIFICAVEL}: identifica quem respondeu — uso restrito` : (aband ? `${aband} começaram e não terminaram (fora das contas)` : '')], ['Escala das respostas', `${ESC} respostas`, g.escMista ? 'há respostas de outra escala no conjunto (coluna esc)' : ''],
+    ['Índice da reunião (% positivo ponderado)', fmtPct(g.blocos.reuniao), 'itens r1 a r7 × peso']].concat(CONSELHEIROS.map(cs => [`Índice · ${cs.nome} (% positivo ponderado)`, fmtPct(g.blocos[cs.c]), `itens ${cs.c}1 a ${cs.c}5 × peso`])).concat([
+    ['Nota média "valeu o tempo" (0-10)', g.nota == null ? '' : g.nota, g.notaN ? `${g.notaN} nota(s)` : ''], ['% que deram 9 ou 10', fmtPct(g.nota9), ''], ['Tempo mediano de resposta (s)', g.durMed == null ? '' : g.durMed, ''], [],
+    ['Uso restrito da governança da Maxipark. Resultados por reunião com menos de 3 respostas não podem ser discutidos individualmente.']]);
+  const porFator = [['Código', 'Bloco', 'Item', 'Peso', 'Texto', 'Responderam', 'Não sei / n.a.', '% positivo', '% negativo', `Média (1-${ESC})`].concat(Array.from({ length: ESC }, (_, i) => String(i + 1)))].concat(g.fatores.map(f => [f.codigo, blocoNome(f.bloco), f.fator, f.peso, f.texto, f.n, f.na, f.pct == null ? '' : f.pct + '%', f.insat == null ? '' : f.insat + '%', f.media == null ? '' : f.media].concat(f.dist))).concat([[], [legendaEscala(g)]]);
+  const cols = csvCols(); const respostas = [cols].concat(filt.map(r => cols.map(c => { const v = celula(r, c); return v === undefined || v === null ? '' : v; })));
+  const comentarios = [['Tipo', 'Comentário', 'Reunião']].concat(shuffle(g.mais).map(c => ['O que funcionou bem', c.texto, dataLabel(c.unidade)]), shuffle(g.mudar).map(c => ['O que mudar', c.texto, dataLabel(c.unidade)]));
+  let evolucao = null;
+  if (!atual) { const C = calcConsolidado(cf); evolucao = [['Reunião', 'Nome', 'Respostas', 'Índice da reunião'].concat(CONSELHEIROS.map(cs => 'Índice · ' + cs.nome), ['Nota média (0-10)', '% 9-10', 'Aviso'])].concat(C.reunioesT.map(u => [dataLabel(u.unidade), u.nome || '', u.n, fmtPct(u.blocos.reuniao)].concat(CONSELHEIROS.map(cs => fmtPct(u.blocos[cs.c])), [u.nota == null ? '' : u.nota, fmtPct(u.nota9), u.identificavel ? 'identificável (menos de 3 respostas)' : '']))); }
+  const perguntas = [['Código', 'Bloco', 'Tipo', 'Pergunta', 'Respostas (código — texto)', 'Peso']].concat(QUESTOES.map(q => [q.codigo, q.bloco ? blocoNome(q.bloco) : (q.codigo === 'nota' ? 'Fechamento' : 'Fechamento'), q.tipo, q.texto, q.opcoes ? q.opcoes.map(o => o.c + ' — ' + o.t).join(' | ') : (q.tipo === 'escala' ? q.rotulos.map((t, i) => (i + 1) + ' = ' + t).join(' | ') + (q.na ? ` | NA = ${q.na}` : '') : (q.tipo === 'nps' ? `0 = ${q.pontas[0]} … 10 = ${q.pontas[1]}` : q.campos.map(cp => cp.c + ': ' + cp.t).join(' | '))), q.peso || ''])).concat([[], [perguntasAlteradas() ? 'Perguntas, respostas, pesos ou nomes editados neste aparelho (Configurações → Editar perguntas).' : 'Perguntas padrão do questionário ' + PESQ_VER + '.']]);
+  const legenda = [['Campo', 'Significado'], ['ver', `versão do questionário (${PESQ_VER})`], ['esc', 'nº de respostas das escalas (3 ou 5); positivo = 3 (com 3) ou 4-5 (com 5); negativo = 1 (com 3) ou 1-2 (com 5)'], ['unidade / reuniao', 'código da reunião (data AAAA-MM-DD) e nome opcional'], ['r1…r7', 'a reunião: 1 (pior) … ' + ESC + ' (melhor); NA = não sei / não se aplica; peso 1-3 na aba Perguntas']].concat(CONSELHEIROS.map(cs => [`${cs.c}1…${cs.c}5`, `${cs.nome}: preparo, contribuição, independência, escuta, interesse da empresa (mesma escala)`])).concat([['nota', '0-10: quanto a reunião valeu o tempo'], ['mais / mudar', 'campos abertos (até 500 caracteres), ordem embaralhada nos relatórios'], ['papel', 'códigos na aba Perguntas (nao_informo = preferiu não dizer)'], ['dur', 'segundos entre o primeiro toque e o envio'], ['vazio × NA', 'NA = não sei / não se aplica; vazio = não respondido']]);
+  const nome = atual ? `conselho_${settings.unidade}_${hojeISO()}` : `conselho_consolidado_${cf.unidade || 'todas'}_${cf.mes || 'todos-meses'}_${hojeISO()}`;
+  return { atual, titulo, escopo, g, resumo, porFator, respostas, comentarios, evolucao, perguntas, legenda, nome };
+}
+function folhasExcel(D){
+  const f = [{ nome: 'Resumo', aoa: D.resumo, larguras: [44, 16, 60], semCab: true }];
+  if (D.evolucao) f.push({ nome: 'Evolução', aoa: D.evolucao, larguras: [12, 30, 10, 12].concat(CONSELHEIROS.map(() => 14), [12, 8, 34]) });
+  f.push({ nome: 'Por item', aoa: D.porFator, larguras: [7, 20, 26, 6, 70, 12, 14, 12, 12, 12].concat(Array.from({ length: ESC }, () => 5)) },
+    { nome: 'Respostas', aoa: D.respostas, larguras: [7, 5, 4, 14, 12, 26, 11, 7, 6].concat(COLS_RESP.map(c => (c === 'mais' || c === 'mudar') ? 50 : 6)) }, { nome: 'Comentários', aoa: D.comentarios, larguras: [20, 90, 12] }, { nome: 'Perguntas', aoa: D.perguntas, larguras: [8, 20, 9, 70, 70, 6] }, { nome: 'Legenda', aoa: D.legenda, larguras: [18, 100] });
+  return f;
+}
+const PCT_RE = /^-?\d+%$/;
+async function excelComLogo(EJ, D, folhas){
+  const wb = new EJ.Workbook(); wb.creator = 'Maxipark - Governança'; wb.created = new Date();
+  const img = wb.addImage({ base64: LOGO_B64, extension: 'png' });
+  const ROXO = 'FF6B4A98', ZEBRA = 'FFF4F1F8', BRANCO = 'FFFFFFFF', CINZA = 'FF5E5670', VERMELHO = 'FF9B1C1C';
+  const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+  const sub = `Gerado em ${dataLabel(hojeISO())} - ${D.escopo} - App v${VERSAO}`;
+  const aviso = 'Uso restrito da governança da Maxipark. Reuniões com menos de 3 respostas identificam quem respondeu: não discutir individualmente.';
+  folhas.forEach(f => {
+    let aoa = f.aoa; if (f.semCab && aoa.length && aoa[0].length === 1 && aoa[0][0] === D.titulo) aoa = aoa.slice(1);
+    const ncol = Math.max(3, ...aoa.map(r => r.length)); const larg = aoa.length ? aoa[0].length : ncol;
+    const ws = wb.addWorksheet(f.nome); (f.larguras || []).forEach((w, i) => { ws.getColumn(i + 1).width = w; });
+    ws.getRow(1).height = 26; ws.getRow(2).height = 26; ws.getRow(3).height = 8; ws.addImage(img, { tl: { col: 0.1, row: 0.15 }, ext: { width: 268, height: 62 } });
+    const mc = 10; const wch = Array.from({ length: mc }, (_, i) => (f.larguras && f.larguras[i]) || 8.43).reduce((a, b) => a + b, 0);
+    const linha = (r, txt, font, h) => { ws.mergeCells(r, 1, r, mc); const c = ws.getCell(r, 1); c.value = txt; c.font = font; c.alignment = { vertical: 'middle', wrapText: true }; const nLin = Math.max(1, Math.ceil(String(txt).length * font.size / 11 / wch)); ws.getRow(r).height = Math.max(h, nLin * font.size * 1.35 + 6); };
+    linha(4, D.titulo, { name: 'Calibri', size: 15, bold: true, color: { argb: ROXO } }, 24); linha(5, sub, { name: 'Calibri', size: 9, italic: true, color: { argb: CINZA } }, 16); linha(6, aviso, { name: 'Calibri', size: 9, bold: true, color: { argb: VERMELHO } }, 30);
+    ws.getRow(7).height = 5; for (let c = 1; c <= Math.max(ncol, mc); c++) ws.getCell(7, c).fill = fill(ROXO);
+    let r = 8, zebra = 0;
+    aoa.forEach((row, ri) => { const isCab = f.semCab ? row[0] === 'Indicador' : ri === 0; const xr = ws.getRow(r);
+      if (!isCab && !f.semCab && row.length && zebra % 2 === 1) for (let c = 1; c <= larg; c++) xr.getCell(c).fill = fill(ZEBRA);
+      row.forEach((v, ci) => { if (v === undefined || v === null) return; const c = xr.getCell(ci + 1); if (typeof v === 'string' && PCT_RE.test(v)) { c.value = parseInt(v, 10); c.numFmt = '0"%"'; } else c.value = v; if (isCab) { c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: BRANCO } }; c.fill = fill(ROXO); c.alignment = { vertical: 'middle', wrapText: true }; } });
+      if (isCab) { xr.height = 30; zebra = 0; if (!f.semCab && ri === 0) ws.autoFilter = { from: { row: r, column: 1 }, to: { row: r, column: row.length } }; } else if (row.length) zebra++; r++; });
+  });
+  return await wb.xlsx.writeBuffer();
+}
+function excelSimples(XLSX, folhas){ const wb = XLSX.utils.book_new(); folhas.forEach(f => { const ws = XLSX.utils.aoa_to_sheet(f.aoa); Object.keys(ws).forEach(a => { const c = ws[a]; if (a[0] !== '!' && c && c.t === 's' && PCT_RE.test(c.v)) { c.t = 'n'; c.v = parseInt(c.v, 10); c.z = '0"%"'; } }); if (f.larguras) ws['!cols'] = f.larguras.map(w => ({ wch: w })); XLSX.utils.book_append_sheet(wb, ws, f.nome); }); return XLSX.write(wb, { bookType: 'xlsx', type: 'array' }); }
+async function exportarExcel(modo){ if (exportando) return; exportando = true; try { await _exportarExcel(modo); } finally { exportando = false; } }
+async function _exportarExcel(modo){
+  const MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  let D, folhas; try { D = dadosExport(modo); folhas = folhasExcel(D); } catch(e) { console.error(e); toast('Não consegui montar os dados do Excel.'); return; }
+  toast('Preparando o Excel…'); let out = null, comLogo = false;
+  try { const EJ = await loadExcelJS(); out = await excelComLogo(EJ, D, folhas); comLogo = true; } catch(e) { console.warn('Excel com logo indisponível', e); }
+  if (!out) { let XLSX; try { XLSX = await loadSheetJS(); } catch(e) { toast('Para gerar o Excel é preciso internet na primeira vez. Sem internet, use o CSV.'); return; } try { out = excelSimples(XLSX, folhas); } catch(e) { console.error(e); toast('Não consegui gerar o Excel. Use o CSV.'); return; } }
+  try { const ok = await shareOrDownload(D.nome + '.xlsx', new Blob([out], { type: MIME }), MIME); if (ok) { toast(comLogo ? 'Excel gerado.' : 'Excel gerado (versão simples, sem logo).'); if (D.atual) { markExported(); if (state.screen === 'admin') render(); } } } catch(e) { console.error(e); toast('Não consegui gerar o Excel. Use o CSV.'); }
+}
+function pdfTxt(s){ return String(s == null ? '' : s).replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}\u{20E3}]/gu, '').replace(/[—–−]/g, '-').replace(/…/g, '...').replace(/≠/g, '<>').replace(/→/g, '->').replace(/[‹«]/g, '<').replace(/[›»]/g, '>').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/[^\x09\x0A\x20-\x7E\xA0-\xFF]/g, '?'); }
+async function exportarPdf(modo){ if (exportando) return; exportando = true; try { await _exportarPdf(modo); } finally { exportando = false; } }
+async function _exportarPdf(modo){
+  let jsPDF; try { toast('Preparando o PDF…'); jsPDF = await loadJsPDF(); } catch(e) { toast('Para gerar o PDF é preciso internet na primeira vez. Sem internet, use o CSV.'); return; }
+  try {
+    const D = dadosExport(modo); const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(); const cor = [107, 74, 152];
+    const tabela = (titulo, aoa, opts) => { let y = doc.lastAutoTable && doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 8 : 24; if (y > H - 40) { doc.addPage(); y = 22; }
+      doc.setFontSize(12); doc.setTextColor(cor[0], cor[1], cor[2]); doc.text(pdfTxt(titulo), 12, y); doc.setTextColor(0, 0, 0);
+      const linhas = aoa.slice(1).map(r => r.map(pdfTxt));
+      doc.autoTable(Object.assign({ head: [aoa[0].map(pdfTxt)], body: linhas.length ? linhas : [['(sem dados)']], startY: y + 3, margin: { top: 21, left: 12, right: 12, bottom: 14 }, styles: { fontSize: 7.5, cellPadding: 1.4, overflow: 'linebreak' }, headStyles: { fillColor: cor, textColor: 255, fontSize: 7.5 }, alternateRowStyles: { fillColor: [244, 243, 252] } }, opts || {})); };
+    try { doc.addImage('data:image/png;base64,' + LOGO_B64, 'PNG', 12, 7, 60, 13.8); } catch(e) {}
+    doc.setDrawColor(cor[0], cor[1], cor[2]); doc.setLineWidth(1.2); doc.line(12, 24, W - 12, 24);
+    doc.setFontSize(D.atual ? 15 : 18); doc.setTextColor(cor[0], cor[1], cor[2]); const tl = doc.splitTextToSize(pdfTxt(D.titulo), W - 24); const dy = (tl.length - 1) * (D.atual ? 6.1 : 7.3); doc.text(tl, 12, 33); doc.setTextColor(0, 0, 0);
+    doc.setFontSize(9.5); doc.text(pdfTxt(`Gerado em ${dataLabel(hojeISO())} - ${D.escopo} - App v${VERSAO}`), 12, 40 + dy, { maxWidth: W - 24 });
+    doc.setFontSize(8.5); doc.setTextColor(155, 28, 28); doc.text(pdfTxt('Uso restrito da governança da Maxipark. Reuniões com menos de 3 respostas identificam quem respondeu: não discutir individualmente.'), 12, 47 + dy, { maxWidth: W - 24 }); doc.setTextColor(0, 0, 0);
+    doc.lastAutoTable = { finalY: 47 + dy };
+    tabela('Resumo', D.resumo.slice(D.resumo.findIndex(r => r[0] === 'Indicador')).filter(r => r.length === 3), { columnStyles: { 0: { cellWidth: 100 }, 1: { cellWidth: 36 } } });
+    if (D.evolucao) tabela('Evolução por reunião', D.evolucao);
+    tabela('Por item (a reunião e cada conselheiro)', D.porFator.filter(r => r.length > 1), { columnStyles: { 4: { cellWidth: 70 } } });
+    doc.setFontSize(7.5); doc.setTextColor(90, 90, 90); doc.text(doc.splitTextToSize(pdfTxt(legendaEscala(D.g)), W - 24), 12, doc.lastAutoTable.finalY + 4); doc.setTextColor(0, 0, 0); doc.lastAutoTable = { finalY: doc.lastAutoTable.finalY + 6 };
+    doc.addPage(); doc.lastAutoTable = { finalY: 14 };
+    tabela('Comentários (ordem embaralhada)', D.comentarios, { columnStyles: { 1: { cellWidth: 170 } } });
+    tabela('Perguntas em uso (versão ' + PESQ_VER + ', escala com ' + ESC + ' respostas)', D.perguntas.filter(r => r.length > 1), { columnStyles: { 3: { cellWidth: 90 }, 4: { cellWidth: 90 } } });
+    const total = doc.internal.getNumberOfPages(); const rodape = pdfTxt(`${D.titulo}${D.atual ? '' : ' - ' + D.escopo} - gerado em ${dataLabel(hojeISO())} - uso restrito`); const tituloFaixa = doc.splitTextToSize(pdfTxt(D.titulo), W - 72)[0];
+    for (let p = 1; p <= total; p++) { doc.setPage(p); doc.setFontSize(7.5); doc.setTextColor(120, 120, 120); const lr = doc.splitTextToSize(rodape, W - 60); doc.text(lr, 12, H - 6 - 3.04 * (lr.length - 1)); doc.text(pdfTxt(`página ${p} de ${total}`), W - 12, H - 6, { align: 'right' }); if (p > 1) { try { doc.addImage('data:image/png;base64,' + LOGO_B64, 'PNG', 12, 5, 40, 9.2); doc.setDrawColor(cor[0], cor[1], cor[2]); doc.setLineWidth(0.8); doc.line(12, 16.5, W - 12, 16.5); doc.setFontSize(8); doc.setTextColor(cor[0], cor[1], cor[2]); doc.text(tituloFaixa, W - 12, 12, { align: 'right' }); } catch(e) {} } }
+    const ok = await shareOrDownload(D.nome + '.pdf', doc.output('blob'), 'application/pdf');
+    if (ok) { toast('PDF gerado.'); if (D.atual) { markExported(); if (state.screen === 'admin') render(); } }
+  } catch(e) { console.error(e); toast('Não consegui gerar o PDF. Tente de novo; se continuar, use o CSV.'); }
+}
+async function importarHist(file){
+  try { const text = await file.text(); const novas = csvToResponses(text); const hist = histResponses(); const ids = new Set(hist.map(r => r.id).concat(allResponses().map(r => r.id)));
+    const add = novas.filter(r => !ids.has(r.id)); if (!LS.set('mpco_hist', hist.concat(add))) throw new Error('Não coube na memória do aparelho.'); toast(`${add.length} resposta(s) importada(s)${novas.length - add.length ? `, ${novas.length - add.length} repetida(s) ignorada(s)` : ''}.`); render(); }
+  catch(e) { console.error(e); toast(e.message || 'Não consegui ler este arquivo.'); }
+}
+
+/* ---------------- eventos ---------------- */
+function pinTentativa(){
+  if (settings.lockUntil && Date.now() < settings.lockUntil) { render(); return; }
+  if (state.pin === pinAtual()) { settings.pinFails = 0; saveSettings(); state.pin = ''; go(state.pinPara || 'admin'); }
+  else { settings.pinFails = (settings.pinFails || 0) + 1; if (settings.pinFails >= PIN_MAX_FALHAS) { settings.lockUntil = Date.now() + PIN_BLOQUEIO_MS; settings.pinFails = 0; } saveSettings(); state.pin = ''; toast('PIN incorreto.'); render(); }
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]'); if (!el || el.disabled) return; const a = el.dataset.action; resetIdle();
+  switch (a) {
+    case 'tosetup': go('setup'); break;
+    case 'reabrir': settings.unidade = el.dataset.cod; saveSettings(); go('setup'); break;
+    case 'start': { const d = ((document.getElementById('s-data') || {}).value || '').trim(); if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast('Informe a data da reunião.'); return; } const nome = ((document.getElementById('s-nome') || {}).value || '').trim().slice(0, 80);
+      const pres = {}; CONSELHEIROS.forEach(cs => { pres[cs.c] = !!((document.getElementById('s-pres-' + cs.c) || { checked: true }).checked); }); if (!Object.values(pres).some(Boolean) && CONSELHEIROS.length) { toast('Marque ao menos um conselheiro presente (ou avalie só a reunião desmarcando ambos e confirmando de novo).'); if (!state.confirmouSemConselheiros) { state.confirmouSemConselheiros = true; return; } }
+      settings.unidade = d; settings.presentes = pres; saveSettings(); const m = reunioes(); if (nome) m[d] = nome; else delete m[d]; LS.set('mpco_reunioes', m); state.confirmouSemConselheiros = false; go('welcome'); break; }
+    case 'begin': state.r = {}; state.i = 0; state.t0 = Date.now(); state.ordem = shuffle(CONSELHEIROS.map(cs => cs.c)); go('q'); break;   // ordem dos blocos dos conselheiros sorteada por respondente
+    case 'ans': { const q = perguntaAtual(); if (!q) return; const raw = el.dataset.v; state.r[q.codigo] = (q.tipo === 'escala' || q.tipo === 'nps') ? (raw === 'NA' ? 'NA' : parseInt(raw, 10)) : raw; render();
+      clearTimeout(autoT); if (settings.autoAvanca !== false) autoT = setTimeout(() => { if (state.screen === 'q' && perguntaAtual() === q) avancar(); }, 380); break; }
+    case 'next': clearTimeout(autoT); avancar(); break;
+    case 'back': clearTimeout(autoT); lerCamposLivres(); if (state.i > 0) { state.i--; go('q'); } break;
+    case 'cancel': clearTimeout(autoT); registrarAbandono(); state.r = {}; go('welcome'); break;
+    case 'retrysave': gravar(); break;
+    case 'welcome': go('welcome'); break;
+    case 'welcomeorsetup': go(settings.unidade ? 'welcome' : 'setup'); break;
+    case 'pinadmin': go('pin', { pinPara: 'admin' }); break;
+    case 'pinkey': { if (el.dataset.k === 'del') state.pin = state.pin.slice(0, -1); else if (state.pin.length < 8) state.pin += el.dataset.k; render(); break; }
+    case 'pinok': pinTentativa(); break;
+    case 'admin': if (state.screen === 'setup') go('pin', { pinPara: 'admin' }); else go('admin'); break;
+    case 'config': if (state.screen === 'setup') go('pin', { pinPara: 'config' }); else go('config'); break;
+    case 'consolidado': if (!state.cf) state.cf = cfDefault(); go('consolidado'); if (syncOk()) sincronizar(true); break;
+    case 'sync': sincronizar(false); break;
+    case 'syncfull': sincronizar(false, true); break;
+    case 'testarservidor': testarServidor(); break;
+    case 'saveconfig': { const w = ((document.getElementById('s-webhook') || {}).value || '').trim(); const ch = ((document.getElementById('s-chave') || {}).value || '').trim(); const np = ((document.getElementById('s-pin') || {}).value || '').trim();
+      if (w && !/^https?:\/\//.test(w)) { toast('A URL precisa começar com https://'); return; } if (np && !/^\d{4,8}$/.test(np)) { toast('O PIN deve ter de 4 a 8 dígitos.'); return; } if (w && !ch) { toast('Digite também a chave de sincronização.'); return; }
+      if (w !== settings.webhook) { settings.ultimaSync = ''; LS.set('mpco_hist', histResponses().filter(h => !h.nuvem)); }
+      settings.webhook = w; settings.chave = ch; if (np) settings.pin = np; settings.autoAvanca = !!((document.getElementById('s-auto') || { checked: true }).checked); saveSettings(); toast('Configurações salvas.'); go('admin'); break; }
+    case 'perguntas': go('perguntas'); break;
+    case 'savepergs': lerPerguntas(); break;
+    case 'resetpergs': localStorage.removeItem('mpco_perguntas'); aplicarPerguntas(); toast('Perguntas, respostas, pesos e nomes voltaram ao padrão.'); render(); break;
+    case 'exportpergs': shareOrDownload('perguntas_conselho_maxipark.json', JSON.stringify(Object.assign({ app: APP_ID, ver: PESQ_VER, esc: ESC }, perguntasCfg()), null, 1), 'application/json').then(ok => { if (ok) toast('Arquivo gerado.'); }); break;
+    case 'csv': shareOrDownload(dadosExport('atual').nome + '.csv', csvText(currentResponses())).then(ok => { if (ok) { markExported(); toast('CSV gerado.'); render(); } }); break;
+    case 'csvtudo': { const D = dadosExport('tudo'); shareOrDownload(D.nome + '.csv', csvText(filtrar(poolTodas(), state.cf || cfDefault()))).then(ok => { if (ok) toast('CSV gerado.'); }); break; }
+    case 'xlsx': exportarExcel(el.dataset.modo || 'atual'); break;
+    case 'pdf': exportarPdf(el.dataset.modo || 'atual'); break;
+    case 'resend': toast('Enviando…'); sendPending().then(n => { toast(n ? `${n} resposta(s) enviada(s) para a nuvem.` : 'Nada enviado: sem internet ou servidor não respondeu.'); render(); }); break;
+    case 'wipe': state.confirma = { tipo: 'wipe', msg: `Apagar as ${currentResponses().length} respostas da ${unidadeLabel(settings.unidade)} deste aparelho?${settings.exported[settings.unidade] ? '' : ' Elas AINDA NÃO foram exportadas.'}` }; render(); break;
+    case 'wipeothers': { const outras = allResponses().filter(r => r.unidade !== settings.unidade); const naoExp = [...new Set(outras.filter(r => !settings.exported[r.unidade]).map(r => dataLabel(r.unidade)))]; state.confirma = { tipo: 'wipeothers', msg: `Apagar as ${outras.length} respostas de outras reuniões?${naoExp.length ? ' Ainda não exportadas: ' + naoExp.join(', ') + '.' : ''}` }; render(); break; }
+    case 'confirmno': state.confirma = null; render(); break;
+    case 'confirmyes': { const t = state.confirma && state.confirma.tipo; state.confirma = null;
+      if (t === 'wipe') { saveResponses(allResponses().filter(r => r.unidade !== settings.unidade)); delete settings.exported[settings.unidade]; saveSettings(); const ab = abandonos(); delete ab[settings.unidade]; LS.set('mpco_abandonos', ab); toast('Respostas apagadas.'); }
+      else if (t === 'wipeothers') { saveResponses(allResponses().filter(r => r.unidade === settings.unidade)); const ab = abandonos(); Object.keys(ab).forEach(k => { if (k !== settings.unidade) delete ab[k]; }); LS.set('mpco_abandonos', ab); toast('Respostas de outras reuniões apagadas.'); }
+      render(); break; }
+    case 'wipehist': localStorage.removeItem('mpco_hist'); toast('Respostas de outros aparelhos apagadas.'); render(); break;
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.matches('[data-cf]')) { state.cf = state.cf || cfDefault(); state.cf[el.dataset.cf] = el.value; render(); }
+  if (el.id === 'file-hist' && el.files[0]) importarHist(el.files[0]);
+  if (el.id === 'file-pergs' && el.files[0]) importarPerguntas(el.files[0]);
+});
+document.addEventListener('input', e => { const el = e.target; resetIdle(); if (el.id === 'pin-input') { state.pin = el.value.replace(/\D/g, '').slice(0, 8); if (el.value !== state.pin) el.value = state.pin; } });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && state.screen === 'pin') { e.preventDefault(); pinTentativa(); } });
+['touchstart', 'pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, resetIdle, { passive: true }));
+
+/* ---------------- início ---------------- */
+try { history.pushState({ app: 1 }, ''); } catch(e) {}
+window.addEventListener('popstate', () => { try { history.pushState({ app: 1 }, ''); } catch(e) {} });
+render(); sendPending();
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { navigator.serviceWorker.register('../sw.js').catch(() => {}); }
+</script>
+</body>
+</html>
