@@ -37,7 +37,11 @@
   .opt{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:12px 18px;border:2px solid var(--linha);border-radius:14px;background:#fff;font-size:20px;text-align:left;cursor:pointer}
   .opt.sel{background:var(--sel);border-color:#E0B400;color:var(--sel-texto);font-weight:700}
   .opt .num{min-width:36px;height:36px;border-radius:50%;background:var(--roxo-claro);color:var(--roxo-escuro);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
-  .escala{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:8px 0 6px}
+  .escala{display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:10px;margin:8px 0 6px}
+  .escala .opt .rot{font-size:14px;color:var(--cinza);line-height:1.2;text-align:center} .escala .opt.sel .rot{color:var(--sel-texto)}
+  .escala.n3 .opt{min-height:112px} .escala.n3 .opt .rot{font-size:18px;font-weight:600}
+  .pergunta-cfg{border:1px solid var(--linha);border-radius:12px;padding:10px 14px 14px;margin:10px 0;background:#FAFBFB}
+  .pergunta-cfg label{font-size:14px;margin:8px 0 4px} .pergunta-cfg input,.pergunta-cfg textarea,.pergunta-cfg select{font-size:16px;padding:8px 10px} .pergunta-cfg textarea{min-height:0}
   .escala .opt{flex-direction:column;justify-content:center;text-align:center;gap:6px;padding:12px 6px;min-height:92px}
   .escala .opt .n{font-size:30px;font-weight:700;color:var(--roxo-escuro)} .escala .opt.sel .n{color:var(--sel-texto)}
   .escala .opt .face{font-size:30px;line-height:1}
@@ -94,7 +98,7 @@
    Modo quiosque: o cliente responde no tablet da unidade; as respostas ficam no tablet e são exportadas
    pela área de Experiência do Cliente (PIN), como no app da equipe. Opcional: envio automático (Power Automate).
    ========================================================= */
-const VERSAO = '1.0.2';
+const VERSAO = '1.1.0';
 const PIN_PADRAO = '2819';   // mesmo PIN do app da equipe; troca em Configurações. Atenção: este código é público.
 const IDLE_MS = 90000;       // cliente abandonou no meio: descarta e volta à tela inicial
 const OBRIGADO_MS = 7000;    // tela "Obrigado" volta sozinha ao início
@@ -124,45 +128,64 @@ const UNIDADES_PADRAO = [
 ].map(a => ({ codigo:a[0], nome:a[1] }));   // lista padrão: só código e nome (local) — sem endereço; a lista completa da empresa vem pela importação
 
 /* ---------------- perguntas ---------------- */
-// Questionário v C1 — desenhado em 10/09/2026 por painel (métricas de CX + operação + mobile) e sintetizado; ordem e textos CONGELADOS:
-// mudar texto, escala, ordem ou opção = nova versão (PESQ_VER), porque quebra a série histórica.
-// tipo: 'escala5' (1 a 5, rótulos só nas pontas; na = chip "não se aplica", grava 'NA'; faces = carinhas no CSAT) | 'nps' (0 a 10)
+// Questionário C2 — desenhado em 10/09/2026 por painel (métricas de CX + operação + mobile) e sintetizado. Em C2 as escalas têm 3 respostas por padrão
+// (como na pesquisa da equipe), a pedido do gestor. Textos, rótulos, "não se aplica", pesos dos fatores e o nº de respostas das escalas (3 ou 5)
+// são EDITÁVEIS em Configurações → Editar perguntas (ficam em mpc_perguntas, só neste tablet). Códigos, ordem e condições não mudam.
+// tipo: 'escala' (1..N, N = ESC; grava o número; na = chip "não se aplica", grava 'NA'; faces = carinhas) | 'nps' (0 a 10)
 //       | 'single' (uma opção; grava o CÓDIGO curto o.c, a planilha fica estável) | 'fim' (comentário + contato + consentimento, opcional, botão Enviar)
-// cond(r): a pergunta só aparece se devolver true (r = respostas já dadas); pergunta pulada grava 'NA'.
-const PESQ_VER = 'C1';
-const PONTAS_ITEM = ['Muito ruim', 'Muito bom'];
-const QUESTOES = [
-  { codigo: 'csat', tipo: 'escala5', obrigatoria: true, faces: true, texto: 'No geral, o quanto você ficou satisfeito com o estacionamento hoje?', pontas: ['Muito insatisfeito', 'Muito satisfeito'] },
+// cond(r): a pergunta só aparece se devolver true (r = respostas já dadas); pergunta pulada grava 'NA'. Cada resposta grava ver (versão) e esc (nº de respostas).
+const PESQ_VER = 'C2';
+const ROTULOS = { 3: { csat: ['Insatisfeito', 'Mais ou menos', 'Satisfeito'], item: ['Ruim', 'Regular', 'Bom'], ces: ['Difícil', 'Mais ou menos', 'Fácil'] },
+  5: { csat: ['Muito insatisfeito', 'Insatisfeito', 'Neutro', 'Satisfeito', 'Muito satisfeito'], item: ['Muito ruim', 'Ruim', 'Regular', 'Bom', 'Muito bom'], ces: ['Muito difícil', 'Difícil', 'Mais ou menos', 'Fácil', 'Muito fácil'] } };
+const FACES = { 3: ['🙁', '😐', '🙂'], 5: ['😠', '🙁', '😐', '🙂', '😄'] };
+const QUESTOES_PADRAO = [
+  { codigo: 'csat', tipo: 'escala', rot: 'csat', faces: true, obrigatoria: true, texto: 'No geral, como foi sua experiência no estacionamento hoje?' },
   { codigo: 'nps', tipo: 'nps', obrigatoria: true, texto: 'De 0 a 10, o quanto você recomendaria este estacionamento a um amigo ou colega?', pontas: ['Nada provável', 'Muito provável'] },
-  { codigo: 'e1', tipo: 'escala5', obrigatoria: true, fator: 'Entrada e saída', texto: 'Entrada e saída (cancelas, filas, tempo de espera)', pontas: PONTAS_ITEM },
-  { codigo: 'e2', tipo: 'escala5', obrigatoria: true, fator: 'Pagamento', texto: 'Pagamento (máquinas, caixa, cartão, Pix)', pontas: PONTAS_ITEM, na: 'Não paguei aqui / não usei' },
-  { codigo: 'e3', tipo: 'escala5', obrigatoria: true, fator: 'Atendimento', texto: 'Atendimento da equipe (educação, agilidade, ajuda)', pontas: PONTAS_ITEM, na: 'Não falei com ninguém da equipe' },
-  { codigo: 'e4', tipo: 'escala5', obrigatoria: true, fator: 'Segurança', texto: 'Segurança (do carro e de você: iluminação, câmeras, vigilância)', pontas: PONTAS_ITEM, na: 'Não sei avaliar' },
-  { codigo: 'e5', tipo: 'escala5', obrigatoria: true, fator: 'Limpeza e conservação', texto: 'Limpeza e conservação (piso, paredes, pintura, manutenção)', pontas: PONTAS_ITEM, na: 'Não sei avaliar' },
-  { codigo: 'e6', tipo: 'escala5', obrigatoria: true, fator: 'Vagas e sinalização', texto: 'Achar vaga e se orientar (sinalização, placas, vagas livres)', pontas: PONTAS_ITEM },
-  { codigo: 'e7', tipo: 'escala5', obrigatoria: true, fator: 'Preço', texto: 'Preço (o que você pagou valeu o que recebeu?)', pontas: PONTAS_ITEM, na: 'Não paguei (cortesia, convênio ou validação)' },
+  { codigo: 'e1', tipo: 'escala', rot: 'item', obrigatoria: true, fator: 'Entrada e saída', peso: 3, texto: 'Entrada e saída (cancelas, filas, tempo de espera)' },
+  { codigo: 'e2', tipo: 'escala', rot: 'item', obrigatoria: true, fator: 'Pagamento', peso: 3, texto: 'Pagamento (máquinas, caixa, cartão, Pix)', na: 'Não paguei aqui / não usei' },
+  { codigo: 'e3', tipo: 'escala', rot: 'item', obrigatoria: true, fator: 'Atendimento', peso: 3, texto: 'Atendimento da equipe (educação, agilidade, ajuda)', na: 'Não falei com ninguém da equipe' },
+  { codigo: 'e4', tipo: 'escala', rot: 'item', obrigatoria: true, fator: 'Segurança', peso: 3, texto: 'Segurança (do carro e de você: iluminação, câmeras, vigilância)', na: 'Não sei avaliar' },
+  { codigo: 'e5', tipo: 'escala', rot: 'item', obrigatoria: true, fator: 'Limpeza e conservação', peso: 2, texto: 'Limpeza e conservação (piso, paredes, pintura, manutenção)', na: 'Não sei avaliar' },
+  { codigo: 'e6', tipo: 'escala', rot: 'item', obrigatoria: true, fator: 'Vagas e sinalização', peso: 2, texto: 'Achar vaga e se orientar (sinalização, placas, vagas livres)' },
+  { codigo: 'e7', tipo: 'escala', rot: 'item', obrigatoria: true, fator: 'Preço', peso: 2, texto: 'Preço (o que você pagou valeu o que recebeu?)', na: 'Não paguei (cortesia, convênio ou validação)' },
   { codigo: 'prob', tipo: 'single', obrigatoria: true, destaque: 'nenhum', texto: 'Aconteceu algum problema hoje? Se foi mais de um, marque o principal.', opcoes: [
     { c: 'nenhum', t: 'Não, deu tudo certo' }, { c: 'fila', t: 'Fila ou demora para entrar ou sair' }, { c: 'cancela', t: 'Cancela, ticket ou tag não funcionou' }, { c: 'maq', t: 'Máquina de pagamento com defeito ou não aceitou meu pagamento' }, { c: 'cobr', t: 'Cobrança errada ou valor que não entendi' },
     { c: 'vaga', t: 'Não achei vaga ou a sinalização confundiu' }, { c: 'atend', t: 'Faltou alguém para me ajudar ou fui mal atendido' }, { c: 'segur', t: 'Dano no carro, furto ou me senti inseguro' }, { c: 'limp', t: 'Local sujo, escuro ou mal conservado' }, { c: 'outro', t: 'Outro problema (conte no final)' } ] },
   { codigo: 'resolv', tipo: 'single', obrigatoria: true, texto: 'E esse problema foi resolvido?', cond: r => !!r.prob && r.prob !== 'nenhum', opcoes: [
     { c: 'sim', t: 'Sim, resolveram na hora' }, { c: 'parcial', t: 'Resolveram, mas demorou ou ficou pela metade' }, { c: 'nao', t: 'Não foi resolvido' }, { c: 'ninguem', t: 'Procurei ajuda, mas não encontrei ninguém' }, { c: 'nao_pedi', t: 'Não pedi ajuda / não avisei ninguém' } ] },
-  { codigo: 'ces', tipo: 'escala5', obrigatoria: true, texto: 'Foi fácil pedir ajuda para esse problema?', pontas: ['Muito difícil', 'Muito fácil'], cond: r => !!r.prob && r.prob !== 'nenhum' && ['sim', 'parcial', 'nao'].includes(r.resolv) },
+  { codigo: 'ces', tipo: 'escala', rot: 'ces', obrigatoria: true, texto: 'Foi fácil pedir ajuda para esse problema?', cond: r => !!r.prob && r.prob !== 'nenhum' && ['sim', 'parcial', 'nao'].includes(r.resolv) },
   { codigo: 'tipo', tipo: 'single', obrigatoria: true, texto: 'Hoje você usou o estacionamento como:', opcoes: [
     { c: 'mensal', t: 'Mensalista (plano mensal)' }, { c: 'avulso', t: 'Avulso (paguei por hora ou diária)' }, { c: 'evento', t: 'Visitante de evento (show, feira, jogo)' }, { c: 'conv', t: 'Convênio, cortesia ou validação (outra pessoa pagou)' } ] },
   { codigo: 'freq', tipo: 'single', obrigatoria: true, texto: 'Com que frequência você estaciona aqui?', cond: r => ['avulso', 'conv'].includes(r.tipo), opcoes: [
     { c: 'prim', t: 'Hoje foi a primeira vez' }, { c: 'raro', t: 'Poucas vezes por ano' }, { c: 'mes', t: 'Algumas vezes por mês' }, { c: 'sem', t: 'Toda semana' }, { c: 'diario', t: 'Quase todo dia' } ] },
-  { codigo: 'fim', tipo: 'fim', obrigatoria: false, texto: 'Quer contar mais alguma coisa? (opcional)', campos: ['coment', 'contato', 'lgpd'] },
+  { codigo: 'fim', tipo: 'fim', obrigatoria: false, texto: 'Quer contar mais alguma coisa? (opcional)', textoContato: 'Quer que a Maxipark retorne sobre sua resposta? Se quiser, deixe seu WhatsApp ou e-mail (opcional)', campos: ['coment', 'contato', 'lgpd'] },
 ];
-const FATORES = QUESTOES.filter(q => q.fator);
-const COLS_RESP = QUESTOES.flatMap(q => q.campos || [q.codigo]);   // colunas de resposta, na ordem: csat, nps, e1…e7, prob, resolv, ces, tipo, freq, coment, contato, lgpd
-const NUMERICAS = new Set(['csat', 'nps', 'ces'].concat(FATORES.map(q => q.codigo)));
+const COLS_RESP = QUESTOES_PADRAO.flatMap(q => q.campos || [q.codigo]);   // colunas de resposta, na ordem: csat, nps, e1…e7, prob, resolv, ces, tipo, freq, coment, contato, lgpd
+const NUMERICAS = new Set(QUESTOES_PADRAO.filter(q => q.tipo === 'escala' || q.tipo === 'nps').map(q => q.codigo));
+let QUESTOES = [], FATORES = [], ESC = 3;   // preenchidos por aplicarPerguntas() (padrão + edições guardadas em mpc_perguntas)
+function perguntasCfg(){ const c = LS.get('mpc_perguntas', null); return (c && typeof c === 'object') ? c : {}; }
+function aplicarPerguntas(){
+  const cfg = perguntasCfg(); ESC = cfg.esc === 5 ? 5 : 3; const s = cfg.q || {};
+  QUESTOES = QUESTOES_PADRAO.map(p => { const c = Object.assign({}, p); const x = s[p.codigo] || {};
+    if (typeof x.texto === 'string' && x.texto.trim()) c.texto = x.texto.trim();
+    if (p.tipo === 'fim' && typeof x.textoContato === 'string' && x.textoContato.trim()) c.textoContato = x.textoContato.trim();
+    if (p.tipo === 'escala') { c.rotulos = (Array.isArray(x.rotulos) && x.rotulos.length === ESC && x.rotulos.every(t => String(t).trim())) ? x.rotulos.map(t => String(t).trim()) : ROTULOS[ESC][p.rot].slice(); if (typeof x.na === 'string') c.na = x.na.trim() || undefined; }
+    if (p.fator) { const pz = parseInt(x.peso, 10); if (pz >= 1 && pz <= 3) c.peso = pz; }
+    if (p.opcoes) c.opcoes = p.opcoes.map(o => ({ c: o.c, t: (x.opcoes && typeof x.opcoes[o.c] === 'string' && x.opcoes[o.c].trim()) ? x.opcoes[o.c].trim() : o.t }));
+    return c; });
+  FATORES = QUESTOES.filter(q => q.fator);
+}
+function perguntasAlteradas(){ const c = perguntasCfg(); return c.esc === 5 || !!(c.q && Object.keys(c.q).length); }
 function rotulo(codigo, v){ const q = QUESTOES.find(x => x.codigo === codigo); if (!q || !q.opcoes) return v; const o = q.opcoes.find(o => o.c === v); return o ? o.t : (v === 'NA' ? 'não perguntado' : v); }
 function temProblema(r){ return !!r.prob && r.prob !== 'nenhum' && r.prob !== 'NA'; }
+function escDe(rec){ if (rec && (rec.esc === 3 || rec.esc === 5)) return rec.esc; return (rec && rec.ver === 'C1') ? 5 : ESC; }   // respostas C1 (sem esc) eram de 5 opções
+function positivo(v, e){ return num(v) && (e === 3 ? v === 3 : v >= 4); }   // 3 respostas: só a melhor; 5 respostas: as duas melhores
+function negativo(v, e){ return num(v) && (e === 3 ? v === 1 : v <= 2); }
 function baseCes(r){ return temProblema(r) && ['sim', 'parcial', 'nao'].includes(r.resolv) && num(r.ces); }
 
 /* ---------------- utilidades ---------------- */
 const LS = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } } };
-const DEFAULT_SETTINGS = { pin: '', unidade: '', ponto: '', webhook: '', exported: {}, pinFails: 0, lockUntil: 0, autoAvanca: true };
+const DEFAULT_SETTINGS = { pin: '', unidade: '', ponto: '', webhook: '', chave: '', ultimaSync: '', baixarContatos: false, exported: {}, pinFails: 0, lockUntil: 0, autoAvanca: true };   // webhook = URL do servidor de sincronização (servidor/Code.gs); chave = senha combinada com o servidor
 const PONTOS = [{ c: '', t: '(não informado)' }, { c: 'caixa', t: 'Caixa / pagamento' }, { c: 'saida', t: 'Saída' }, { c: 'totem', t: 'Totem / balcão' }, { c: 'outro', t: 'Outro lugar' }];
 function abandonos(){ return LS.get('mpc_abandonos', {}); }
 function registrarAbandono(){ if (state.r && state.r.csat !== undefined) { const a = abandonos(); a[settings.unidade] = (a[settings.unidade] || 0) + 1; LS.set('mpc_abandonos', a); } }
@@ -186,6 +209,7 @@ function pinAtual(){ return settings.pin || PIN_PADRAO; }
 let toastT; function toast(m){ const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
 
 /* ---------------- estado e navegação ---------------- */
+aplicarPerguntas();
 // QR com ?u=CÓDIGO (e opcional &p=caixa|saida|totem|outro) abre já com a unidade do QR (gerador: cliente/qr.html)
 try { const qs = new URLSearchParams(location.search); const uQS = (qs.get('u') || '').trim().toUpperCase(); if (uQS) { settings.unidade = uQS; const pQS = (qs.get('p') || '').trim().toLowerCase(); if (pQS && PONTOS.some(p => p.c === pQS)) settings.ponto = pQS; saveSettings(); } } catch(e) {}
 const state = { screen: settings.unidade ? 'welcome' : 'setup', i: 0, r: {}, pin: '', pinPara: 'admin', cf: null, sel: null, confirma: null };
@@ -233,14 +257,13 @@ function viewWelcome(){
   </div></div>
   <div class="rodape-kiosk"><span>Maxipark · ${esc(unidadeLabel(settings.unidade))}</span><button data-action="pinadmin">Área do avaliador</button></div>`;
 }
-const FACES = ['😠', '🙁', '😐', '🙂', '😄'];
 function viewQ(){
   const vis = visiveis(); const q = vis[state.i]; if (!q) { return viewThanks(); }
   const v = state.r[q.codigo]; const n = vis.length; const pct = Math.round((state.i) / n * 100);
   let corpo = '', titulo = q.texto, cabecalho = '';
   if (q.fator) { const k = FATORES.indexOf(q) + 1; cabecalho = `<p class="small muted" style="margin:0 0 4px"><b>Ponto ${k} de ${FATORES.length}</b>${k === 1 ? ' — agora, ponto a ponto: toque na nota' + (settings.autoAvanca !== false ? ' e o próximo aparece' : '') : ''}</p>`; }
   if (q.tipo === 'single') corpo = `<div class="opcoes">${q.opcoes.map(o => `<button class="opt ${v === o.c ? 'sel' : ''} ${q.destaque === o.c ? 'destaque' : ''}" data-action="ans" data-v="${esc(o.c)}">${esc(o.t)}</button>`).join('')}</div>`;
-  else if (q.tipo === 'escala5') corpo = `<div class="escala">${[1, 2, 3, 4, 5].map(k => `<button class="opt ${v === k ? 'sel' : ''}" data-action="ans" data-v="${k}">${q.faces ? `<span class="face">${FACES[k - 1]}</span>` : ''}<span class="n">${k}</span></button>`).join('')}</div><div class="pontas"><span>1 — ${esc(q.pontas[0])}</span><span>5 — ${esc(q.pontas[1])}</span></div>${q.na ? `<div class="na"><button class="opt chip ${v === 'NA' ? 'sel' : ''}" data-action="ans" data-v="NA">${esc(q.na)}</button></div>` : ''}`;
+  else if (q.tipo === 'escala') { const N = q.rotulos.length; const fc = q.faces && FACES[N]; corpo = `<div class="escala n${N}" style="--n:${N}">${q.rotulos.map((rt, i) => { const k = i + 1; return `<button class="opt ${v === k ? 'sel' : ''}" data-action="ans" data-v="${k}">${fc ? `<span class="face">${fc[i]}</span>` : ''}<span class="n">${k}</span><span class="rot">${esc(rt)}</span></button>`; }).join('')}</div>${q.na ? `<div class="na"><button class="opt chip ${v === 'NA' ? 'sel' : ''}" data-action="ans" data-v="NA">${esc(q.na)}</button></div>` : ''}`; }
   else if (q.tipo === 'nps') corpo = `<div class="nps">${Array.from({ length: 11 }, (_, k) => `<button class="opt ${v === k ? 'sel' : ''}" data-action="ans" data-v="${k}">${k}</button>`).join('')}</div><div class="pontas"><span>0 — ${esc(q.pontas[0])}</span><span>10 — ${esc(q.pontas[1])}</span></div>`;
   else if (q.tipo === 'fim') {
     const ruim = temProblema(state.r) && ['nao', 'parcial', 'ninguem'].includes(state.r.resolv) || (num(state.r.nps) && state.r.nps <= 6);
@@ -248,7 +271,7 @@ function viewQ(){
     titulo = ruim ? 'Sentimos pelo ocorrido. Quer que a gente entre em contato?' : 'Para terminar';
     const c = state.r.contato || '';
     corpo = `<label style="margin-top:0">${esc(rotuloComent)}</label><textarea id="txt" maxlength="300" placeholder="Elogio, sugestão ou o que aconteceu…">${esc(state.r.coment || '')}</textarea><p class="legenda">Não escreva placa, nome ou telefone aqui.</p>
-    <label>Quer que a Maxipark retorne sobre sua resposta? Se quiser, deixe seu WhatsApp ou e-mail (opcional)</label><input type="text" id="c-contato" value="${esc(c)}" placeholder="WhatsApp ou e-mail" autocomplete="off" inputmode="email">
+    <label>${esc(q.textoContato)}</label><input type="text" id="c-contato" value="${esc(c)}" placeholder="WhatsApp ou e-mail" autocomplete="off" inputmode="email">
     <div id="lgpd-wrap" ${c ? '' : 'hidden'}><label class="check"><input type="checkbox" id="c-ok" ${state.r.lgpd === 1 ? 'checked' : ''}> Autorizo a Maxipark a usar este contato só para retornar sobre esta pesquisa. Não será usado para propaganda e será apagado em até 90 dias.</label></div>
     <p class="legenda">Comentário e contato são opcionais. Sem contato, sua resposta continua anônima.</p>`;
   }
@@ -284,16 +307,22 @@ function viewPin(){
 /* ---------------- cálculos ---------------- */
 function num(v){ return typeof v === 'number' && !isNaN(v); }
 function agregar(list){
-  const g = { n: list.length, nps: null, prom: 0, det: 0, neu: 0, csat: null, csatMedia: null, ces: null, cesMedia: null, cesN: 0, fatores: [], problemas: {}, resolv: {}, tipos: {}, freqs: {}, comentarios: [], contatos: 0, durMed: null };
+  const g = { n: list.length, nps: null, prom: 0, det: 0, neu: 0, csat: null, csatMedia: null, ces: null, cesMedia: null, cesN: 0, fatores: [], pond: null, problemas: {}, resolv: {}, tipos: {}, freqs: {}, comentarios: [], contatos: 0, durMed: null, escs: {} };
+  list.forEach(x => { const e = escDe(x); g.escs[e] = (g.escs[e] || 0) + 1; }); const escUnica = Object.keys(g.escs).every(k => Number(k) === ESC); g.escMista = !escUnica;   // médias e distribuição só fazem sentido quando tudo está na escala atual
+  const media = vs => vs.length ? Math.round(vs.reduce((a, b) => a + b, 0) / vs.length * 10) / 10 : null;
   const npsV = list.map(r => r.r.nps).filter(num); if (npsV.length) { g.prom = npsV.filter(v => v >= 9).length; g.det = npsV.filter(v => v <= 6).length; g.neu = npsV.length - g.prom - g.det; g.nps = Math.round((g.prom - g.det) / npsV.length * 100); g.npsN = npsV.length; }
-  const cs = list.map(r => r.r.csat).filter(num); if (cs.length) { g.csat = Math.round(cs.filter(v => v >= 4).length / cs.length * 100); g.csatMedia = Math.round(cs.reduce((a, b) => a + b, 0) / cs.length * 10) / 10; g.csatN = cs.length; }
-  const cesV = list.filter(r => baseCes(r.r)).map(r => r.r.ces); if (cesV.length) { g.cesN = cesV.length; g.ces = Math.round(cesV.filter(v => v >= 4).length / cesV.length * 100); g.cesMedia = Math.round(cesV.reduce((a, b) => a + b, 0) / cesV.length * 10) / 10; }
-  g.fatores = FATORES.map(q => { const vs = list.map(r => r.r[q.codigo]).filter(num); const na = list.filter(r => r.r[q.codigo] === 'NA').length; const dist = [1, 2, 3, 4, 5].map(k => vs.filter(v => v === k).length);
-    return { codigo: q.codigo, fator: q.fator, texto: q.texto, n: vs.length, na, dist, pct: vs.length ? Math.round(vs.filter(v => v >= 4).length / vs.length * 100) : null, media: vs.length ? Math.round(vs.reduce((a, b) => a + b, 0) / vs.length * 10) / 10 : null, insat: vs.length ? Math.round(vs.filter(v => v <= 2).length / vs.length * 100) : null }; });
+  const cs = list.filter(x => num(x.r.csat)); if (cs.length) { g.csat = Math.round(cs.filter(x => positivo(x.r.csat, escDe(x))).length / cs.length * 100); g.csatMedia = escUnica ? media(cs.map(x => x.r.csat)) : null; g.csatN = cs.length; }
+  const cesL = list.filter(x => baseCes(x.r)); if (cesL.length) { g.cesN = cesL.length; g.ces = Math.round(cesL.filter(x => positivo(x.r.ces, escDe(x))).length / cesL.length * 100); g.cesMedia = escUnica ? media(cesL.map(x => x.r.ces)) : null; }
+  let pondNum = 0, pondDen = 0;
+  g.fatores = FATORES.map(q => { const xs = list.filter(x => num(x.r[q.codigo])); const na = list.filter(x => x.r[q.codigo] === 'NA').length; const pos = xs.filter(x => positivo(x.r[q.codigo], escDe(x))).length; const neg = xs.filter(x => negativo(x.r[q.codigo], escDe(x))).length;
+    const dist = Array.from({ length: ESC }, (_, i) => xs.filter(x => escDe(x) === ESC && x.r[q.codigo] === i + 1).length);   // distribuição só da escala atual
+    pondNum += q.peso * pos; pondDen += q.peso * xs.length;
+    return { codigo: q.codigo, fator: q.fator, texto: q.texto, peso: q.peso, n: xs.length, na, dist, pct: xs.length ? Math.round(pos / xs.length * 100) : null, insat: xs.length ? Math.round(neg / xs.length * 100) : null, media: (xs.length && escUnica) ? media(xs.map(x => x.r[q.codigo])) : null }; });
+  g.pond = pondDen ? Math.round(pondNum / pondDen * 100) : null;   // % positivo ponderado pelos pesos dos fatores (como o "% Sim ponderado" da pesquisa da equipe)
   const qp = QUESTOES.find(q => q.codigo === 'prob'); qp.opcoes.forEach(o => { g.problemas[o.c] = 0; });
   QUESTOES.find(q => q.codigo === 'resolv').opcoes.forEach(o => { g.resolv[o.c] = 0; });
   list.forEach(r => { if (r.r.prob && r.r.prob !== 'NA') g.problemas[r.r.prob] = (g.problemas[r.r.prob] || 0) + 1; if (r.r.resolv && r.r.resolv !== 'NA') g.resolv[r.r.resolv] = (g.resolv[r.r.resolv] || 0) + 1; if (r.r.tipo && r.r.tipo !== 'NA') g.tipos[r.r.tipo] = (g.tipos[r.r.tipo] || 0) + 1; if (r.r.freq && r.r.freq !== 'NA') g.freqs[r.r.freq] = (g.freqs[r.r.freq] || 0) + 1;
-    if (r.r.coment && String(r.r.coment).trim() && r.r.coment !== 'NA') g.comentarios.push({ texto: String(r.r.coment).trim(), unidade: r.unidade, data: r.data, nps: r.r.nps, csat: r.r.csat, prob: r.r.prob }); if (r.r.lgpd === 1 && r.r.contato) g.contatos++; });
+    if (r.r.coment && String(r.r.coment).trim() && r.r.coment !== 'NA') g.comentarios.push({ texto: String(r.r.coment).trim(), unidade: r.unidade, data: r.data, nps: r.r.nps, csat: r.r.csat, prob: r.r.prob }); if (r.r.lgpd === 1) g.contatos++; });   // pediram retorno (o contato em si só é baixado onde o avaliador marcou)
   g.comProblema = list.filter(r => temProblema(r.r)).length;
   g.resolvidoHora = g.comProblema ? Math.round((g.resolv.sim || 0) / g.comProblema * 100) : null;
   const durs = list.map(r => r.dur).filter(num).sort((a, b) => a - b); if (durs.length) g.durMed = durs[Math.floor(durs.length / 2)];
@@ -323,17 +352,19 @@ function fmtNps(v){ return v == null ? '—' : (v > 0 ? '+' : '') + v; }
 function fmtPct(v){ return v == null ? '—' : v + '%'; }
 
 /* ---------------- área do avaliador ---------------- */
+function legendaEscala(g){ return `Positivo = ${ESC === 3 ? 'a melhor resposta (3)' : 'as duas melhores respostas (4 e 5)'}; negativo = ${ESC === 3 ? 'a pior (1)' : 'as duas piores (1 e 2)'}. "% positivo ponderado" usa o peso de cada fator (1 a 3; Configurações → Editar perguntas).${g && g.escMista ? ` Há respostas gravadas com outra escala (${Object.keys(g.escs).join(' e ')} opções; a atual tem ${ESC}): os percentuais valem para todas; médias e distribuição só saem quando tudo está na escala atual.` : ''}`; }
 function tabelaFatores(g){
-  return `<div class="tabela-wrap"><table><tr><th class="l">Fator</th><th>Responderam</th><th>Não se aplica</th><th>% bom (4-5)</th><th>% ruim (1-2)</th><th>Média (1-5)</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
-    ${g.fatores.map(f => `<tr><td class="l"><b>${esc(f.fator)}</b> <span class="small muted">${esc(f.texto)}</span></td><td>${f.n}</td><td>${f.na}</td><td><b>${fmtPct(f.pct)}</b></td><td>${fmtPct(f.insat)}</td><td>${f.media == null ? '—' : f.media}</td>${f.dist.map(d => `<td>${d}</td>`).join('')}</tr>`).join('')}</table></div>`;
+  return `<div class="tabela-wrap"><table><tr><th class="l">Fator</th><th>Peso</th><th>Responderam</th><th>Não se aplica</th><th>% positivo</th><th>% negativo</th><th>Média (1-${ESC})</th>${Array.from({ length: ESC }, (_, i) => `<th>${i + 1}</th>`).join('')}</tr>
+    ${g.fatores.map(f => `<tr><td class="l"><b>${esc(f.fator)}</b> <span class="small muted">${esc(f.texto)}</span></td><td>${f.peso}</td><td>${f.n}</td><td>${f.na}</td><td><b>${fmtPct(f.pct)}</b></td><td>${fmtPct(f.insat)}</td><td>${f.media == null ? '—' : f.media}</td>${f.dist.map(d => `<td>${d}</td>`).join('')}</tr>`).join('')}</table></div>
+    <p class="legenda">${legendaEscala(g)}</p>`;
 }
 function tabelaProblemas(g){
   return `<div class="tabela-wrap"><table><tr><th class="l">Problema principal relatado</th><th>Respostas</th><th>% do total</th></tr>${Object.keys(g.problemas).map(c => `<tr><td class="l">${esc(rotulo('prob', c))}${c === 'nenhum' ? '' : ' <span class="small muted">(' + esc(c) + ')</span>'}</td><td>${g.problemas[c]}</td><td>${g.n ? Math.round(g.problemas[c] / g.n * 100) + '%' : '—'}</td></tr>`).join('')}</table></div>
-    <p class="small muted">${g.comProblema} resposta(s) com problema. ${g.comProblema ? 'Resolução: ' + Object.keys(g.resolv).map(k => `${rotulo('resolv', k)}: <b>${g.resolv[k]}</b>`).join(' · ') + '.' : ''}${g.cesN ? ` Facilidade de pedir ajuda (CES, ${g.cesN} caso${g.cesN === 1 ? '' : 's'}): <b>${fmtPct(g.ces)}</b> acharam fácil (4-5), média ${g.cesMedia}.` : ''}</p>`;
+    <p class="small muted">${g.comProblema} resposta(s) com problema. ${g.comProblema ? 'Resolução: ' + Object.keys(g.resolv).map(k => `${rotulo('resolv', k)}: <b>${g.resolv[k]}</b>`).join(' · ') + '.' : ''}${g.cesN ? ` Facilidade de pedir ajuda (CES, ${g.cesN} caso${g.cesN === 1 ? '' : 's'}): <b>${fmtPct(g.ces)}</b> acharam fácil (${ESC === 3 ? 'resposta 3' : 'respostas 4 e 5'})${g.cesMedia == null ? '' : ', média ' + g.cesMedia}.` : ''}</p>`;
 }
 function distTabela(obj, titulo, codigo){ const tot = Object.values(obj).reduce((a, b) => a + b, 0); return `<div class="tabela-wrap"><table><tr><th class="l">${esc(titulo)}</th><th>Respostas</th><th>%</th></tr>${Object.keys(obj).map(k => `<tr><td class="l">${esc(codigo ? rotulo(codigo, k) : k)}</td><td>${obj[k]}</td><td>${tot ? Math.round(obj[k] / tot * 100) + '%' : '—'}</td></tr>`).join('') || '<tr><td colspan="3" class="muted">—</td></tr>'}</table></div>`; }
 function kpis(g){
-  return `<div class="kpi"><div><b>${g.n}</b><span>respostas</span></div><div><b>${fmtPct(g.csat)}</b><span>satisfeitos ou muito satisfeitos (CSAT)</span></div><div><b>${g.csatMedia == null ? '—' : g.csatMedia}</b><span>satisfação média (1-5)</span></div><div><b>${fmtNps(g.nps)}</b><span>NPS (promotores − detratores)</span></div><div><b>${g.n ? Math.round(g.comProblema / g.n * 100) + '%' : '—'}</b><span>relataram um problema</span></div><div><b>${fmtPct(g.resolvidoHora)}</b><span>dos problemas resolvidos na hora</span></div><div><b>${fmtPct(g.ces)}</b><span>acharam fácil pedir ajuda (CES)</span></div><div><b>${g.contatos}</b><span>pediram retorno (contato)</span></div></div>
+  return `<div class="kpi"><div><b>${g.n}</b><span>respostas</span></div><div><b>${fmtPct(g.csat)}</b><span>% satisfeitos (CSAT)</span></div><div><b>${fmtPct(g.pond)}</b><span>% positivo ponderado (7 fatores × peso)</span></div><div><b>${g.csatMedia == null ? '—' : g.csatMedia}</b><span>satisfação média (1-${ESC})</span></div><div><b>${fmtNps(g.nps)}</b><span>NPS (promotores − detratores)</span></div><div><b>${g.n ? Math.round(g.comProblema / g.n * 100) + '%' : '—'}</b><span>relataram um problema</span></div><div><b>${fmtPct(g.resolvidoHora)}</b><span>dos problemas resolvidos na hora</span></div><div><b>${fmtPct(g.ces)}</b><span>acharam fácil pedir ajuda (CES)</span></div><div><b>${g.contatos}</b><span>pediram retorno (contato)</span></div></div>
   ${g.npsN ? `<p class="small muted">NPS: ${g.prom} promotor(es) (9-10), ${g.neu} neutro(s) (7-8), ${g.det} detrator(es) (0-6), de ${g.npsN} que deram nota.${g.durMed != null ? ` Tempo mediano de resposta: ${g.durMed} s.` : ''} Leia CSAT com pelo menos 50 respostas e NPS com pelo menos 100; antes disso, olhe a tendência.</p>` : ''}`;
 }
 function comentariosHtml(g){
@@ -348,12 +379,12 @@ function viewAdmin(){
     <div class="espaco"><h1 style="margin:0">Resultados — ${esc(unidadeLabel(u) || 'sem unidade')}</h1><button class="btn" data-action="welcome">Voltar ao atendimento</button></div>
     <p class="small muted">Respostas de clientes guardadas <b>neste tablet</b> para esta unidade (todas as datas). O consolidado de todas as unidades e tablets fica em <i>Consolidado</i>.</p>
     ${list.length ? kpis(g) : '<div class="aviso">Ainda não há respostas nesta unidade.</div>'}
-    ${list.length ? `<h3>Por fator</h3>${tabelaFatores(g)}<p class="legenda">e1 a e6 dependem da unidade; e7 (preço) é comercial. O "% ruim (1-2)" é o número que a operação corrige.</p><h3>Problemas relatados</h3>${tabelaProblemas(g)}<h3>Perfil</h3><div class="filtros">${distTabela(g.tipos, 'Tipo de cliente', 'tipo')}${distTabela(g.freqs, 'Frequência (só avulso e convênio)', 'freq')}</div><details><summary>Ler os ${g.comentarios.length} comentários (ordem embaralhada)</summary>${comentariosHtml(g)}</details>` : ''}
+    ${list.length ? `<h3>Por fator</h3>${tabelaFatores(g)}<p class="legenda">e1 a e6 dependem da unidade; e7 (preço) é comercial. O "% negativo" é o número que a operação corrige.</p><h3>Problemas relatados</h3>${tabelaProblemas(g)}<h3>Perfil</h3><div class="filtros">${distTabela(g.tipos, 'Tipo de cliente', 'tipo')}${distTabela(g.freqs, 'Frequência (só avulso e convênio)', 'freq')}</div><details><summary>Ler os ${g.comentarios.length} comentários (ordem embaralhada)</summary>${comentariosHtml(g)}</details>` : ''}
     ${abandonos()[u] ? `<p class="small muted">${abandonos()[u]} pesquisa(s) começaram e não terminaram (cancelada ou sem toque por 90 s) — não entram nas contas.</p>` : ''}
     ${g.contatos ? `<div class="aviso"><b>${g.contatos}</b> cliente(s) deixaram contato pedindo retorno. Os contatos saem só no CSV/Excel (coluna contato) — use-os apenas para o retorno e apague depois.</div>` : ''}
     <h3>Exportar</h3>
     <div class="linha"><button class="btn" data-action="csv" ${list.length ? '' : 'disabled'}>Baixar CSV (esta unidade)</button><button class="btn" data-action="xlsx" data-modo="atual" ${list.length ? '' : 'disabled'}>Baixar Excel (esta unidade)</button><button class="btn" data-action="pdf" data-modo="atual" ${list.length ? '' : 'disabled'}>Baixar PDF (esta unidade)</button></div>
-    ${settings.webhook ? `<div class="linha"><button class="btn light" data-action="resend" ${unsent ? '' : 'disabled'}>Enviar à matriz agora (${unsent} pendente${unsent === 1 ? '' : 's'})</button></div>` : ''}
+    ${syncOk() ? `<div class="linha"><button class="btn light" data-action="resend" ${unsent ? '' : 'disabled'}>Enviar para a nuvem agora (${unsent} pendente${unsent === 1 ? '' : 's'})</button><span class="small muted" style="align-self:center">${unsent ? '' : 'Tudo deste tablet já está na nuvem.'}</span></div>` : '<p class="legenda">Sincronização online desligada: as respostas ficam só neste tablet. Para ver tudo de qualquer aparelho, configure o servidor em Configurações (LEIA-ME, seção 11).</p>'}
     <p class="legenda">${exported ? 'Esta unidade já foi exportada (novas respostas depois disso exigem exportar de novo).' : 'Ainda não exportada.'} Excel e PDF precisam de internet na primeira vez (baixam o gerador); sem internet, use o CSV.</p>
     <h3>Outras ações</h3>
     <div class="linha"><button class="btn ghost" data-action="consolidado">Consolidado de todas as unidades</button><button class="btn ghost" data-action="config">Configurações</button><button class="btn ghost" data-action="tosetup">Trocar unidade</button></div>
@@ -364,12 +395,20 @@ function viewAdmin(){
 function viewConfig(){
   return header('Configurações') + `<div class="wrap"><div class="card">
     <h1>Configurações</h1>
-    <label>Envio automático para a matriz (opcional) — URL do fluxo do Power Automate</label>
-    <input type="url" id="s-webhook" value="${esc(settings.webhook)}" placeholder="https://...">
-    <p class="legenda">Com a URL preenchida, cada resposta é enviada assim que o cliente termina (e o que ficar pendente sem internet vai depois). Sem URL, nada sai do tablet até você exportar.</p>
+    <h3 style="margin-top:6px">Sincronização online — ver as respostas de todos os tablets em qualquer aparelho</h3>
+    <label>URL do servidor (Apps Script — LEIA-ME, seção 11)</label>
+    <input type="url" id="s-webhook" value="${esc(settings.webhook)}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+    <label>Chave de sincronização (a mesma digitada no servidor)</label>
+    <input type="text" id="s-chave" value="${esc(settings.chave || '')}" placeholder="letras e números, sem espaços" autocomplete="off">
+    <label class="check"><input type="checkbox" id="s-contatos" ${settings.baixarContatos ? 'checked' : ''}> Baixar da nuvem também os <b>contatos</b> deixados pelos clientes. Marque só no computador da área de Experiência do Cliente; nos tablets das unidades deixe desmarcado (LGPD).</label>
+    <div class="linha" style="margin-top:8px"><button class="btn light" data-action="testarservidor">Testar ligação</button>${settings.ultimaSync ? `<span class="small muted" style="align-self:center">Última atualização da nuvem: ${esc(dataLabel(settings.ultimaSync.slice(0, 10)))} ${esc(settings.ultimaSync.slice(11, 16))}</span>` : ''}</div>
+    <p class="legenda">Com URL e chave preenchidas, cada resposta é enviada assim que o cliente termina (o que ficar pendente sem internet vai depois) e o <i>Consolidado</i> baixa as respostas de todos os tablets. Sem isso, as respostas ficam só neste tablet até você exportar.</p>
     <label>Trocar PIN do avaliador (4 a 8 dígitos; vazio = manter)</label>
     <input type="text" id="s-pin" inputmode="numeric" autocomplete="off" placeholder="novo PIN" style="-webkit-text-security:disc">
     <label class="check" style="margin-top:16px"><input type="checkbox" id="s-auto" ${settings.autoAvanca !== false ? 'checked' : ''}> Avançar sozinho ao tocar na resposta (nas perguntas de escolha única). Desmarque para exigir o toque em <i>Próxima</i>.</label>
+    <label>Perguntas, respostas e pesos</label>
+    <div class="linha" style="margin-top:4px"><button class="btn light" data-action="perguntas">Editar perguntas, respostas e pesos${perguntasAlteradas() ? ' (alteradas neste tablet)' : ''}</button></div>
+    <p class="legenda">Escala atual: <b>${ESC} respostas</b> por pergunta de escala (padrão 3, como na pesquisa da equipe). Dá para mudar textos, rótulos, "não se aplica", pesos (1 a 3) e trocar para 5 respostas.</p>
     <label>Lista de unidades (opcional)</label>
     <p class="small muted">O tablet já vem com ${UNIDADES_PADRAO.length} unidades (código e bairro). Para usar a lista completa da empresa, importe o mesmo CSV/Excel do app da equipe: <input type="file" id="file-unid" accept=".csv,.txt,.xlsx,.xls"></p>
     ${LS.get('mpc_unidades', null) ? `<p class="small muted">Lista importada: ${unidades().length} unidades. <button class="btn ghost" data-action="unidpadrao" style="min-height:40px;font-size:15px">Voltar à lista padrão</button></p>` : ''}
@@ -377,13 +416,53 @@ function viewConfig(){
     <p class="legenda">Versão ${VERSAO}. PIN padrão de fábrica: o mesmo do app da equipe — troque se isso for um problema (este código é público).</p>
   </div></div>`;
 }
+function tipoNome(t){ return { escala: 'escala', nps: 'nota de 0 a 10', single: 'escolha única', fim: 'tela final (comentário e contato)' }[t] || t; }
+function viewPerguntas(){
+  const bloco = q => {
+    let campos = `<label>Pergunta</label><input type="text" id="pt-${q.codigo}" value="${esc(q.texto)}" maxlength="220">`;
+    if (q.tipo === 'escala') campos += `<label>Rótulos das ${ESC} respostas, da pior para a melhor (um por linha)</label><textarea id="pr-${q.codigo}" rows="${ESC}">${esc(q.rotulos.join('\n'))}</textarea><label>Botão "não se aplica" (vazio = não mostra)</label><input type="text" id="pn-${q.codigo}" value="${esc(q.na || '')}" maxlength="60">`;
+    if (q.opcoes) campos += `<label>Respostas (o código à esquerda não muda)</label>` + q.opcoes.map(o => `<div class="espaco" style="margin:6px 0;flex-wrap:nowrap"><code style="min-width:84px">${esc(o.c)}</code><input type="text" id="po-${q.codigo}-${o.c}" value="${esc(o.t)}" maxlength="120" style="flex:1"></div>`).join('');
+    if (q.tipo === 'fim') campos += `<label>Texto do pedido de contato</label><input type="text" id="pc-${q.codigo}" value="${esc(q.textoContato)}" maxlength="220">`;
+    const peso = q.fator ? `<label style="display:inline-flex;align-items:center;gap:8px;margin:0">Peso <select id="pp-${q.codigo}" style="width:auto">${[1, 2, 3].map(k => `<option value="${k}" ${q.peso === k ? 'selected' : ''}>${k}</option>`).join('')}</select></label>` : '';
+    return `<div class="pergunta-cfg"><div class="espaco"><div><b>${esc(q.codigo)}</b> <span class="small muted">${q.fator ? 'fator: ' + esc(q.fator) : tipoNome(q.tipo)}${q.cond ? ' · só em alguns casos' : ''}</span></div>${peso}</div>${campos}</div>`;
+  };
+  return header('Perguntas') + `<div class="wrap"><div class="card" style="max-width:900px">
+    <div class="espaco"><h1 style="margin:0">Editar perguntas, respostas e pesos</h1><button class="btn ghost" data-action="config">Voltar</button></div>
+    <p class="small muted">Mude os textos, os rótulos das respostas, o botão "não se aplica" (vazio = não mostra), o peso de cada fator (1 a 3, usado no "% positivo ponderado") e quantas respostas as escalas têm. A estrutura (códigos, ordem, condições) não muda. Alterar textos não altera respostas já gravadas; cada resposta guarda a versão (<code>ver</code>) e o nº de respostas da escala (<code>esc</code>). As alterações valem só neste tablet — use <i>Exportar JSON</i> / <i>Importar JSON</i> para repetir nos outros.</p>
+    <label>Respostas por pergunta de escala (satisfação geral, os 7 fatores e a facilidade de pedir ajuda)</label>
+    <select id="p-esc"><option value="3" ${ESC === 3 ? 'selected' : ''}>3 respostas (padrão — igual à pesquisa da equipe)</option><option value="5" ${ESC === 5 ? 'selected' : ''}>5 respostas</option></select>
+    <p class="legenda">Ao mudar de 3 para 5 (ou de 5 para 3), os rótulos voltam ao padrão daquele tamanho — salve e ajuste depois, se quiser. Respostas antigas continuam contando nos percentuais (positivo = melhor resposta com 3; duas melhores com 5).</p>
+    ${QUESTOES.map(bloco).join('')}
+    <div class="linha"><button class="btn" data-action="savepergs">Salvar</button><button class="btn ghost" data-action="resetpergs">Restaurar padrão</button><button class="btn light" data-action="exportpergs">Exportar JSON</button><label class="btn light" style="cursor:pointer">Importar JSON<input type="file" id="file-pergs" accept=".json,application/json" style="display:none"></label></div>
+  </div></div>`;
+}
+function lerPerguntas(){
+  const novoEsc = parseInt((document.getElementById('p-esc') || { value: ESC }).value, 10) === 5 ? 5 : 3; const mudouEsc = novoEsc !== ESC;
+  const cfg = { esc: novoEsc, q: {} }; const erros = []; const val = id => ((document.getElementById(id) || { value: '' }).value || '').trim();
+  QUESTOES_PADRAO.forEach(p => { const x = {}; const t = val('pt-' + p.codigo); if (!t) erros.push(p.codigo + ': a pergunta não pode ficar vazia'); else if (t !== p.texto) x.texto = t;
+    if (p.tipo === 'escala') { if (!mudouEsc) { const linhas = val('pr-' + p.codigo).split(/\r?\n/).map(s => s.trim()).filter(Boolean); if (linhas.length !== novoEsc) erros.push(`${p.codigo}: são necessários ${novoEsc} rótulos (há ${linhas.length})`); else if (linhas.join('|') !== ROTULOS[novoEsc][p.rot].join('|')) x.rotulos = linhas; }
+      const na = val('pn-' + p.codigo); if (na !== (p.na || '')) x.na = na; }
+    if (p.fator) { const pz = parseInt(val('pp-' + p.codigo), 10); if (pz >= 1 && pz <= 3 && pz !== p.peso) x.peso = pz; }
+    if (p.opcoes) { const op = {}; p.opcoes.forEach(o => { const v = val(`po-${p.codigo}-${o.c}`); if (!v) erros.push(`${p.codigo} / ${o.c}: a resposta não pode ficar vazia`); else if (v !== o.t) op[o.c] = v; }); if (Object.keys(op).length) x.opcoes = op; }
+    if (p.tipo === 'fim') { const tc = val('pc-' + p.codigo); if (!tc) erros.push('fim: o texto do contato não pode ficar vazio'); else if (tc !== p.textoContato) x.textoContato = tc; }
+    if (Object.keys(x).length) cfg.q[p.codigo] = x; });
+  if (erros.length) { toast(erros[0]); return; }
+  if (!LS.set('mpc_perguntas', cfg)) { toast('Não consegui salvar (memória do tablet).'); return; }
+  aplicarPerguntas(); toast(mudouEsc ? `Salvo: escala com ${novoEsc} respostas. Os rótulos voltaram ao padrão — revise se quiser.` : 'Perguntas, respostas e pesos salvos.'); go(mudouEsc ? 'perguntas' : 'config');
+}
+async function importarPerguntas(file){
+  try { const cfg = JSON.parse(await file.text()); if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) throw new Error('Arquivo inválido.'); if (cfg.app && cfg.app !== APP_ID) throw new Error('Este arquivo não é das perguntas da pesquisa com clientes.'); if (cfg.esc === undefined && !cfg.q) throw new Error('Arquivo sem perguntas (esperava esc e q).'); if (cfg.esc !== undefined && cfg.esc !== 3 && cfg.esc !== 5) throw new Error('Escala inválida no arquivo (use 3 ou 5).');
+    if (!LS.set('mpc_perguntas', { esc: cfg.esc === 5 ? 5 : 3, q: (cfg.q && typeof cfg.q === 'object') ? cfg.q : {} })) throw new Error('Não consegui salvar.'); aplicarPerguntas(); toast('Perguntas importadas.'); render(); }
+  catch(e) { toast(e.message || 'Não consegui ler o arquivo.'); }
+}
 function viewConsolidado(){
   if (!state.cf) state.cf = cfDefault();
   const C = calcConsolidado(state.cf); const { cf, geral, units, meses, dias, unidadesOpt, cad, pesq, pendentes, filtroTxt } = C;
   const opt = (arr, sel, fmt) => arr.map(v => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(fmt ? fmt(v) : v)}</option>`).join('');
   return header('Consolidado') + `<div class="wrap"><div class="card" style="max-width:1100px">
     <div class="espaco"><h1 style="margin:0">Consolidado — clientes</h1><button class="btn" data-action="admin">← Voltar (Área do avaliador)</button></div>
-    <p class="small muted">Junta as respostas deste tablet com as importadas de outros tablets (CSV deste app).${C.importadas ? ` ${C.importadas} resposta(s) importada(s).` : ' <b>Ainda não há respostas importadas</b> — o que está abaixo é só deste aparelho.'}</p>
+    <p class="small muted">Junta as respostas deste tablet com as da <b>nuvem</b> (todos os tablets ligados ao mesmo servidor) e com CSVs importados à mão.${C.importadas ? ` ${C.importadas} resposta(s) de outros aparelhos.` : ' <b>Ainda não há respostas de outros aparelhos</b> — o que está abaixo é só deste tablet.'}</p>
+    <div class="linha" style="margin-top:4px">${syncOk() ? `<button class="btn" data-action="sync">Atualizar da nuvem</button><span class="small muted" style="align-self:center">${settings.ultimaSync ? 'Última atualização: ' + esc(dataLabel(settings.ultimaSync.slice(0, 10))) + ' ' + esc(settings.ultimaSync.slice(11, 16)) + ' · ' : 'Ainda não atualizado · '}<button class="btn ghost" data-action="syncfull" style="min-height:36px;font-size:14px;padding:6px 10px">baixar tudo de novo</button></span>` : '<span class="small muted">Sincronização online desligada — configure o servidor em Configurações (LEIA-ME, seção 11) para ver as respostas de todos os tablets aqui.</span>'}</div>
     <h3>Filtros</h3>
     <div class="filtros">
       <div><label>Unidade</label><select data-cf="unidade"><option value="">Todas</option>${opt(unidadesOpt, cf.unidade, v => unidadeLabel(v))}</select></div>
@@ -394,9 +473,9 @@ function viewConsolidado(){
     <p class="small muted">Mostrando: ${esc(filtroTxt)}.</p>
     ${kpis(geral)}
     <h3>Ranking das unidades</h3>
-    <div class="tabela-wrap"><table><tr><th>#</th><th class="l">Unidade</th><th>Respostas</th><th>CSAT</th><th>Média</th><th>NPS</th><th>% com problema</th><th>Resolvido na hora</th>${FATORES.map(f => `<th>${esc(f.fator)}</th>`).join('')}</tr>
-    ${units.map((u, i) => `<tr><td>${i + 1}</td><td class="l"><b>${esc(u.unidade)}</b> <span class="small muted">${esc((unidadePorCodigo(u.unidade) || {}).nome || '')}</span>${u.n < 50 ? ' <span class="tag pend" title="menos de 50 respostas">poucas</span>' : ''}</td><td>${u.n}</td><td><b>${fmtPct(u.csat)}</b></td><td>${u.csatMedia == null ? '—' : u.csatMedia}</td><td>${fmtNps(u.nps)}</td><td>${u.n ? Math.round(u.comProblema / u.n * 100) + '%' : '—'}</td><td>${fmtPct(u.resolvidoHora)}</td>${u.fatores.map(f => `<td>${fmtPct(f.pct)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${9 + FATORES.length}" class="muted">Sem respostas no filtro.</td></tr>`}</table></div>
-    <p class="legenda">Colunas dos fatores: % de respostas 4 ou 5 ("bom" / "muito bom"). "poucas" = menos de 50 respostas: compare só a tendência. Compare unidades do mesmo tipo (shopping, hospital, comercial, condomínio).</p>
+    <div class="tabela-wrap"><table><tr><th>#</th><th class="l">Unidade</th><th>Respostas</th><th>CSAT</th><th>% pos. ponderado</th><th>Média</th><th>NPS</th><th>% com problema</th><th>Resolvido na hora</th>${FATORES.map(f => `<th>${esc(f.fator)}</th>`).join('')}</tr>
+    ${units.map((u, i) => `<tr><td>${i + 1}</td><td class="l"><b>${esc(u.unidade)}</b> <span class="small muted">${esc((unidadePorCodigo(u.unidade) || {}).nome || '')}</span>${u.n < 50 ? ' <span class="tag pend" title="menos de 50 respostas">poucas</span>' : ''}</td><td>${u.n}</td><td><b>${fmtPct(u.csat)}</b></td><td>${fmtPct(u.pond)}</td><td>${u.csatMedia == null ? '—' : u.csatMedia}</td><td>${fmtNps(u.nps)}</td><td>${u.n ? Math.round(u.comProblema / u.n * 100) + '%' : '—'}</td><td>${fmtPct(u.resolvidoHora)}</td>${u.fatores.map(f => `<td>${fmtPct(f.pct)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${9 + FATORES.length}" class="muted">Sem respostas no filtro.</td></tr>`}</table></div>
+    <p class="legenda">Colunas dos fatores: % positivo (${ESC === 3 ? 'a melhor das 3 respostas' : 'as duas melhores das 5 respostas'}). "poucas" = menos de 50 respostas: compare só a tendência. Compare unidades do mesmo tipo (shopping, hospital, comercial, condomínio).</p>
     <h3>Por fator (todas as respostas do filtro)</h3>${tabelaFatores(geral)}
     <h3>Problemas relatados</h3>${tabelaProblemas(geral)}
     <h3>Cobertura</h3>
@@ -405,8 +484,8 @@ function viewConsolidado(){
     <details><summary>Ler os ${geral.comentarios.length} comentários (ordem embaralhada)</summary>${comentariosHtml(geral)}</details>
     <h3>Exportar e juntar tablets</h3>
     <div class="linha"><button class="btn" data-action="xlsx" data-modo="tudo" ${geral.n ? '' : 'disabled'}>Baixar Excel (tudo, filtro atual)</button><button class="btn" data-action="pdf" data-modo="tudo" ${geral.n ? '' : 'disabled'}>Baixar PDF (relatório, filtro atual)</button><button class="btn light" data-action="csvtudo" ${geral.n ? '' : 'disabled'}>Baixar CSV (tudo, filtro atual)</button></div>
-    <div class="linha"><label class="btn light" style="cursor:pointer">Importar respostas de outro tablet (CSV deste app)<input type="file" id="file-hist" accept=".csv,.txt" style="display:none"></label>${C.importadas ? `<button class="btn ghost" data-action="wipehist">Apagar as ${C.importadas} importadas</button>` : ''}</div>
-    <p class="legenda">Para juntar todos os tablets: em cada um, baixe o CSV (esta unidade) e importe aqui. Respostas repetidas (mesmo id) são ignoradas.</p>
+    <div class="linha"><label class="btn light" style="cursor:pointer">Importar CSV de outro tablet (sem nuvem)<input type="file" id="file-hist" accept=".csv,.txt" style="display:none"></label>${C.importadas ? `<button class="btn ghost" data-action="wipehist">Apagar as ${C.importadas} de outros aparelhos</button>` : ''}</div>
+    <p class="legenda">Com a nuvem configurada, tudo chega sozinho em <i>Atualizar da nuvem</i>. O CSV é o caminho manual, para tablets sem servidor. Respostas repetidas (mesmo id) são ignoradas.</p>
     <div class="linha"><button class="btn" data-action="admin">← Voltar (Área do avaliador)</button></div>
   </div></div>`;
 }
@@ -414,7 +493,7 @@ function viewConsolidado(){
 /* ---------------- render ---------------- */
 function render(){
   const app = document.getElementById('app');
-  const map = { setup: viewSetup, pick: viewPick, welcome: viewWelcome, q: viewQ, thanks: viewThanks, saveerror: viewSaveError, pin: viewPin, admin: viewAdmin, config: viewConfig, consolidado: viewConsolidado };
+  const map = { setup: viewSetup, pick: viewPick, welcome: viewWelcome, q: viewQ, thanks: viewThanks, saveerror: viewSaveError, pin: viewPin, admin: viewAdmin, config: viewConfig, perguntas: viewPerguntas, consolidado: viewConsolidado };
   app.innerHTML = (map[state.screen] || viewSetup)();
   const pi = document.getElementById('pin-input'); if (pi && state.screen === 'pin' && !pi.disabled) { pi.focus(); try { pi.setSelectionRange(pi.value.length, pi.value.length); } catch(e) {} }
   const b = document.getElementById('busca'); if (b) { b.focus(); try { b.setSelectionRange(b.value.length, b.value.length); } catch(e) {} }
@@ -440,29 +519,68 @@ function gravar(){
   if (r.contato && r.lgpd !== 1) r.contato = '';   // sem consentimento, o contato não é guardado
   r.lgpd = r.contato ? 1 : 0; r.coment = r.coment || '';
   const now = new Date();
-  const rec = { id: uid(), versao: VERSAO, ver: PESQ_VER, unidade: settings.unidade, ponto: settings.ponto || '', data: hojeISO(now), hora: horaHM(now), dur: state.t0 ? Math.round((Date.now() - state.t0) / 1000) : null, r, sent: false };
+  const rec = { id: uid(), versao: VERSAO, ver: PESQ_VER, esc: ESC, unidade: settings.unidade, ponto: settings.ponto || '', data: hojeISO(now), hora: horaHM(now), dur: state.t0 ? Math.round((Date.now() - state.t0) / 1000) : null, r, sent: false };
   const list = allResponses(); list.push(rec);
   if (!saveResponses(list)) { go('saveerror'); return; }   // memória cheia/bloqueada: mantém state.r para tentar de novo, nunca diz "registrada" sem ter gravado
   if (settings.exported[settings.unidade]) { delete settings.exported[settings.unidade]; saveSettings(); }
   const retorno = !!r.contato; state.r = {}; go('thanks', { retorno }); sendPending();
 }
-let sending = false;
-async function sendPending(){
-  if (sending || !settings.webhook || !navigator.onLine) return; sending = true;
-  const pend = allResponses().filter(r => !r.sent);
-  for (const r of pend) {
-    try {
-      const payload = { app: 'pesquisa-clientes-maxipark', versao: r.versao, ver: r.ver || PESQ_VER, id: r.id, unidade: r.unidade, ponto: r.ponto || '', data: r.data, hora: r.hora, dur: r.dur == null ? '' : r.dur }; COLS_RESP.forEach(c => { payload[c] = r.r[c] === undefined || r.r[c] === null ? '' : r.r[c]; });
-      await fetch(settings.webhook, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-      const list = allResponses(); const it = list.find(x => x.id === r.id); if (it) { it.sent = true; saveResponses(list); }
-    } catch(e) { /* sem rede: fica pendente */ }
-  }
-  sending = false; if (state.screen === 'admin') render();
+/* ---------------- sincronização online (servidor/Code.gs: Google Apps Script + Planilha) ---------------- */
+const APP_ID = 'pesquisa-clientes-maxipark';
+function syncOk(){ return !!(settings.webhook && settings.chave); }
+function payloadDe(r){ const p = { app: APP_ID, versao: r.versao, ver: r.ver || PESQ_VER, esc: escDe(r), id: r.id, unidade: r.unidade, ponto: r.ponto || '', data: r.data, hora: r.hora, dur: r.dur == null ? '' : r.dur }; COLS_RESP.forEach(c => { p[c] = r.r[c] === undefined || r.r[c] === null ? '' : r.r[c]; }); return p; }
+function registroDe(p){   // o inverso: o que veio do servidor vira um registro igual ao local (marcado como nuvem)
+  if (!p || !p.id) return null; const r = {};
+  COLS_RESP.forEach(k => { let v = p[k]; if (v === undefined || v === null || v === '') return; if ((NUMERICAS.has(k) || k === 'lgpd') && v !== 'NA') { const n = parseInt(v, 10); v = isNaN(n) ? v : n; } r[k] = v; });
+  if (r.lgpd !== 1 || !r.contato) r.contato = ''; r.coment = r.coment || ''; const escv = parseInt(p.esc, 10); const dur = parseInt(p.dur, 10); const ver = p.ver || 'C1';
+  return { id: String(p.id), versao: p.versao || '', ver, esc: (escv === 3 || escv === 5) ? escv : (ver === 'C1' ? 5 : undefined), unidade: String(p.unidade || '').toUpperCase(), ponto: p.ponto || '', data: p.data || '', hora: p.hora || '', dur: isNaN(dur) ? null : dur, r, sent: true, nuvem: true };
+}
+async function apiPost(body){ const res = await fetch(settings.webhook, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ chave: settings.chave }, body)) }); if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }
+async function apiGet(params){ const u = new URL(settings.webhook); Object.entries(Object.assign({ chave: settings.chave }, params)).forEach(([k, v]) => u.searchParams.set(k, v)); const res = await fetch(u.toString()); if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }
+let sending = false, syncing = false;
+async function sendPending(){   // envia o que ainda não foi enviado, em lotes; o servidor ignora id repetido, então reenviar não duplica
+  if (sending || !syncOk() || !navigator.onLine) return 0; sending = true; let enviadas = 0;
+  try {
+    const pend = allResponses().filter(r => !r.sent);
+    for (let i = 0; i < pend.length; i += 25) {
+      const lote = pend.slice(i, i + 25); const itens = lote.map(payloadDe); let ok = false;
+      try { const j = await apiPost({ op: 'add', itens }); ok = !!(j && j.ok); if (j && j.ok === false) { toast(erroServidor(j)); break; } }
+      catch(e) { ok = false; }   // sem resposta legível (rede, CORS, login): NÃO marca como enviado — fica pendente e tenta de novo depois; o servidor ignora id repetido
+      if (!ok) break;
+      const list = allResponses(); lote.forEach(r => { const it = list.find(x => x.id === r.id); if (it) it.sent = true; }); saveResponses(list); enviadas += lote.length;
+    }
+  } finally { sending = false; }
+  if (enviadas && state.screen === 'admin') render(); return enviadas;
+}
+function erroServidor(j){ if (!j) return 'Resposta inesperada do servidor.'; if (j.erro === 'chave') return 'Chave de sincronização diferente da do servidor (Configurações).'; if (j.erro === 'configurar-chave') return 'O servidor ainda está com a chave de exemplo: troque CHAVE no Code.gs e implante de novo.'; return 'Resposta inesperada do servidor' + (j.erro ? ' (' + j.erro + ')' : '') + '.'; }
+async function sincronizar(silencioso, tudo){   // sobe o pendente e baixa as respostas do servidor para mpc_hist (marcadas nuvem: true); depois da 1ª vez só o que é novo (desde)
+  if (!syncOk()) { if (!silencioso) toast('Configure a URL e a chave do servidor em Configurações.'); return; }
+  if (syncing) return; if (!navigator.onLine) { if (!silencioso) toast('Sem internet agora; tento de novo quando voltar.'); return; }
+  syncing = true; if (!silencioso) toast('Atualizando da nuvem…');
+  try {
+    await sendPending();
+    const incremental = !tudo && !!settings.ultimaSync; const params = { op: 'list', app: APP_ID, contatos: settings.baixarContatos ? '1' : '0' };   // contatos só chegam onde o avaliador marcou (nunca nos tablets das unidades)
+    if (incremental) params.desde = new Date(new Date(settings.ultimaSync).getTime() - 15 * 60 * 1000).toISOString();   // margem de 15 min para relógios diferentes
+    const j = await apiGet(params); if (!j || !j.ok) throw new Error(erroServidor(j));
+    const anteriores = histResponses(); const manuais = anteriores.filter(h => !h.nuvem); const nuvem = incremental ? anteriores.filter(h => h.nuvem) : [];
+    const locais = new Set(allResponses().map(r => r.id)); const manuaisIds = new Set(manuais.map(h => h.id)); const porId = new Map(nuvem.map(h => [h.id, h]));
+    let novas = 0; (j.itens || []).map(registroDe).forEach(x => { if (!x || locais.has(x.id) || manuaisIds.has(x.id)) return; if (!porId.has(x.id)) novas++; porId.set(x.id, x); });
+    if (!LS.set('mpc_hist', manuais.concat([...porId.values()]))) throw new Error('Não coube na memória do tablet: exporte e apague respostas antigas.');
+    settings.ultimaSync = new Date().toISOString(); saveSettings();
+    if (!silencioso) toast(`Nuvem atualizada: ${novas} nova(s); ${porId.size} resposta(s) de outros aparelhos no total.`); render();
+  } catch(e) { console.warn('sincronizar', e); if (!silencioso) toast(e.message || 'Não consegui falar com o servidor.'); }
+  finally { syncing = false; }
+}
+async function testarServidor(){
+  const url = ((document.getElementById('s-webhook') || {}).value || '').trim(), chave = ((document.getElementById('s-chave') || {}).value || '').trim();
+  if (!url || !chave) { toast('Preencha a URL e a chave antes de testar.'); return; } toast('Testando…');
+  try { const u = new URL(url); u.searchParams.set('op', 'ping'); u.searchParams.set('chave', chave); const res = await fetch(u.toString()); const j = await res.json(); toast(j && j.ok ? 'Ligação OK: o servidor respondeu.' : erroServidor(j)); }
+  catch(e) { toast('Não consegui falar com o servidor: confira a URL (termina em /exec), a implantação "Qualquer pessoa" e a internet.'); }
 }
 window.addEventListener('online', () => sendPending());
 
 /* ---------------- CSV ---------------- */
-const CSV_FIXAS = ['versao', 'ver', 'id', 'unidade', 'ponto', 'data', 'hora', 'dur'];
+const CSV_FIXAS = ['versao', 'ver', 'esc', 'id', 'unidade', 'ponto', 'data', 'hora', 'dur'];
 function csvCols(){ return CSV_FIXAS.concat(COLS_RESP); }
 function celula(r, c){ if (CSV_FIXAS.includes(c)) return r[c]; return r.r[c]; }
 function csvCell(v){ if (v === undefined || v === null) return ''; let s = Array.isArray(v) ? v.join(' | ') : String(v); s = s.replace(/\r?\n|\r/g, ' '); return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
@@ -489,8 +607,8 @@ function csvToResponses(text){
     const r = {}; COLS_RESP.forEach(k => { const v = g(k); if (v === '') return; if (NUMERICAS.has(k) || k === 'lgpd') r[k] = v === 'NA' ? 'NA' : (isNaN(parseInt(v, 10)) ? v : parseInt(v, 10)); else r[k] = v; });
     if (r.lgpd !== 1) r.contato = '';   // contato só com consentimento
     const data = g('data'); const dn = /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : (/^\d{2}\/\d{2}\/\d{4}$/.test(data) ? data.slice(6) + '-' + data.slice(3, 5) + '-' + data.slice(0, 2) : data);
-    const dur = parseInt(g('dur'), 10);
-    out.push({ id: g('id') || uid(), versao: g('versao') || VERSAO, ver: g('ver') || PESQ_VER, unidade: g('unidade').toUpperCase(), ponto: g('ponto'), data: dn, hora: g('hora'), dur: isNaN(dur) ? null : dur, r, sent: true }); });
+    const dur = parseInt(g('dur'), 10); const escv = parseInt(g('esc'), 10); const ver = g('ver') || 'C1';
+    out.push({ id: g('id') || uid(), versao: g('versao') || VERSAO, ver, esc: (escv === 3 || escv === 5) ? escv : (ver === 'C1' ? 5 : undefined), unidade: g('unidade').toUpperCase(), ponto: g('ponto'), data: dn, hora: g('hora'), dur: isNaN(dur) ? null : dur, r, sent: true }); });
   return out;
 }
 
@@ -516,26 +634,26 @@ function dadosExport(modo){
   const escopo = atual ? `${settings.unidade} — todas as datas — só respostas deste tablet` : `Filtros: ${calcConsolidado(cf).filtroTxt}`;
   const aband = atual ? (abandonos()[settings.unidade] || 0) : Object.values(abandonos()).reduce((a, b) => a + b, 0);
   const resumo = [[titulo], ['Gerado em', dataLabel(hojeISO())], [atual ? 'Unidade' : 'Filtros', escopo], ['Versão do app / do questionário', `${VERSAO} / ${PESQ_VER}`], [],
-    ['Indicador', 'Valor', 'Observação'], ['Respostas', g.n, aband ? `${aband} começaram e não terminaram neste tablet (fora das contas)` : ''], ['CSAT (% satisfeitos, notas 4-5)', fmtPct(g.csat), 'indicador-título da unidade; leia com 50+ respostas'], ['Satisfação média (1-5)', g.csatMedia == null ? '' : g.csatMedia, ''], ['NPS', fmtNps(g.nps), g.npsN ? `${g.prom} promotores · ${g.neu} neutros · ${g.det} detratores; leia com 100+ respostas` : ''], ['% com algum problema', g.n ? Math.round(g.comProblema / g.n * 100) + '%' : '', `${g.comProblema} resposta(s)`], ['% dos problemas resolvidos na hora', fmtPct(g.resolvidoHora), ''], ['CES (% acharam fácil pedir ajuda, 4-5)', fmtPct(g.ces), g.cesN ? `${g.cesN} caso(s) com problema e pedido de ajuda; média ${g.cesMedia}` : 'sem casos'], ['Pediram retorno (contato)', g.contatos, 'contatos só na aba Respostas'], ['Tempo mediano de resposta (s)', g.durMed == null ? '' : g.durMed, ''], [],
+    ['Indicador', 'Valor', 'Observação'], ['Respostas', g.n, aband ? `${aband} começaram e não terminaram neste tablet (fora das contas)` : ''], ['Escala das respostas', `${ESC} respostas`, g.escMista ? 'há respostas de outra escala no conjunto (coluna esc)' : 'coluna esc de cada resposta'], ['CSAT (% satisfeitos = resposta positiva)', fmtPct(g.csat), 'indicador-título da unidade; leia com 50+ respostas'], ['% positivo ponderado (7 fatores × peso)', fmtPct(g.pond), 'pesos em Configurações → Editar perguntas'], [`Satisfação média (1-${ESC})`, g.csatMedia == null ? '' : g.csatMedia, g.escMista ? 'não calculada: escalas misturadas' : ''], ['NPS', fmtNps(g.nps), g.npsN ? `${g.prom} promotores · ${g.neu} neutros · ${g.det} detratores; leia com 100+ respostas` : ''], ['% com algum problema', g.n ? Math.round(g.comProblema / g.n * 100) + '%' : '', `${g.comProblema} resposta(s)`], ['% dos problemas resolvidos na hora', fmtPct(g.resolvidoHora), ''], [`CES (% acharam fácil pedir ajuda: ${ESC === 3 ? 'resposta 3' : 'respostas 4-5'})`, fmtPct(g.ces), g.cesN ? `${g.cesN} caso(s) com problema e pedido de ajuda${g.cesMedia == null ? '' : '; média ' + g.cesMedia}` : 'sem casos'], ['Pediram retorno (contato)', g.contatos, 'contatos só na aba Respostas'], ['Tempo mediano de resposta (s)', g.durMed == null ? '' : g.durMed, ''], [],
     ['Uso interno da área de Experiência do Cliente. Contatos de clientes: usar só para o retorno e apagar em até 90 dias.']];
-  const porFator = [['Código', 'Fator', 'Texto', 'Responderam', 'NA (não se aplica)', '% bom (4-5)', '% ruim (1-2)', 'Média (1-5)', '1', '2', '3', '4', '5']].concat(g.fatores.map(f => [f.codigo, f.fator, f.texto, f.n, f.na, f.pct == null ? '' : f.pct + '%', f.insat == null ? '' : f.insat + '%', f.media == null ? '' : f.media].concat(f.dist)));
+  const porFator = [['Código', 'Fator', 'Peso', 'Texto', 'Responderam', 'NA (não se aplica)', '% positivo', '% negativo', `Média (1-${ESC})`].concat(Array.from({ length: ESC }, (_, i) => String(i + 1)))].concat(g.fatores.map(f => [f.codigo, f.fator, f.peso, f.texto, f.n, f.na, f.pct == null ? '' : f.pct + '%', f.insat == null ? '' : f.insat + '%', f.media == null ? '' : f.media].concat(f.dist))).concat([[], [legendaEscala(g)]]);
   const problemas = [['Código', 'Problema principal relatado', 'Respostas', '% do total']].concat(Object.keys(g.problemas).map(c => [c, rotulo('prob', c), g.problemas[c], g.n ? Math.round(g.problemas[c] / g.n * 100) + '%' : ''])).concat([[], ['Código', 'Foi resolvido?', 'Respostas', '']], Object.keys(g.resolv).map(k => [k, rotulo('resolv', k), g.resolv[k], '']));
   const perfil = [['Código', 'Tipo de cliente', 'Respostas']].concat(Object.keys(g.tipos).map(k => [k, rotulo('tipo', k), g.tipos[k]])).concat([[], ['Código', 'Frequência (só avulso e convênio)', 'Respostas']], Object.keys(g.freqs).map(k => [k, rotulo('freq', k), g.freqs[k]]));
   const cols = csvCols(); const respostas = [cols].concat(filt.map(r => cols.map(c => { const v = celula(r, c); return v === undefined || v === null ? '' : v; })));
-  const comentarios = [['Comentário', 'Unidade', 'Data', 'Nota 0-10', 'Satisfação 1-5', 'Problema']].concat(shuffle(g.comentarios).map(c => [c.texto, c.unidade, dataLabel(c.data), num(c.nps) ? c.nps : '', num(c.csat) ? c.csat : '', temProblema(c) ? rotulo('prob', c.prob) : '']));
+  const comentarios = [['Comentário', 'Unidade', 'Data', 'Nota 0-10', `Satisfação 1-${ESC}`, 'Problema']].concat(shuffle(g.comentarios).map(c => [c.texto, c.unidade, dataLabel(c.data), num(c.nps) ? c.nps : '', num(c.csat) ? c.csat : '', temProblema(c) ? rotulo('prob', c.prob) : '']));
   let ranking = null, cobertura = null;
-  if (!atual) { const C = calcConsolidado(cf); ranking = [['#', 'Unidade', 'Local', 'Respostas', 'CSAT', 'Média', 'NPS', '% com problema', 'Resolvido na hora'].concat(FATORES.map(f => f.codigo + ' ' + f.fator + ' (% 4-5)'))].concat(C.units.map((u, i) => [i + 1, u.unidade, (unidadePorCodigo(u.unidade) || {}).nome || '', u.n, fmtPct(u.csat), u.csatMedia == null ? '' : u.csatMedia, fmtNps(u.nps), u.n ? Math.round(u.comProblema / u.n * 100) + '%' : '', fmtPct(u.resolvidoHora)].concat(u.fatores.map(f => f.pct == null ? '' : f.pct + '%'))));
+  if (!atual) { const C = calcConsolidado(cf); ranking = [['#', 'Unidade', 'Local', 'Respostas', 'CSAT', '% positivo ponderado', 'Média', 'NPS', '% com problema', 'Resolvido na hora'].concat(FATORES.map(f => f.codigo + ' ' + f.fator + ' (% positivo)'))].concat(C.units.map((u, i) => [i + 1, u.unidade, (unidadePorCodigo(u.unidade) || {}).nome || '', u.n, fmtPct(u.csat), fmtPct(u.pond), u.csatMedia == null ? '' : u.csatMedia, fmtNps(u.nps), u.n ? Math.round(u.comProblema / u.n * 100) + '%' : '', fmtPct(u.resolvidoHora)].concat(u.fatores.map(f => f.pct == null ? '' : f.pct + '%'))));
     cobertura = [['Unidade', 'Local', 'Situação', 'Respostas']].concat(C.cad.map(u => [u.codigo, u.nome || '', C.pesq.has(u.codigo) ? 'com respostas' : 'sem respostas', filt.filter(r => r.unidade === u.codigo).length])); }
-  const perguntas = [['Código', 'Tipo', 'Pergunta', 'Opções / escala (código — texto)', 'Quando aparece']].concat(QUESTOES.map(q => [q.codigo, q.tipo, q.texto, q.opcoes ? q.opcoes.map(o => o.c + ' — ' + o.t).join(' | ') : (q.tipo === 'escala5' ? `1 = ${q.pontas[0]} … 5 = ${q.pontas[1]}` + (q.na ? ` | NA = ${q.na}` : '') : (q.tipo === 'nps' ? `0 = ${q.pontas[0]} … 10 = ${q.pontas[1]}` : 'coment (texto até 300), contato (WhatsApp ou e-mail), lgpd (1 = autorizou)')), q.cond ? (q.codigo === 'freq' ? 'só avulso e convênio' : q.codigo === 'ces' ? 'só com problema e pedido de ajuda (resolv = sim, parcial ou nao)' : 'só quando prob ≠ nenhum') : 'sempre' + (q.obrigatoria ? '' : ' (opcional)')]));
-  const legenda = [['Campo', 'Significado'], ['ver', `versão do questionário (${PESQ_VER}); não compare versões diferentes sem ajuste`], ['ponto', 'onde fica o tablet: caixa, saida, totem, outro (vazio = não informado)'], ['dur', 'segundos entre o primeiro toque e o envio'], ['csat', 'satisfação geral: 1 muito insatisfeito … 5 muito satisfeito; CSAT = % de 4 e 5'], ['nps', 'nota 0-10; NPS = % promotores (9-10) − % detratores (0-6)'], ['e1…e7', 'fatores: 1 muito ruim … 5 muito bom; NA = chip "não se aplica" (fora da base)'], ['prob', 'código do problema principal (nenhum = deu tudo certo); ver aba Perguntas'], ['resolv / ces', 'só quando houve problema; NA = não perguntado. ces: 1 muito difícil … 5 muito fácil'], ['tipo / freq', 'códigos na aba Perguntas; freq = NA para mensalista e evento'], ['coment', 'texto livre (até 300 caracteres), ordem embaralhada nos relatórios'], ['contato / lgpd', 'contato só quando o cliente deixou E autorizou (lgpd = 1); usar para o retorno e apagar em até 90 dias'], ['data / hora', 'quando respondeu (a hora ajuda a ver picos); não há nome nem CPF'], ['vazio × NA', 'NA = não se aplica / não perguntado; vazio = não respondido']];
+  const perguntas = [['Código', 'Tipo', 'Pergunta', 'Respostas (código — texto)', 'Peso', 'Quando aparece']].concat(QUESTOES.map(q => [q.codigo, q.tipo, q.texto, q.opcoes ? q.opcoes.map(o => o.c + ' — ' + o.t).join(' | ') : (q.tipo === 'escala' ? q.rotulos.map((t, i) => (i + 1) + ' = ' + t).join(' | ') + (q.na ? ` | NA = ${q.na}` : '') : (q.tipo === 'nps' ? `0 = ${q.pontas[0]} … 10 = ${q.pontas[1]}` : `coment (texto até 300) | contato: "${q.textoContato}" | lgpd (1 = autorizou)`)), q.peso || '', q.cond ? (q.codigo === 'freq' ? 'só avulso e convênio' : q.codigo === 'ces' ? 'só com problema e pedido de ajuda (resolv = sim, parcial ou nao)' : 'só quando prob ≠ nenhum') : 'sempre' + (q.obrigatoria ? '' : ' (opcional)')])).concat([[], [perguntasAlteradas() ? 'Perguntas, respostas ou pesos editados neste tablet (Configurações → Editar perguntas).' : 'Perguntas padrão do questionário ' + PESQ_VER + '.']]);
+  const legenda = [['Campo', 'Significado'], ['ver', `versão do questionário (${PESQ_VER}); não compare versões diferentes sem ajuste`], ['esc', 'nº de respostas das escalas usado nesta resposta (3 ou 5); positivo = 3 (com 3) ou 4-5 (com 5); negativo = 1 (com 3) ou 1-2 (com 5). Respostas C1 sem esc eram de 5'], ['ponto', 'onde fica o tablet, só quando aberto por QR (vazio = não informado)'], ['dur', 'segundos entre o primeiro toque e o envio'], ['csat', `satisfação geral: 1 (pior) … ${ESC} (melhor); CSAT = % positivo`], ['nps', 'nota 0-10; NPS = % promotores (9-10) − % detratores (0-6)'], ['e1…e7', `fatores: 1 (pior) … ${ESC} (melhor); NA = chip "não se aplica" (fora da base); peso 1-3 na aba Perguntas`], ['prob', 'código do problema principal (nenhum = deu tudo certo); ver aba Perguntas'], ['resolv / ces', `só quando houve problema; NA = não perguntado. ces: 1 (difícil) … ${ESC} (fácil)`], ['tipo / freq', 'códigos na aba Perguntas; freq = NA para mensalista e evento'], ['coment', 'texto livre (até 300 caracteres), ordem embaralhada nos relatórios'], ['contato / lgpd', 'contato só quando o cliente deixou E autorizou (lgpd = 1); usar para o retorno e apagar em até 90 dias'], ['data / hora', 'quando respondeu (a hora ajuda a ver picos); não há nome nem CPF'], ['vazio × NA', 'NA = não se aplica / não perguntado; vazio = não respondido']];
   const nome = atual ? `clientes_${String(settings.unidade).replace(/[^\w.-]+/g, '_')}_${hojeISO()}` : `clientes_consolidado_${cf.unidade || 'todas'}_${cf.dia || cf.mes || 'todas-datas'}_${hojeISO()}`;
   return { atual, titulo, escopo, g, resumo, porFator, problemas, perfil, respostas, comentarios, ranking, cobertura, perguntas, legenda, nome };
 }
 function folhasExcel(D){
   const f = [{ nome: 'Resumo', aoa: D.resumo, larguras: [34, 16, 60], semCab: true }];
-  if (D.ranking) f.push({ nome: 'Ranking', aoa: D.ranking, larguras: [4, 14, 22, 10, 8, 8, 8, 14, 14].concat(FATORES.map(() => 14)) }, { nome: 'Cobertura', aoa: D.cobertura, larguras: [14, 24, 14, 10] });
-  f.push({ nome: 'Por fator', aoa: D.porFator, larguras: [7, 22, 60, 12, 16, 12, 12, 12, 5, 5, 5, 5, 5] }, { nome: 'Problemas', aoa: D.problemas, larguras: [10, 56, 12, 12] }, { nome: 'Perfil', aoa: D.perfil, larguras: [10, 46, 12] },
-    { nome: 'Respostas', aoa: D.respostas, larguras: [7, 5, 14, 12, 8, 11, 7, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 9, 10, 6, 9, 8, 50, 26, 6] }, { nome: 'Comentários', aoa: D.comentarios, larguras: [80, 12, 12, 10, 14, 30] }, { nome: 'Perguntas', aoa: D.perguntas, larguras: [9, 9, 60, 90, 30] }, { nome: 'Legenda', aoa: D.legenda, larguras: [16, 100] });
+  if (D.ranking) f.push({ nome: 'Ranking', aoa: D.ranking, larguras: [4, 14, 22, 10, 8, 12, 8, 8, 14, 14].concat(FATORES.map(() => 14)) }, { nome: 'Cobertura', aoa: D.cobertura, larguras: [14, 24, 14, 10] });
+  f.push({ nome: 'Por fator', aoa: D.porFator, larguras: [7, 22, 6, 60, 12, 16, 12, 12, 12].concat(Array.from({ length: ESC }, () => 5)) }, { nome: 'Problemas', aoa: D.problemas, larguras: [10, 56, 12, 12] }, { nome: 'Perfil', aoa: D.perfil, larguras: [10, 46, 12] },
+    { nome: 'Respostas', aoa: D.respostas, larguras: [7, 5, 4, 14, 12, 8, 11, 7, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 9, 10, 6, 9, 8, 50, 26, 6] }, { nome: 'Comentários', aoa: D.comentarios, larguras: [80, 12, 12, 10, 14, 30] }, { nome: 'Perguntas', aoa: D.perguntas, larguras: [9, 9, 60, 90, 6, 30] }, { nome: 'Legenda', aoa: D.legenda, larguras: [16, 100] });
   return f;
 }
 const PCT_RE = /^-?\d+%$/;
@@ -592,13 +710,14 @@ async function _exportarPdf(modo){
     doc.lastAutoTable = { finalY: 47 + dy };
     tabela('Resumo', D.resumo.slice(D.resumo.findIndex(r => r[0] === 'Indicador')).filter(r => r.length === 3), { columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 40 } } });
     if (D.ranking) tabela('Ranking das unidades', D.ranking);
-    tabela('Por fator (e1 a e6 dependem da unidade; e7 é comercial)', D.porFator, { columnStyles: { 2: { cellWidth: 70 } } });
+    tabela('Por fator (e1 a e6 dependem da unidade; e7 é comercial)', D.porFator.filter(r => r.length > 1), { columnStyles: { 3: { cellWidth: 66 } } });
+    doc.setFontSize(7.5); doc.setTextColor(90, 90, 90); doc.text(doc.splitTextToSize(pdfTxt(legendaEscala(D.g)), W - 24), 12, doc.lastAutoTable.finalY + 4); doc.setTextColor(0, 0, 0); doc.lastAutoTable = { finalY: doc.lastAutoTable.finalY + 6 };
     tabela('Problema principal relatado e resolução', D.problemas.filter(r => r.length));
     tabela('Perfil dos clientes', D.perfil.filter(r => r.length));
     if (D.cobertura) tabela('Cobertura das unidades', D.cobertura);
     doc.addPage(); doc.lastAutoTable = { finalY: 14 };
     tabela('Comentários (ordem embaralhada)', D.comentarios, { columnStyles: { 0: { cellWidth: 130 } } });
-    tabela('Perguntas em uso (versão ' + PESQ_VER + ')', D.perguntas, { columnStyles: { 2: { cellWidth: 70 }, 3: { cellWidth: 120 } } });
+    tabela('Perguntas em uso (versão ' + PESQ_VER + ', escala com ' + ESC + ' respostas)', D.perguntas.filter(r => r.length > 1), { columnStyles: { 2: { cellWidth: 66 }, 3: { cellWidth: 112 } } });
     const total = doc.internal.getNumberOfPages(); const rodape = pdfTxt(`${D.titulo} - ${D.escopo} - gerado em ${dataLabel(hojeISO())} - uso interno`); const tituloFaixa = doc.splitTextToSize(pdfTxt(D.titulo), W - 72)[0];
     for (let p = 1; p <= total; p++) { doc.setPage(p); doc.setFontSize(7.5); doc.setTextColor(120, 120, 120); const lr = doc.splitTextToSize(rodape, W - 60); doc.text(lr, 12, H - 6 - 3.04 * (lr.length - 1)); doc.text(pdfTxt(`página ${p} de ${total}`), W - 12, H - 6, { align: 'right' }); if (p > 1) { try { doc.addImage('data:image/png;base64,' + LOGO_B64, 'PNG', 12, 5, 40, 9.2); doc.setDrawColor(cor[0], cor[1], cor[2]); doc.setLineWidth(0.8); doc.line(12, 16.5, W - 12, 16.5); doc.setFontSize(8); doc.setTextColor(cor[0], cor[1], cor[2]); doc.text(tituloFaixa, W - 12, 12, { align: 'right' }); } catch(e) {} } }
     const ok = await shareOrDownload(D.nome + '.pdf', doc.output('blob'), 'application/pdf');
@@ -636,7 +755,7 @@ document.addEventListener('click', e => {
     case 'tosetup': go('setup'); break;
     case 'start': { const u = (document.getElementById('s-unidade') || { value: settings.unidade }).value.trim().toUpperCase(); if (!u) { toast('Escolha a unidade primeiro.'); return; } settings.unidade = u; saveSettings(); go('welcome'); break; }   // o "ponto" (onde fica o tablet) só vem do QR (&p=); a pergunta na tela foi retirada a pedido do gestor (10/09/2026)
     case 'begin': state.r = {}; state.i = 0; state.t0 = Date.now(); go('q'); break;
-    case 'ans': { const q = perguntaAtual(); if (!q) return; const raw = el.dataset.v; state.r[q.codigo] = (q.tipo === 'escala5' || q.tipo === 'nps') ? (raw === 'NA' ? 'NA' : parseInt(raw, 10)) : raw; render();
+    case 'ans': { const q = perguntaAtual(); if (!q) return; const raw = el.dataset.v; state.r[q.codigo] = (q.tipo === 'escala' || q.tipo === 'nps') ? (raw === 'NA' ? 'NA' : parseInt(raw, 10)) : raw; render();
       clearTimeout(autoT); if (settings.autoAvanca !== false) autoT = setTimeout(() => { if (state.screen === 'q' && perguntaAtual() === q) avancar(); }, 380); break; }   // avança sozinho (configurável)
     case 'next': clearTimeout(autoT); avancar(); break;
     case 'back': clearTimeout(autoT); lerCamposLivres(); if (state.i > 0) { state.i--; go('q'); } break;
@@ -649,16 +768,25 @@ document.addEventListener('click', e => {
     case 'pinok': pinTentativa(); break;
     case 'admin': if (state.screen === 'setup') { go('pin', { pinPara: 'admin' }); } else go('admin'); break;
     case 'config': if (state.screen === 'setup') go('pin', { pinPara: 'config' }); else go('config'); break;
-    case 'consolidado': if (!state.cf) state.cf = cfDefault(); go('consolidado'); break;
-    case 'saveconfig': { const w = (document.getElementById('s-webhook') || { value: '' }).value.trim(); const np = (document.getElementById('s-pin') || { value: '' }).value.trim();
-      if (w && !/^https:\/\//.test(w)) { toast('A URL precisa começar com https://'); return; } if (np && !/^\d{4,8}$/.test(np)) { toast('O PIN deve ter de 4 a 8 dígitos.'); return; }
-      settings.webhook = w; if (np) settings.pin = np; settings.autoAvanca = !!((document.getElementById('s-auto') || { checked: true }).checked); saveSettings(); toast('Configurações salvas.'); go('admin'); break; }
+    case 'consolidado': if (!state.cf) state.cf = cfDefault(); go('consolidado'); if (syncOk()) sincronizar(true); break;   // ao abrir, já atualiza da nuvem em silêncio
+    case 'sync': sincronizar(false); break;
+    case 'syncfull': sincronizar(false, true); break;
+    case 'testarservidor': testarServidor(); break;
+    case 'saveconfig': { const w = (document.getElementById('s-webhook') || { value: '' }).value.trim(); const ch = (document.getElementById('s-chave') || { value: '' }).value.trim(); const np = (document.getElementById('s-pin') || { value: '' }).value.trim();
+      if (w && !/^https?:\/\//.test(w)) { toast('A URL precisa começar com https://'); return; } if (np && !/^\d{4,8}$/.test(np)) { toast('O PIN deve ter de 4 a 8 dígitos.'); return; } if (w && !ch) { toast('Digite também a chave de sincronização.'); return; }
+      const bc = !!((document.getElementById('s-contatos') || {}).checked);
+      if (w !== settings.webhook || bc !== !!settings.baixarContatos) { settings.ultimaSync = ''; LS.set('mpc_hist', histResponses().filter(h => !h.nuvem)); }   // trocou de servidor ou a regra de contatos: baixa tudo de novo na próxima vez
+      settings.webhook = w; settings.chave = ch; settings.baixarContatos = bc; if (np) settings.pin = np; settings.autoAvanca = !!((document.getElementById('s-auto') || { checked: true }).checked); saveSettings(); toast('Configurações salvas.'); go('admin'); break; }
     case 'unidpadrao': localStorage.removeItem('mpc_unidades'); toast('Lista padrão restaurada.'); render(); break;
+    case 'perguntas': go('perguntas'); break;
+    case 'savepergs': lerPerguntas(); break;
+    case 'resetpergs': localStorage.removeItem('mpc_perguntas'); aplicarPerguntas(); toast('Perguntas, respostas e pesos voltaram ao padrão (3 respostas).'); render(); break;
+    case 'exportpergs': shareOrDownload('perguntas_clientes_maxipark.json', JSON.stringify(Object.assign({ app: 'pesquisa-clientes-maxipark', ver: PESQ_VER }, { esc: ESC }, perguntasCfg()), null, 1), 'application/json').then(ok => { if (ok) toast('Arquivo gerado.'); }); break;
     case 'csv': shareOrDownload(dadosExport('atual').nome + '.csv', csvText(currentResponses())).then(ok => { if (ok) { markExported(); toast('CSV gerado.'); render(); } }); break;
     case 'csvtudo': { const D = dadosExport('tudo'); shareOrDownload(D.nome + '.csv', csvText(filtrar(poolTodas(), state.cf || cfDefault()))).then(ok => { if (ok) toast('CSV gerado.'); }); break; }
     case 'xlsx': exportarExcel(el.dataset.modo || 'atual'); break;
     case 'pdf': exportarPdf(el.dataset.modo || 'atual'); break;
-    case 'resend': sendPending(); toast('Enviando…'); break;
+    case 'resend': toast('Enviando…'); sendPending().then(n => { toast(n ? `${n} resposta(s) enviada(s) para a nuvem.` : 'Nada enviado: sem internet ou servidor não respondeu.'); render(); }); break;
     case 'wipe': state.confirma = { tipo: 'wipe', msg: `Apagar as ${currentResponses().length} respostas da unidade ${settings.unidade} deste tablet?${settings.exported[settings.unidade] ? '' : ' Elas AINDA NÃO foram exportadas.'}` }; render(); break;
     case 'wipeothers': { const outras = allResponses().filter(r => r.unidade !== settings.unidade); const naoExp = [...new Set(outras.filter(r => !settings.exported[r.unidade]).map(r => r.unidade))]; state.confirma = { tipo: 'wipeothers', msg: `Apagar as ${outras.length} respostas de outras unidades (${[...new Set(outras.map(r => r.unidade))].join(', ')})?${naoExp.length ? ' Ainda não exportadas: ' + naoExp.join(', ') + '.' : ''}` }; render(); break; }
     case 'confirmno': state.confirma = null; render(); break;
@@ -674,6 +802,7 @@ document.addEventListener('change', e => {
   if (el.matches('[data-cf]')) { state.cf = state.cf || cfDefault(); state.cf[el.dataset.cf] = el.value; if (el.dataset.cf === 'mes') state.cf.dia = ''; render(); }
   if (el.id === 'file-hist' && el.files[0]) importarHist(el.files[0]);
   if (el.id === 'file-unid' && el.files[0]) importarUnidades(el.files[0]);
+  if (el.id === 'file-pergs' && el.files[0]) importarPerguntas(el.files[0]);
 });
 document.addEventListener('input', e => {
   const el = e.target; resetIdle();
