@@ -65,6 +65,16 @@
   .boasvindas{text-align:center;padding:26px 22px}
   .boasvindas h1{font-size:36px;margin:12px 0 10px}
   .boasvindas p{font-size:20px;color:var(--cinza)}
+  .boasvindas p.quem-ajuda{font-size:16px;margin:0 0 14px}
+  .quem-titulo{font-size:22px;margin:18px 0 6px;color:var(--roxo-escuro)}
+  .quem-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:6px 0 0}
+  .quem-grid.n1{grid-template-columns:minmax(0,340px);justify-content:center} .quem-grid.n2{grid-template-columns:repeat(2,minmax(0,340px));justify-content:center}
+  .quem{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;min-height:176px;padding:18px 12px 16px;border:2px solid var(--linha);border-radius:18px;background:#fff;cursor:pointer;font-family:inherit}
+  .quem:active{background:var(--roxo-claro);border-color:var(--roxo)} .quem:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+  .quem .avatar{width:72px;height:72px;border-radius:50%;background:var(--roxo);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;letter-spacing:1px}
+  .quem .avatar.duo{width:auto;height:72px;background:none;letter-spacing:0} .quem .avatar.duo span{width:62px;height:62px;border-radius:50%;background:var(--roxo);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:21px;border:3px solid #fff} .quem .avatar.duo span+span{margin-left:-16px;background:var(--acento)}
+  .quem-nome{font-size:20px;font-weight:700;color:var(--roxo-escuro);line-height:1.2;text-wrap:balance;overflow-wrap:anywhere;max-width:100%} .quem-sub{font-size:14px;color:var(--cinza);line-height:1.25;overflow-wrap:anywhere;max-width:100%} .quem{min-width:0}
+  .so-reuniao{margin-top:12px} .so-reuniao .btn{min-height:44px;font-size:15px;padding:8px 14px}
   .rodape-kiosk{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:center;padding:8px 18px;font-size:13px;color:var(--cinza);background:transparent}
   .rodape-kiosk button{background:none;border:0;color:var(--cinza);font-size:13px;text-decoration:underline;cursor:pointer;padding:10px}
   .obrigado{text-align:center;padding:30px 20px}
@@ -84,8 +94,8 @@
   ul.lista{padding-left:20px;font-size:16px} ul.lista li{margin:6px 0}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#221C2E;color:#fff;padding:12px 18px;border-radius:12px;font-size:16px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:9}
   .toast.show{opacity:1}
-  @media (max-width:640px){ .pergunta{font-size:22px} .escala .opt{min-height:80px;padding:10px 4px} .escala .opt .n{font-size:24px} .escala .opt .rot{font-size:12px} .nps{gap:5px} .nps .opt{min-height:52px;font-size:18px} .boasvindas h1{font-size:28px} .wrap{padding:12px 12px 80px} .card{padding:16px} }
-  @media (max-height:600px) and (orientation:landscape){ .pergunta{font-size:21px;margin:2px 0 10px} .opt{min-height:52px;font-size:18px} .escala .opt{min-height:76px} .wrap{padding:8px 16px 70px} }
+  @media (max-width:640px){ .quem-grid,.quem-grid.n2{grid-template-columns:repeat(2,minmax(0,1fr))} .quem-grid.n3 .quem:nth-child(3){grid-column:1 / -1} .quem{min-height:150px} .pergunta{font-size:22px} .escala .opt{min-height:80px;padding:10px 4px} .escala .opt .n{font-size:24px} .escala .opt .rot{font-size:12px} .nps{gap:5px} .nps .opt{min-height:52px;font-size:18px} .boasvindas h1{font-size:28px} .wrap{padding:12px 12px 80px} .card{padding:16px} }
+  @media (max-height:600px) and (orientation:landscape){ .pergunta{font-size:21px;margin:2px 0 10px} .opt{min-height:52px;font-size:18px} .escala .opt{min-height:76px} .wrap{padding:8px 16px 70px} .boasvindas{padding:14px 18px} .boasvindas h1{font-size:26px;margin:6px 0 6px} .boasvindas p{font-size:17px} .logo-hero img{height:44px} .quem-titulo{font-size:19px;margin:8px 0 4px} .quem{min-height:120px;padding:10px 12px;gap:6px} .quem .avatar{width:52px;height:52px;font-size:20px} .quem .avatar.duo{height:52px} .quem .avatar.duo span{width:46px;height:46px;font-size:17px} .quem-nome{font-size:17px} }
 </style>
 </head>
 <body>
@@ -96,10 +106,12 @@
 /* =========================================================
    Avaliação da REUNIÃO DO CONSELHO — Maxipark
    Executivos e sócios avaliam, sem nome, a reunião do conselho e os conselheiros independentes, ao fim de cada reunião.
+   Na tela inicial cada respondente escolhe quem avalia: um conselheiro, os dois (executivos e sócios) ou só a reunião;
+   assim o conselheiro independente responde sobre a reunião e sobre o colega, nunca sobre si mesmo (coluna 'avaliados').
    Mesma estrutura das outras pesquisas: respostas ficam no aparelho (ou vão para a nuvem), área do avaliador com PIN,
    consolidado por reunião, Excel/PDF/CSV com o logo, perguntas/respostas/pesos editáveis. LEIA-ME, seção 12.
    ========================================================= */
-const VERSAO = '1.0.0';
+const VERSAO = '1.1.0';   // 1.1.0: tela inicial pergunta quem será avaliado (um conselheiro, os dois ou só a reunião); coluna 'avaliados'
 const PIN_PADRAO = '2819';   // mesmo PIN das outras pesquisas; troca em Configurações. Atenção: este código é público.
 const IDLE_MS = 180000;      // avaliação abandonada: descarta e volta à tela inicial
 const OBRIGADO_MS = 7000;
@@ -192,14 +204,22 @@ function registrarAbandono(){ if (state.r && state.r.r1 !== undefined) { const a
 aplicarPerguntas();
 
 /* ---------------- estado e navegação ---------------- */
-const state = { screen: settings.unidade ? 'welcome' : 'setup', i: 0, r: {}, pin: '', pinPara: 'admin', cf: null, confirma: null };
+const state = { screen: settings.unidade ? 'welcome' : 'setup', i: 0, r: {}, pin: '', pinPara: 'admin', cf: null, confirma: null, avaliar: [] };   // avaliar = códigos dos conselheiros que ESTE respondente escolheu avaliar na tela inicial ([] = só a reunião)
 let idleT = null, obrigadoT = null, autoT = null;
 function resetIdle(){ clearTimeout(idleT); if (state.screen === 'q') idleT = setTimeout(() => { registrarAbandono(); state.r = {}; go('welcome'); toast('Avaliação reiniciada por inatividade.'); }, IDLE_MS); }
 function go(screen, extra){ state.screen = screen; Object.assign(state, extra || {}); clearTimeout(obrigadoT); if (screen !== 'pin') state.pin = ''; state.confirma = null; render(); window.scrollTo(0, 0); resetIdle(); if (screen === 'thanks') obrigadoT = setTimeout(() => go('welcome'), OBRIGADO_MS); }
 function presente(c){ const p = settings.presentes || {}; return p[c] !== false; }   // conselheiro ausente (marcado na preparação): o bloco dele é pulado e grava 'NA'
-function visiveis(){   // reunião → blocos dos conselheiros PRESENTES em ordem sorteada por respondente → fechamento
+function avaliando(c){ return presente(c) && (state.avaliar || []).includes(c); }   // bloco perguntado a ESTE respondente: presente na reunião E escolhido na tela inicial
+function presentesDe(r){ if (r && typeof r.presentes === 'string') return r.presentes.split(' ').filter(Boolean); return CONSELHEIROS.map(cs => cs.c); }   // sem a coluna (fonte externa): todos
+function avaliadosDe(r){   // conselheiros avaliados num registro: coluna 'avaliados' (v1.1+); registros anteriores: todos os presentes; sem nenhuma das duas (CSV externo): quem tem alguma nota no bloco
+  if (r && typeof r.avaliados === 'string') return r.avaliados.split(' ').filter(Boolean);
+  if (r && typeof r.presentes === 'string') return r.presentes.split(' ').filter(Boolean);
+  return CONSELHEIROS.filter(cs => CRITERIOS_CONSELHEIRO.some(cr => num(r && r.r && r.r[cs.c + cr.n]))).map(cs => cs.c);
+}
+function iniciais(nome){ const p = String(nome || '').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase(); }
+function visiveis(){   // reunião → blocos dos conselheiros ESCOLHIDOS (e presentes) em ordem sorteada por respondente → fechamento
   const ordem = state.ordem || CONSELHEIROS.map(cs => cs.c);
-  const base = QUESTOES.filter(q => q.ativa !== false && (!q.bloco || q.bloco === 'reuniao' || presente(q.bloco)));
+  const base = QUESTOES.filter(q => q.ativa !== false && (!q.bloco || q.bloco === 'reuniao' || avaliando(q.bloco)));
   const reuniao = base.filter(q => q.bloco === 'reuniao'); const fecho = base.filter(q => !q.bloco);
   return reuniao.concat(ordem.flatMap(c => base.filter(q => q.bloco === c)), fecho);
 }
@@ -215,7 +235,7 @@ function viewSetup(){
   const anteriores = [...new Set(allResponses().concat(histResponses()).map(r => r.unidade))].sort().reverse().slice(0, 6);
   return header('Preparar a avaliação') + `<div class="wrap"><div class="card">${logoHero()}
     <h1>Avaliação da reunião do conselho — preparar</h1>
-    <p class="muted">Informe a data da reunião (e um nome, se quiser) e toque em <b>Iniciar avaliação</b>. Passe o tablet para cada executivo ou sócio ao fim da reunião; a tela volta sozinha ao início depois de cada resposta. Para ver resultados, <i>Área do avaliador</i> (PIN).</p>
+    <p class="muted">Informe a data da reunião (e um nome, se quiser) e toque em <b>Iniciar avaliação</b>. Passe o tablet para cada executivo, sócio e conselheiro independente ao fim da reunião; na tela inicial cada um escolhe quem avalia (um conselheiro, os dois ou só a reunião — o conselheiro independente avalia só o colega) e a tela volta sozinha ao início depois de cada resposta. Para ver resultados, <i>Área do avaliador</i> (PIN).</p>
     <label>Data da reunião</label><input type="date" id="s-data" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(u) ? u : hojeISO())}">
     <label>Nome da reunião (opcional)</label><input type="text" id="s-nome" value="${esc(nome)}" placeholder="ex.: Reunião ordinária de setembro" maxlength="80">
     <label>Conselheiros independentes presentes nesta reunião</label>
@@ -228,10 +248,20 @@ function viewSetup(){
   </div></div>`;
 }
 function viewWelcome(){
+  const pres = CONSELHEIROS.filter(cs => presente(cs.c));   // só quem estava na reunião pode ser escolhido
+  const cartao = (codigos, nome, sub, avatar) => `<button class="quem" data-action="begin" data-avaliar="${esc(codigos.join(' '))}" aria-label="Avaliar ${esc(nome)} — ${esc(sub)}">${avatar}<span class="quem-nome">${esc(nome)}</span><span class="quem-sub">${esc(sub)}</span></button>`;
+  const avatar1 = cs => `<span class="avatar" aria-hidden="true">${esc(iniciais(cs.nome))}</span>`;
+  const avatar2 = `<span class="avatar duo" aria-hidden="true">${pres.map(cs => `<span>${esc(iniciais(cs.nome))}</span>`).join('')}</span>`;
+  let escolha;
+  if (!pres.length) escolha = `<p class="quem-ajuda">Nenhum conselheiro independente estava presente: a avaliação é só da reunião.</p><div class="linha" style="justify-content:center"><button class="btn grande block" data-action="begin" data-avaliar="">Toque aqui para começar</button></div>`;
+  else escolha = `<h2 class="quem-titulo">Quem você vai avaliar?</h2>
+    <p class="quem-ajuda">${pres.length > 1 ? 'Executivos e sócios avaliam <b>os dois</b>. Conselheiro independente: escolha <b>só o colega</b>. Só a governança vê respostas individuais.' : `Só ${esc(pres[0].nome)} esteve presente. ${esc(pres[0].nome)} avalia só a reunião.`} A reunião é avaliada por todos.</p>
+    <div class="quem-grid n${pres.length > 1 ? pres.length + 1 : 1}">${pres.map(cs => cartao([cs.c], cs.nome, cs.titulo, avatar1(cs))).join('')}${pres.length > 1 ? cartao(pres.map(cs => cs.c), 'Os dois conselheiros', 'executivos e sócios', avatar2) : ''}</div>
+    <div class="linha so-reuniao" style="justify-content:center"><button class="btn ghost" data-action="begin" data-avaliar="">Avaliar só a reunião</button></div>`;
   return header(esc(dataLabel(settings.unidade))) + `<div class="wrap"><div class="card boasvindas">${logoHero()}
     <h1>Como foi a reunião do conselho de hoje?</h1>
-    <p>${esc(unidadeLabel(settings.unidade))}. Sua avaliação é <b>anônima</b> e leva <b>uns 3 minutos</b>: a reunião, os conselheiros independentes e o que manter ou mudar.</p>
-    <div class="linha" style="justify-content:center"><button class="btn grande block" data-action="begin">Toque aqui para começar</button></div>
+    <p>${esc(unidadeLabel(settings.unidade))}. Sua avaliação é <b>anônima</b> e leva <b>uns 3 minutos</b>: a reunião, ${pres.length ? 'quem você escolher abaixo' : 'a nota'} e o que manter ou mudar.</p>
+    ${escolha}
   </div></div>
   <div class="rodape-kiosk"><span>Maxipark · Governança</span><button data-action="pinadmin">Área do avaliador</button></div>`;
 }
@@ -277,18 +307,24 @@ function viewPin(){
 /* ---------------- cálculos ---------------- */
 function agregar(list){
   const g = { n: list.length, fatores: [], blocos: {}, nBloco: {}, nota: null, notaN: 0, nota9: null, papeis: {}, mais: [], mudar: [], durMed: null, escs: {} };
-  CONSELHEIROS.forEach(cs => { g.nBloco[cs.c] = list.filter(x => !x.presentes || String(x.presentes).split(' ').includes(cs.c)).length; });   // respostas em que o conselheiro estava presente (avaliável)
+  CONSELHEIROS.forEach(cs => { g.nBloco[cs.c] = list.filter(x => avaliadosDe(x).includes(cs.c)).length; });   // respostas em que o conselheiro foi escolhido para ser avaliado (registros anteriores à v1.1: presença)
+  g.soReuniao = list.filter(x => !avaliadosDe(x).length).length;   // responderam só sobre a reunião
+  g.ausente = {}; CONSELHEIROS.forEach(cs => { g.ausente[cs.c] = list.length > 0 && list.every(x => !presentesDe(x).includes(cs.c)); });   // faltou em todas as reuniões do conjunto
   list.forEach(x => { const e = escDe(x); g.escs[e] = (g.escs[e] || 0) + 1; }); const escUnica = Object.keys(g.escs).every(k => Number(k) === ESC); g.escMista = !escUnica;
   const media = vs => vs.length ? Math.round(vs.reduce((a, b) => a + b, 0) / vs.length * 10) / 10 : null;
   const notas = list.map(r => r.r.nota).filter(num); if (notas.length) { g.notaN = notas.length; g.nota = media(notas); g.nota9 = Math.round(notas.filter(v => v >= 9).length / notas.length * 100); }
   const pond = {};
-  g.fatores = FATORES.map(q => { const xs = list.filter(x => num(x.r[q.codigo])); const na = list.filter(x => x.r[q.codigo] === 'NA').length; const pos = xs.filter(x => positivo(x.r[q.codigo], escDe(x))).length; const neg = xs.filter(x => negativo(x.r[q.codigo], escDe(x))).length;
+  g.fatores = FATORES.map(q => { const base = (q.bloco && q.bloco !== 'reuniao') ? list.filter(x => avaliadosDe(x).includes(q.bloco)) : list;   // item de conselheiro: só quem foi perguntado (o 'NA' de bloco não escolhido não é "não sei")
+    const xs = base.filter(x => num(x.r[q.codigo])); const na = base.filter(x => x.r[q.codigo] === 'NA').length; const pos = xs.filter(x => positivo(x.r[q.codigo], escDe(x))).length; const neg = xs.filter(x => negativo(x.r[q.codigo], escDe(x))).length;
     const dist = Array.from({ length: ESC }, (_, i) => xs.filter(x => escDe(x) === ESC && x.r[q.codigo] === i + 1).length);
     const p = pond[q.bloco] = pond[q.bloco] || { num: 0, den: 0 }; p.num += q.peso * pos; p.den += q.peso * xs.length;
     return { codigo: q.codigo, bloco: q.bloco, fator: q.fator, texto: q.texto, peso: q.peso, n: xs.length, na, dist, pct: xs.length ? Math.round(pos / xs.length * 100) : null, insat: xs.length ? Math.round(neg / xs.length * 100) : null, media: (xs.length && escUnica) ? media(xs.map(x => x.r[q.codigo])) : null }; });
   Object.keys(pond).forEach(b => { g.blocos[b] = pond[b].den ? Math.round(pond[b].num / pond[b].den * 100) : null; });   // índice ponderado (% positivo × peso) por bloco: reunião e cada conselheiro
   list.forEach(r => { ['mais', 'mudar'].forEach(k => { const t = r.r[k]; if (t && t !== 'NA' && String(t).trim()) g[k].push({ texto: String(t).trim(), unidade: r.unidade }); }); });
-  g.identificavel = g.n > 0 && g.n < N_IDENTIFICAVEL;
+  g.identTotal = g.n > 0 && g.n < N_IDENTIFICAVEL;
+  g.identBloco = {}; CONSELHEIROS.forEach(cs => { g.identBloco[cs.c] = g.nBloco[cs.c] > 0 && g.nBloco[cs.c] < N_IDENTIFICAVEL; });   // bloco com 1 ou 2 avaliações: quem avaliou reconhece a outra resposta
+  g.blocosIdent = CONSELHEIROS.filter(cs => g.identBloco[cs.c]).map(cs => `${cs.nome} (${g.nBloco[cs.c]})`);
+  g.identificavel = g.identTotal || g.blocosIdent.length > 0;
   return g;
 }
 function poolTodas(){ const loc = allResponses(); const ids = new Set(loc.map(r => r.id)); return loc.concat(histResponses().filter(r => !ids.has(r.id))); }
@@ -307,9 +343,14 @@ function fmtPct(v){ return v == null ? '—' : v + '%'; }
 
 /* ---------------- área do avaliador ---------------- */
 function legendaEscala(g){ return `Positivo = ${ESC === 3 ? 'a melhor resposta ("Sim")' : 'as duas melhores respostas (4 e 5)'}; negativo = ${ESC === 3 ? 'a pior ("Não")' : 'as duas piores (1 e 2)'}. O índice de cada bloco é o % positivo ponderado pelo peso de cada item (1 a 3; Configurações → Editar perguntas).${g && g.escMista ? ` Há respostas gravadas com outra escala (${Object.keys(g.escs).join(' e ')} opções; a atual tem ${ESC}): os percentuais valem para todas; médias e distribuição só saem quando tudo está na escala atual.` : ''}`; }
-function avisoN(g){ if (!g.n) return ''; if (g.identificavel) return `<div class="ruim"><b>${g.n} resposta${g.n === 1 ? '' : 's'}: o resultado identifica quem respondeu.</b> Uso restrito da governança — não mostre nem discuta individualmente.</div>`; if (g.n < 5) return `<div class="aviso">Poucas respostas (${g.n}): leia como indicação, não como medida.</div>`; return ''; }
+function avisoN(g){ if (!g.n) return ''; let h = '';
+  if (g.identTotal) h += `<div class="ruim"><b>${g.n} resposta${g.n === 1 ? '' : 's'}: o resultado identifica quem respondeu.</b> Uso restrito da governança — não mostre nem discuta individualmente.</div>`;
+  else if (g.blocosIdent.length) h += `<div class="ruim"><b>Bloco com menos de ${N_IDENTIFICAVEL} avaliações: ${esc(g.blocosIdent.join(', '))}.</b> Quem avaliou reconhece a outra resposta — não mostre nem discuta esse bloco individualmente.</div>`;
+  if (!g.identTotal && g.n < 5) h += `<div class="aviso">Poucas respostas (${g.n}): leia como indicação, não como medida.</div>`;
+  return h; }
 function kpis(g){
-  return `<div class="kpi"><div><b>${g.n}</b><span>respostas</span></div><div><b>${fmtPct(g.blocos.reuniao)}</b><span>índice da reunião</span></div>${CONSELHEIROS.map(cs => `<div><b>${fmtPct(g.blocos[cs.c])}</b><span>índice · ${esc(cs.nome)}${g.nBloco[cs.c] !== g.n ? ` (${g.nBloco[cs.c]} resp.)` : ''}</span></div>`).join('')}<div><b>${g.nota == null ? '—' : g.nota}</b><span>nota média "valeu o tempo" (0-10)${g.notaN && g.notaN !== g.n ? ` · ${g.notaN} nota(s)` : ''}</span></div><div><b>${fmtPct(g.nota9)}</b><span>deram 9 ou 10</span></div></div>
+  return `<div class="kpi"><div><b>${g.n}</b><span>respostas</span></div><div><b>${fmtPct(g.blocos.reuniao)}</b><span>índice da reunião</span></div>${CONSELHEIROS.map(cs => `<div><b>${fmtPct(g.blocos[cs.c])}</b><span>índice · ${esc(cs.nome)}${g.nBloco[cs.c] !== g.n ? ` (${g.nBloco[cs.c]} aval.)` : ''}${g.identBloco[cs.c] ? ' <span class="tag pend">identificável</span>' : ''}</span></div>`).join('')}<div><b>${g.nota == null ? '—' : g.nota}</b><span>nota média "valeu o tempo" (0-10)${g.notaN && g.notaN !== g.n ? ` · ${g.notaN} nota(s)` : ''}</span></div><div><b>${fmtPct(g.nota9)}</b><span>deram 9 ou 10</span></div></div>
+  ${g.n && CONSELHEIROS.length ? `<p class="small muted">Quem foi avaliado (escolha na tela inicial): ${CONSELHEIROS.map(cs => `<b>${esc(cs.nome)}</b> ${g.ausente[cs.c] ? 'ausente' : `em ${g.nBloco[cs.c]} de ${g.n}`}`).join(' · ')}${g.soReuniao ? ` · só a reunião: ${g.soReuniao}` : ''}.</p>` : ''}
   <p class="small muted">${legendaEscala(g)}</p>`;
 }
 function tabelaFatores(g, bloco){
@@ -323,7 +364,7 @@ function comentariosHtml(g){
   return bloco(g.mais, 'O que funcionou bem') + bloco(g.mudar, 'O que mudar');
 }
 function blocosHtml(g){
-  return `<h3>A reunião</h3>${tabelaFatores(g, 'reuniao')}` + CONSELHEIROS.map(cs => `<h3>${esc(cs.titulo)} · ${esc(cs.nome)} <span class="small muted">índice ${fmtPct(g.blocos[cs.c])}</span></h3>${tabelaFatores(g, cs.c)}`).join('');
+  return `<h3>A reunião</h3>${tabelaFatores(g, 'reuniao')}` + CONSELHEIROS.map(cs => `<h3>${esc(cs.titulo)} · ${esc(cs.nome)} <span class="small muted">índice ${fmtPct(g.blocos[cs.c])}${g.nBloco[cs.c] !== g.n ? ` · ${g.nBloco[cs.c]} avaliação(ões)` : ''}</span>${g.identBloco[cs.c] ? ' <span class="tag pend">identificável: não discutir</span>' : ''}</h3>${tabelaFatores(g, cs.c)}`).join('');
 }
 function viewAdmin(){
   const list = currentResponses(); const g = agregar(list); const u = settings.unidade;
@@ -428,7 +469,7 @@ function viewConsolidado(){
     ${avisoN(geral)}${kpis(geral)}
     <h3>Evolução por reunião</h3>
     <div class="tabela-wrap"><table><tr><th class="l">Reunião</th><th>Respostas</th><th>Índice da reunião</th>${CONSELHEIROS.map(cs => `<th>${esc(cs.nome)}</th>`).join('')}<th>Nota média (0-10)</th><th>Deram 9-10</th></tr>
-    ${reunioesT.map(u => `<tr><td class="l"><b>${esc(dataLabel(u.unidade))}</b> <span class="small muted">${esc(u.nome || '')}</span>${u.identificavel ? ' <span class="tag pend">identificável</span>' : ''}</td><td>${u.n}</td><td><b>${fmtPct(u.blocos.reuniao)}</b></td>${CONSELHEIROS.map(cs => `<td>${fmtPct(u.blocos[cs.c])}</td>`).join('')}<td>${u.nota == null ? '—' : u.nota}</td><td>${fmtPct(u.nota9)}</td></tr>`).join('') || `<tr><td colspan="${5 + CONSELHEIROS.length}" class="muted">Sem respostas no filtro.</td></tr>`}</table></div>
+    ${reunioesT.map(u => `<tr><td class="l"><b>${esc(dataLabel(u.unidade))}</b> <span class="small muted">${esc(u.nome || '')}</span>${u.identificavel ? ' <span class="tag pend">identificável</span>' : ''}</td><td>${u.n}</td><td><b>${fmtPct(u.blocos.reuniao)}</b></td>${CONSELHEIROS.map(cs => `<td>${fmtPct(u.blocos[cs.c])}${u.nBloco[cs.c] !== u.n ? ` <span class="small muted">(${u.nBloco[cs.c]} aval.)</span>` : ''}${u.identBloco[cs.c] ? ' <span class="tag pend">identificável</span>' : ''}</td>`).join('')}<td>${u.nota == null ? '—' : u.nota}</td><td>${fmtPct(u.nota9)}</td></tr>`).join('') || `<tr><td colspan="${5 + CONSELHEIROS.length}" class="muted">Sem respostas no filtro.</td></tr>`}</table></div>
     <p class="legenda">Índices = % positivo ponderado pelos pesos. Compare a tendência ao longo das reuniões; "identificável" = menos de ${N_IDENTIFICAVEL} respostas.</p>
     ${geral.n ? blocosHtml(geral) + `<details><summary>Ler os ${geral.mais.length + geral.mudar.length} comentários (ordem embaralhada)</summary>${comentariosHtml(geral)}</details>` : ''}
     <h3>Exportar e juntar aparelhos</h3>
@@ -460,7 +501,7 @@ function gravar(){
   if (r.nota === undefined) r.nota = '';   // nota opcional em branco
   const now = new Date();
   // anonimato em grupo pequeno: não grava hora nem duração da resposta; só a data da reunião
-  const rec = { id: uid(), versao: VERSAO, ver: PESQ_VER, esc: ESC, unidade: settings.unidade, reuniao: reuniaoNome(settings.unidade), presentes: CONSELHEIROS.filter(cs => presente(cs.c)).map(cs => cs.c).join(' '), data: hojeISO(now), r, sent: false };
+  const rec = { id: uid(), versao: VERSAO, ver: PESQ_VER, esc: ESC, unidade: settings.unidade, reuniao: reuniaoNome(settings.unidade), presentes: CONSELHEIROS.filter(cs => presente(cs.c)).map(cs => cs.c).join(' '), avaliados: CONSELHEIROS.filter(cs => avaliando(cs.c)).map(cs => cs.c).join(' '), data: hojeISO(now), r, sent: false };   // avaliados = quem este respondente escolheu na tela inicial ('' = só a reunião)
   const list = allResponses(); list.push(rec);
   if (!saveResponses(list)) { go('saveerror'); return; }
   if (settings.exported[settings.unidade]) { delete settings.exported[settings.unidade]; saveSettings(); }
@@ -470,13 +511,16 @@ function gravar(){
 /* ---------------- sincronização online (servidor/Code.gs) ---------------- */
 const APP_ID = 'pesquisa-conselho-maxipark';
 function syncOk(){ return !!(settings.webhook && settings.chave); }
-function payloadDe(r){ const p = { app: APP_ID, versao: r.versao, ver: r.ver || PESQ_VER, esc: escDe(r), id: r.id, unidade: r.unidade, reuniao: r.reuniao || reuniaoNome(r.unidade), presentes: r.presentes || '', data: r.data }; COLS_RESP.forEach(c => { p[c] = r.r[c] === undefined || r.r[c] === null ? '' : r.r[c]; }); return p; }
+function payloadDe(r){ const p = { app: APP_ID, versao: r.versao, ver: r.ver || PESQ_VER, esc: escDe(r), id: r.id, unidade: r.unidade, reuniao: r.reuniao || reuniaoNome(r.unidade), presentes: r.presentes || '', avaliados: avaliadosDe(r).join(' '), data: r.data }; COLS_RESP.forEach(c => { p[c] = r.r[c] === undefined || r.r[c] === null ? '' : r.r[c]; }); return p; }
 function registroDe(p){
   if (!p || !p.id) return null; const r = {};
   COLS_RESP.forEach(k => { let v = p[k]; if (v === undefined || v === null || v === '') return; if (NUMERICAS.has(k) && v !== 'NA') { const n = parseInt(v, 10); v = isNaN(n) ? v : n; } r[k] = v; });
   r.mais = r.mais || ''; r.mudar = r.mudar || ''; const escv = parseInt(p.esc, 10);
   const unidade = String(p.unidade || ''); if (p.reuniao && unidade && !reuniaoNome(unidade)) { const m = reunioes(); m[unidade] = String(p.reuniao); LS.set('mpco_reunioes', m); }
-  return { id: String(p.id), versao: p.versao || '', ver: p.ver || PESQ_VER, esc: (escv === 3 || escv === 5) ? escv : undefined, unidade, reuniao: p.reuniao || '', presentes: p.presentes || '', data: p.data || '', r, sent: true, nuvem: true };
+  const out = { id: String(p.id), versao: p.versao || '', ver: p.ver || PESQ_VER, esc: (escv === 3 || escv === 5) ? escv : undefined, unidade, reuniao: p.reuniao || '', data: p.data || '', r, sent: true, nuvem: true };
+  if (typeof p.presentes === 'string') out.presentes = p.presentes;   // sem a chave (fonte externa): avaliadosDe/presentesDe inferem
+  if (typeof p.avaliados === 'string') out.avaliados = p.avaliados;   // ausente nos registros anteriores à v1.1 (aí valem os presentes)
+  return out;
 }
 async function apiPost(body){ const res = await fetch(settings.webhook, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ chave: settings.chave }, body)) }); if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }
 async function apiGet(params){ const u = new URL(settings.webhook); Object.entries(Object.assign({ chave: settings.chave }, params)).forEach(([k, v]) => u.searchParams.set(k, v)); const res = await fetch(u.toString()); if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }
@@ -521,9 +565,9 @@ async function testarServidor(){
 window.addEventListener('online', () => sendPending());
 
 /* ---------------- CSV ---------------- */
-const CSV_FIXAS = ['versao', 'ver', 'esc', 'id', 'unidade', 'reuniao', 'presentes', 'data'];   // sem hora: em grupo pequeno, a hora identificaria quem respondeu
+const CSV_FIXAS = ['versao', 'ver', 'esc', 'id', 'unidade', 'reuniao', 'presentes', 'avaliados', 'data'];   // sem hora: em grupo pequeno, a hora identificaria quem respondeu
 function csvCols(){ return CSV_FIXAS.concat(COLS_RESP); }
-function celula(r, c){ if (c === 'reuniao') return r.reuniao || reuniaoNome(r.unidade); if (CSV_FIXAS.includes(c)) return r[c]; return r.r[c]; }
+function celula(r, c){ if (c === 'reuniao') return r.reuniao || reuniaoNome(r.unidade); if (c === 'avaliados') return avaliadosDe(r).join(' '); if (CSV_FIXAS.includes(c)) return r[c]; return r.r[c]; }
 function csvCell(v){ if (v === undefined || v === null) return ''; let s = String(v).replace(/\r?\n|\r/g, ' '); return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
 function csvText(list){ const cols = csvCols(); return '﻿' + cols.join(';') + '\n' + shuffle(list).map(r => cols.map(c => csvCell(celula(r, c))).join(';')).join('\n') + '\n'; }   // linhas embaralhadas: a ordem de resposta também identificaria
 function parseDelimited(text){
@@ -543,7 +587,10 @@ function csvToResponses(text){
   rows.slice(1).forEach(c => { const g = n => { const i = idx(n); return i >= 0 ? (c[i] || '').trim() : ''; };
     const r = {}; COLS_RESP.forEach(k => { const v = g(k); if (v === '') return; if (NUMERICAS.has(k)) r[k] = v === 'NA' ? 'NA' : (isNaN(parseInt(v, 10)) ? v : parseInt(v, 10)); else r[k] = v; }); r.mais = r.mais || ''; r.mudar = r.mudar || '';
     const escv = parseInt(g('esc'), 10); const unidade = g('unidade'); const nome = g('reuniao'); if (nome && unidade && !reuniaoNome(unidade)) { const m = reunioes(); m[unidade] = nome; LS.set('mpco_reunioes', m); }
-    out.push({ id: g('id') || uid(), versao: g('versao') || VERSAO, ver: g('ver') || PESQ_VER, esc: (escv === 3 || escv === 5) ? escv : undefined, unidade, reuniao: nome, presentes: g('presentes'), data: g('data'), r, sent: true }); });
+    const rec = { id: g('id') || uid(), versao: g('versao') || VERSAO, ver: g('ver') || PESQ_VER, esc: (escv === 3 || escv === 5) ? escv : undefined, unidade, reuniao: nome, data: g('data'), r, sent: true };
+    if (idx('presentes') >= 0) rec.presentes = g('presentes');   // CSV externo sem a coluna: avaliadosDe/presentesDe inferem pelas notas
+    if (idx('avaliados') >= 0) rec.avaliados = g('avaliados');   // CSV anterior à v1.1 não tem a coluna: valem os presentes
+    out.push(rec); });
   return out;
 }
 
@@ -569,17 +616,17 @@ function dadosExport(modo){
   const escopo = atual ? `${unidadeLabel(settings.unidade)} — só respostas deste aparelho` : `Filtros: ${calcConsolidado(cf).filtroTxt}`;
   const aband = atual ? (abandonos()[settings.unidade] || 0) : Object.values(abandonos()).reduce((a, b) => a + b, 0);
   const resumo = [[titulo], ['Gerado em', dataLabel(hojeISO())], [atual ? 'Reunião' : 'Filtros', escopo], ['Versão do app / do questionário', `${VERSAO} / ${PESQ_VER}`], [],
-    ['Indicador', 'Valor', 'Observação'], ['Respostas', g.n, g.identificavel ? `menos de ${N_IDENTIFICAVEL}: identifica quem respondeu — uso restrito` : (aband ? `${aband} começaram e não terminaram (fora das contas)` : '')], ['Escala das respostas', `${ESC} respostas`, g.escMista ? 'há respostas de outra escala no conjunto (coluna esc)' : ''],
-    ['Índice da reunião (% positivo ponderado)', fmtPct(g.blocos.reuniao), 'itens r1 a r7 × peso']].concat(CONSELHEIROS.map(cs => [`Índice · ${cs.nome} (% positivo ponderado)`, fmtPct(g.blocos[cs.c]), `itens ${cs.c}1 a ${cs.c}5 × peso`])).concat([
-    ['Nota média "valeu o tempo" (0-10)', g.nota == null ? '' : g.nota, g.notaN ? `${g.notaN} nota(s)` : ''], ['% que deram 9 ou 10', fmtPct(g.nota9), ''], ['Tempo mediano de resposta (s)', g.durMed == null ? '' : g.durMed, ''], [],
-    ['Uso restrito da governança da Maxipark. Resultados por reunião com menos de 3 respostas não podem ser discutidos individualmente.']]);
+    ['Indicador', 'Valor', 'Observação'], ['Respostas', g.n, g.identTotal ? `menos de ${N_IDENTIFICAVEL}: identifica quem respondeu — uso restrito` : (aband ? `${aband} começaram e não terminaram (fora das contas)` : '')], ['Escala das respostas', `${ESC} respostas`, g.escMista ? 'há respostas de outra escala no conjunto (coluna esc)' : ''],
+    ['Índice da reunião (% positivo ponderado)', fmtPct(g.blocos.reuniao), `itens r1 a r7${FATORES.some(q => q.codigo === 'r8') ? ' e r8' : ''} × peso`]].concat(CONSELHEIROS.map(cs => [`Índice · ${cs.nome} (% positivo ponderado)`, fmtPct(g.blocos[cs.c]), `itens ${cs.c}1 a ${cs.c}5 × peso · ${g.ausente[cs.c] ? 'ausente' : `avaliado em ${g.nBloco[cs.c]} de ${g.n} resposta(s)`}${g.identBloco[cs.c] ? ` — menos de ${N_IDENTIFICAVEL} avaliações: identifica quem respondeu, uso restrito` : ''}`])).concat([
+    ['Nota média "valeu o tempo" (0-10)', g.nota == null ? '' : g.nota, g.notaN ? `${g.notaN} nota(s)` : ''], ['% que deram 9 ou 10', fmtPct(g.nota9), ''], ['Responderam só sobre a reunião', g.soReuniao || 0, 'sem conselheiro avaliado (escolha na tela inicial ou nenhum conselheiro presente)'], [],
+    ['Uso restrito da governança da Maxipark. Reuniões com menos de 3 respostas, ou blocos de conselheiro com menos de 3 avaliações, identificam quem respondeu: não discutir individualmente. A aba Respostas (coluna avaliados) pode identificar a resposta dos conselheiros independentes.']]);
   const porFator = [['Código', 'Bloco', 'Item', 'Peso', 'Texto', 'Responderam', 'Não sei / n.a.', '% positivo', '% negativo', `Média (1-${ESC})`].concat(Array.from({ length: ESC }, (_, i) => String(i + 1)))].concat(g.fatores.map(f => [f.codigo, blocoNome(f.bloco), f.fator, f.peso, f.texto, f.n, f.na, f.pct == null ? '' : f.pct + '%', f.insat == null ? '' : f.insat + '%', f.media == null ? '' : f.media].concat(f.dist))).concat([[], [legendaEscala(g)]]);
-  const cols = csvCols(); const respostas = [cols].concat(filt.map(r => cols.map(c => { const v = celula(r, c); return v === undefined || v === null ? '' : v; })));
+  const cols = csvCols(); const respostas = [cols].concat(shuffle(filt).map(r => cols.map(c => { const v = celula(r, c); return v === undefined || v === null ? '' : v; })));   // embaralhado como o CSV: a ordem de resposta identificaria
   const comentarios = [['Tipo', 'Comentário', 'Reunião']].concat(shuffle(g.mais).map(c => ['O que funcionou bem', c.texto, dataLabel(c.unidade)]), shuffle(g.mudar).map(c => ['O que mudar', c.texto, dataLabel(c.unidade)]));
   let evolucao = null;
-  if (!atual) { const C = calcConsolidado(cf); evolucao = [['Reunião', 'Nome', 'Respostas', 'Índice da reunião'].concat(CONSELHEIROS.map(cs => 'Índice · ' + cs.nome), ['Nota média (0-10)', '% 9-10', 'Aviso'])].concat(C.reunioesT.map(u => [dataLabel(u.unidade), u.nome || '', u.n, fmtPct(u.blocos.reuniao)].concat(CONSELHEIROS.map(cs => fmtPct(u.blocos[cs.c])), [u.nota == null ? '' : u.nota, fmtPct(u.nota9), u.identificavel ? 'identificável (menos de 3 respostas)' : '']))); }
+  if (!atual) { const C = calcConsolidado(cf); evolucao = [['Reunião', 'Nome', 'Respostas', 'Índice da reunião'].concat(CONSELHEIROS.map(cs => 'Índice · ' + cs.nome), ['Nota média (0-10)', '% 9-10', 'Aviso'])].concat(C.reunioesT.map(u => [dataLabel(u.unidade), u.nome || '', u.n, fmtPct(u.blocos.reuniao)].concat(CONSELHEIROS.map(cs => fmtPct(u.blocos[cs.c]) + (u.nBloco[cs.c] !== u.n ? ` (${u.nBloco[cs.c]} aval.)` : '')), [u.nota == null ? '' : u.nota, fmtPct(u.nota9), u.identTotal ? 'identificável (menos de 3 respostas)' : (u.blocosIdent.length ? 'identificável: ' + u.blocosIdent.join(', ') + ' com menos de 3 avaliações' : '')]))); }
   const perguntas = [['Código', 'Bloco', 'Tipo', 'Pergunta', 'Respostas (código — texto)', 'Peso']].concat(QUESTOES.map(q => [q.codigo, q.bloco ? blocoNome(q.bloco) : (q.codigo === 'nota' ? 'Fechamento' : 'Fechamento'), q.tipo, q.texto, q.opcoes ? q.opcoes.map(o => o.c + ' — ' + o.t).join(' | ') : (q.tipo === 'escala' ? q.rotulos.map((t, i) => (i + 1) + ' = ' + t).join(' | ') + (q.na ? ` | NA = ${q.na}` : '') : (q.tipo === 'nps' ? `0 = ${q.pontas[0]} … 10 = ${q.pontas[1]}` : q.campos.map(cp => cp.c + ': ' + cp.t).join(' | '))), q.peso || ''])).concat([[], [perguntasAlteradas() ? 'Perguntas, respostas, pesos ou nomes editados neste aparelho (Configurações → Editar perguntas).' : 'Perguntas padrão do questionário ' + PESQ_VER + '.']]);
-  const legenda = [['Campo', 'Significado'], ['ver', `versão do questionário (${PESQ_VER})`], ['esc', 'nº de respostas das escalas (3 ou 5); positivo = 3 (com 3) ou 4-5 (com 5); negativo = 1 (com 3) ou 1-2 (com 5)'], ['unidade / reuniao', 'código da reunião (data AAAA-MM-DD) e nome opcional'], ['r1…r7', 'a reunião: 1 (pior) … ' + ESC + ' (melhor); NA = não sei / não se aplica; peso 1-3 na aba Perguntas']].concat(CONSELHEIROS.map(cs => [`${cs.c}1…${cs.c}5`, `${cs.nome}: preparo, contribuição, independência, escuta, interesse da empresa (mesma escala)`])).concat([['nota', '0-10: quanto a reunião valeu o tempo'], ['mais / mudar', 'campos abertos (até 500 caracteres), ordem embaralhada nos relatórios'], ['papel', 'códigos na aba Perguntas (nao_informo = preferiu não dizer)'], ['dur', 'segundos entre o primeiro toque e o envio'], ['vazio × NA', 'NA = não sei / não se aplica; vazio = não respondido']]);
+  const legenda = [['Campo', 'Significado'], ['ver', `versão do questionário (${PESQ_VER})`], ['esc', 'nº de respostas das escalas (3 ou 5); positivo = 3 (com 3) ou 4-5 (com 5); negativo = 1 (com 3) ou 1-2 (com 5)'], ['unidade / reuniao', 'código da reunião (data AAAA-MM-DD) e nome opcional'], ['r1…r8', 'a reunião: 1 (pior) … ' + ESC + ' (melhor); NA = não sei / não se aplica; peso 1-3 na aba Perguntas; r8 (quem presidiu) ' + (FATORES.some(q => q.codigo === 'r8') ? 'ligada neste aparelho' : 'desligada neste aparelho: a coluna fica NA')]].concat(CONSELHEIROS.map(cs => [`${cs.c}1…${cs.c}5`, `${cs.nome}: preparo, contribuição, perguntas que qualificam as decisões, independência construtiva, escuta (mesma escala; NA em todo o bloco quando não foi avaliado)`])).concat([['nota', '0-10: quanto a reunião valeu o tempo'], ['mais / mudar', 'campos abertos (até 500 caracteres), ordem embaralhada nos relatórios'], ['presentes', 'códigos dos conselheiros presentes na reunião (marcados na preparação; ' + CONSELHEIROS.map(cs => cs.c + ' = ' + cs.nome).join(', ') + ')'], ['avaliados', 'códigos dos conselheiros que este respondente escolheu avaliar na tela inicial (vazio = só a reunião; ausente = registro com versao 1.0.0, anterior ao site v1.9.1: valem os presentes)'], ['vazio × NA', 'NA = não sei / não se aplica / bloco não perguntado; vazio = não respondido']]);
   const nome = atual ? `conselho_${settings.unidade}_${hojeISO()}` : `conselho_consolidado_${cf.unidade || 'todas'}_${cf.mes || 'todos-meses'}_${hojeISO()}`;
   return { atual, titulo, escopo, g, resumo, porFator, respostas, comentarios, evolucao, perguntas, legenda, nome };
 }
@@ -587,7 +634,7 @@ function folhasExcel(D){
   const f = [{ nome: 'Resumo', aoa: D.resumo, larguras: [44, 16, 60], semCab: true }];
   if (D.evolucao) f.push({ nome: 'Evolução', aoa: D.evolucao, larguras: [12, 30, 10, 12].concat(CONSELHEIROS.map(() => 14), [12, 8, 34]) });
   f.push({ nome: 'Por item', aoa: D.porFator, larguras: [7, 20, 26, 6, 70, 12, 14, 12, 12, 12].concat(Array.from({ length: ESC }, () => 5)) },
-    { nome: 'Respostas', aoa: D.respostas, larguras: [7, 5, 4, 14, 12, 26, 11, 7, 6].concat(COLS_RESP.map(c => (c === 'mais' || c === 'mudar') ? 50 : 6)) }, { nome: 'Comentários', aoa: D.comentarios, larguras: [20, 90, 12] }, { nome: 'Perguntas', aoa: D.perguntas, larguras: [8, 20, 9, 70, 70, 6] }, { nome: 'Legenda', aoa: D.legenda, larguras: [18, 100] });
+    { nome: 'Respostas', aoa: D.respostas, larguras: [7, 5, 4, 14, 12, 26, 11, 11, 11].concat(COLS_RESP.map(c => (c === 'mais' || c === 'mudar') ? 50 : 6)) }, { nome: 'Comentários', aoa: D.comentarios, larguras: [20, 90, 12] }, { nome: 'Perguntas', aoa: D.perguntas, larguras: [8, 20, 9, 70, 70, 6] }, { nome: 'Legenda', aoa: D.legenda, larguras: [18, 100] });
   return f;
 }
 const PCT_RE = /^-?\d+%$/;
@@ -597,7 +644,7 @@ async function excelComLogo(EJ, D, folhas){
   const ROXO = 'FF6B4A98', ZEBRA = 'FFF4F1F8', BRANCO = 'FFFFFFFF', CINZA = 'FF5E5670', VERMELHO = 'FF9B1C1C';
   const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
   const sub = `Gerado em ${dataLabel(hojeISO())} - ${D.escopo} - App v${VERSAO}`;
-  const aviso = 'Uso restrito da governança da Maxipark. Reuniões com menos de 3 respostas identificam quem respondeu: não discutir individualmente.';
+  const aviso = 'Uso restrito da governança da Maxipark. Menos de 3 respostas na reunião, ou menos de 3 avaliações no bloco de um conselheiro, identificam quem respondeu: não discutir individualmente.';
   folhas.forEach(f => {
     let aoa = f.aoa; if (f.semCab && aoa.length && aoa[0].length === 1 && aoa[0][0] === D.titulo) aoa = aoa.slice(1);
     const ncol = Math.max(3, ...aoa.map(r => r.length)); const larg = aoa.length ? aoa[0].length : ncol;
@@ -640,7 +687,7 @@ async function _exportarPdf(modo){
     doc.setDrawColor(cor[0], cor[1], cor[2]); doc.setLineWidth(1.2); doc.line(12, 24, W - 12, 24);
     doc.setFontSize(D.atual ? 15 : 18); doc.setTextColor(cor[0], cor[1], cor[2]); const tl = doc.splitTextToSize(pdfTxt(D.titulo), W - 24); const dy = (tl.length - 1) * (D.atual ? 6.1 : 7.3); doc.text(tl, 12, 33); doc.setTextColor(0, 0, 0);
     doc.setFontSize(9.5); doc.text(pdfTxt(`Gerado em ${dataLabel(hojeISO())} - ${D.escopo} - App v${VERSAO}`), 12, 40 + dy, { maxWidth: W - 24 });
-    doc.setFontSize(8.5); doc.setTextColor(155, 28, 28); doc.text(pdfTxt('Uso restrito da governança da Maxipark. Reuniões com menos de 3 respostas identificam quem respondeu: não discutir individualmente.'), 12, 47 + dy, { maxWidth: W - 24 }); doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8.5); doc.setTextColor(155, 28, 28); doc.text(pdfTxt('Uso restrito da governança da Maxipark. Menos de 3 respostas na reunião, ou menos de 3 avaliações no bloco de um conselheiro, identificam quem respondeu: não discutir individualmente.'), 12, 47 + dy, { maxWidth: W - 24 }); doc.setTextColor(0, 0, 0);
     doc.lastAutoTable = { finalY: 47 + dy };
     tabela('Resumo', D.resumo.slice(D.resumo.findIndex(r => r[0] === 'Indicador')).filter(r => r.length === 3), { columnStyles: { 0: { cellWidth: 100 }, 1: { cellWidth: 36 } } });
     if (D.evolucao) tabela('Evolução por reunião', D.evolucao);
@@ -675,7 +722,8 @@ document.addEventListener('click', e => {
     case 'start': { const d = ((document.getElementById('s-data') || {}).value || '').trim(); if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast('Informe a data da reunião.'); return; } const nome = ((document.getElementById('s-nome') || {}).value || '').trim().slice(0, 80);
       const pres = {}; CONSELHEIROS.forEach(cs => { pres[cs.c] = !!((document.getElementById('s-pres-' + cs.c) || { checked: true }).checked); }); if (!Object.values(pres).some(Boolean) && CONSELHEIROS.length) { toast('Marque ao menos um conselheiro presente (ou avalie só a reunião desmarcando ambos e confirmando de novo).'); if (!state.confirmouSemConselheiros) { state.confirmouSemConselheiros = true; return; } }
       settings.unidade = d; settings.presentes = pres; saveSettings(); const m = reunioes(); if (nome) m[d] = nome; else delete m[d]; LS.set('mpco_reunioes', m); state.confirmouSemConselheiros = false; go('welcome'); break; }
-    case 'begin': state.r = {}; state.i = 0; state.t0 = Date.now(); state.ordem = shuffle(CONSELHEIROS.map(cs => cs.c)); go('q'); break;   // ordem dos blocos dos conselheiros sorteada por respondente
+    case 'begin': { const av = String(el.dataset.avaliar || '').split(' ').filter(c => CONSELHEIROS.some(cs => cs.c === c) && presente(c));   // quem este respondente escolheu avaliar (cartão da tela inicial); '' = só a reunião
+      state.r = {}; state.i = 0; state.t0 = Date.now(); state.avaliar = av; state.ordem = shuffle(av); go('q'); break; }   // ordem dos blocos dos conselheiros sorteada por respondente
     case 'ans': { const q = perguntaAtual(); if (!q) return; const raw = el.dataset.v; state.r[q.codigo] = (q.tipo === 'escala' || q.tipo === 'nps') ? (raw === 'NA' ? 'NA' : parseInt(raw, 10)) : raw; render();
       clearTimeout(autoT); if (settings.autoAvanca !== false) autoT = setTimeout(() => { if (state.screen === 'q' && perguntaAtual() === q) avancar(); }, 380); break; }
     case 'next': clearTimeout(autoT); avancar(); break;

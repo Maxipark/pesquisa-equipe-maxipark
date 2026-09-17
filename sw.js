@@ -1,5 +1,5 @@
 // Service worker: o app abre sem internet e recebe atualizações quando houver rede.
-const VERSAO = '1.9.0';
+const VERSAO = '1.9.1';
 const CACHE = 'pesquisa-maxipark-' + VERSAO;
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './equipe/', './equipe/index.html', './equipe/manifest.webmanifest', './cliente/', './cliente/index.html', './cliente/manifest.webmanifest', './cliente/qr.html', './conselho/', './conselho/index.html', './conselho/manifest.webmanifest'];   // inclui a pesquisa com clientes (pasta cliente/)
 
