@@ -98,7 +98,7 @@
    Modo quiosque: o cliente responde no tablet da unidade; as respostas ficam no tablet e são exportadas
    pela área de Experiência do Cliente (PIN), como no app da equipe. Opcional: envio automático (Power Automate).
    ========================================================= */
-const VERSAO = '1.1.1';
+const VERSAO = '1.1.2';   // 1.1.2: abre sempre na tela "Preparar o tablet" (escolher a unidade); só o QR ?u= pula direto
 const PIN_PADRAO = '2819';   // mesmo PIN do app da equipe; troca em Configurações. Atenção: este código é público.
 const IDLE_MS = 90000;       // cliente abandonou no meio: descarta e volta à tela inicial
 const OBRIGADO_MS = 7000;    // tela "Obrigado" volta sozinha ao início
@@ -211,8 +211,9 @@ let toastT; function toast(m){ const t = document.getElementById('toast'); t.tex
 /* ---------------- estado e navegação ---------------- */
 aplicarPerguntas();
 // QR com ?u=CÓDIGO (e opcional &p=caixa|saida|totem|outro) abre já com a unidade do QR (gerador: cliente/qr.html)
-try { const qs = new URLSearchParams(location.search); const uQS = (qs.get('u') || '').trim().toUpperCase(); if (uQS) { settings.unidade = uQS; const pQS = (qs.get('p') || '').trim().toLowerCase(); if (pQS && PONTOS.some(p => p.c === pQS)) settings.ponto = pQS; saveSettings(); } } catch(e) {}
-const state = { screen: settings.unidade ? 'welcome' : 'setup', i: 0, r: {}, pin: '', pinPara: 'admin', cf: null, sel: null, confirma: null };
+let viaQR = false;   // aberto pelo QR da unidade: pula a tela de preparação e vai direto para o cliente
+try { const qs = new URLSearchParams(location.search); const uQS = (qs.get('u') || '').trim().toUpperCase(); if (uQS) { settings.unidade = uQS; viaQR = true; const pQS = (qs.get('p') || '').trim().toLowerCase(); if (pQS && PONTOS.some(p => p.c === pQS)) settings.ponto = pQS; saveSettings(); } } catch(e) {}
+const state = { screen: (viaQR && settings.unidade) ? 'welcome' : 'setup', i: 0, r: {}, pin: '', pinPara: 'admin', cf: null, sel: null, confirma: null };   // abre sempre em "Preparar o tablet" (escolher a unidade), como o app da equipe; só o QR da unidade pula direto
 let idleT = null, obrigadoT = null, autoT = null;
 function resetIdle(){ clearTimeout(idleT); if (state.screen === 'q') idleT = setTimeout(() => { registrarAbandono(); state.r = {}; go('welcome'); toast('Pesquisa reiniciada por inatividade.'); }, IDLE_MS); }
 function go(screen, extra){ state.screen = screen; Object.assign(state, extra || {}); clearTimeout(obrigadoT); if (screen !== 'pin') state.pin = ''; state.confirma = null; render(); window.scrollTo(0, 0); resetIdle(); if (screen === 'thanks') obrigadoT = setTimeout(() => go('welcome'), OBRIGADO_MS); }
@@ -229,7 +230,7 @@ function viewSetup(){
   const u = settings.unidade;
   return header('Preparar o tablet') + `<div class="wrap"><div class="card">${logoHero()}
     <h1>Pesquisa com clientes — preparar o tablet</h1>
-    <p class="muted">Escolha a unidade onde este tablet vai ficar. Depois toque em <b>Iniciar atendimento</b>: a tela do cliente entra em loop (boas-vindas → perguntas → obrigado → boas-vindas). Para sair, use <i>Área do avaliador</i> no rodapé (PIN).</p>
+    <p class="muted">Confira ou escolha a <b>unidade</b> onde a pesquisa está sendo feita (esta tela aparece sempre que o app é aberto pela página inicial). Depois toque em <b>Iniciar atendimento</b>: a tela do cliente entra em loop (boas-vindas → perguntas → obrigado → boas-vindas). Para sair, use <i>Área do avaliador</i> no rodapé (PIN).</p>
     <label>Unidade</label>
     <div class="espaco"><input type="text" id="s-unidade" value="${esc(u)}" placeholder="toque em Escolher" autocapitalize="characters" autocomplete="off" style="flex:1"><button class="btn ghost" data-action="pick">Escolher na lista</button></div>
     ${u ? `<p class="small muted" style="margin:6px 0 0">${esc(unidadeLabel(u))}</p>` : ''}
