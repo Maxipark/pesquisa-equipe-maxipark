@@ -1,7 +1,7 @@
 {
   "name": "Pesquisas Maxipark — Experiência do Cliente",
   "short_name": "Pesquisas Maxipark",
-  "description": "Página inicial das pesquisas de experiência da Maxipark no tablet: pesquisa com clientes (cliente final) e pesquisa com a equipe (cliente interno).",
+  "description": "Página inicial das pesquisas de experiência da Maxipark no tablet: pesquisa com clientes (cliente final), pesquisa com a equipe (cliente interno), avaliação da reunião do conselho e painel de resultados.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

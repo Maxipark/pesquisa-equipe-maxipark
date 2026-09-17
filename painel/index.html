@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel de resultados Maxipark</title>
+<meta name="theme-color" content="#6B4A98">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Painel Maxipark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{
+    --roxo:#6B4A98; --roxo-escuro:#4E3572; --roxo-claro:#EEE8F5; --acento:#9935F4; --bg:#F5F3F9; --card:#FFFFFF;
+    --texto:#221C2E; --cinza:#5E5670; --linha:#DED8EA; --perigo:#B23A3A; --ok:#2E7D32; --raio:18px;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:17px;line-height:1.35}
+  button{font-family:inherit;color:var(--texto)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:#fff;border-bottom:3px solid var(--roxo)}
+  .top .marca{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--roxo-escuro);font-size:17px}
+  .top .marca img{height:40px;width:auto}
+  .top .passo{font-size:15px;color:var(--roxo-escuro);font-weight:600;text-align:right}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 60px}
+  .card{background:var(--card);border-radius:var(--raio);padding:20px 22px;box-shadow:0 2px 10px rgba(34,28,46,.06);margin-bottom:16px}
+  h1{font-size:26px;line-height:1.2;margin:0 0 10px;color:var(--roxo-escuro)}
+  h2{font-size:21px;line-height:1.25;margin:0 0 10px;color:var(--roxo-escuro)}
+  h3{font-size:18px;margin:16px 0 8px;color:var(--roxo-escuro)}
+  p{margin:0 0 12px}
+  .small{font-size:14px} .muted{color:var(--cinza)} .legenda{font-size:13px;color:var(--cinza);margin:6px 0 0}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:10px 20px;border:0;border-radius:14px;background:var(--roxo);color:#fff;font-size:18px;font-weight:700;cursor:pointer}
+  .btn:disabled{opacity:.4;cursor:default}
+  .btn.ghost{background:var(--roxo-claro);color:var(--roxo-escuro)} .btn.light{background:#fff;border:2px solid var(--roxo);color:var(--roxo-escuro)}
+  .btn.perigo{background:var(--perigo)} .btn.block{width:100%} .btn.mini{min-height:38px;font-size:14px;padding:6px 12px;white-space:nowrap;flex:none}
+  .linha{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;align-items:center} .espaco{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  textarea,input,select{width:100%;font:inherit;font-size:17px;padding:10px 12px;border:2px solid var(--linha);border-radius:12px;background:#fff;color:var(--texto)}
+  label{display:block;font-weight:600;margin:14px 0 6px}
+  .check{display:flex;gap:12px;align-items:flex-start;font-weight:500;margin:12px 0 4px;font-size:16px} .check input{width:26px;height:26px;margin-top:2px;flex:none}
+  .logo-hero{display:flex;justify-content:center;margin:2px 0 14px} .logo-hero img{height:64px;width:auto;max-width:80%}
+  a.home{display:inline-flex;align-items:center;border-radius:8px} a.home:active{opacity:.7}
+  a.link{color:var(--roxo-escuro);font-weight:600}
+  .grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:16px}
+  .bloco{border:1px solid var(--linha);border-radius:16px;padding:14px 16px;background:#fff}
+  .bloco .cab{display:flex;align-items:center;gap:10px;margin-bottom:8px} .bloco .cab .ic{width:40px;height:40px;border-radius:12px;background:var(--roxo-claro);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .bloco h2{margin:0;font-size:19px} .bloco .sub{font-size:13px;color:var(--cinza)}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:8px 0}
+  .kpi div{background:var(--roxo-claro);border-radius:12px;padding:10px 8px;text-align:center} .kpi b{display:block;font-size:26px;color:var(--roxo-escuro);line-height:1.1} .kpi span{font-size:12px;color:var(--cinza);display:block;margin-top:3px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0} th,td{padding:7px 8px;border-bottom:1px solid var(--linha);text-align:center;vertical-align:middle} th{background:var(--roxo-claro);color:var(--roxo-escuro);font-size:13px} td.l,th.l{text-align:left}
+  .tabela-wrap{overflow-x:auto}
+  .mini{height:10px;background:var(--roxo-claro);border-radius:6px;overflow:hidden;min-width:70px;display:inline-block;vertical-align:middle;width:90px} .mini i{display:block;height:100%;background:var(--roxo)} .mini.acento i{background:var(--acento)}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700} .tag.ok{background:#E6F4EA;color:#1B5E20} .tag.pend{background:#FFF4D6;color:#7A5A00} .tag.ruim{background:#FBE3E3;color:#7A1F1F}
+  .aviso{background:#FFF4D6;border-left:5px solid #E0B400;padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  .ruim{background:#FBE3E3;border-left:5px solid var(--perigo);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  .bom{background:#E6F4EA;border:1px solid #9CCFA9;border-radius:12px;padding:12px 14px;margin:10px 0 14px;font-size:16px;color:#1B3D26}
+  .filtros{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:8px 0} .filtros label{margin:0 0 4px;font-size:13px;color:var(--cinza)} .filtros select{font-size:16px;padding:8px 10px}
+  .grafico{width:100%;min-width:600px;height:auto;display:block;margin:6px 0} .rot{font-size:11px;fill:var(--cinza)}
+  .legenda-graf{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--cinza)} .legitem i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+  .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:12px auto} .pinpad button{min-height:64px;font-size:26px;border-radius:14px;border:2px solid var(--linha);background:#fff}
+  .pininput{display:block;max-width:320px;margin:8px auto 6px;text-align:center;font-size:30px;letter-spacing:12px;min-height:60px;-webkit-text-security:disc}
+  details{margin:8px 0 14px} details summary{color:var(--roxo-escuro);cursor:pointer;font-weight:600}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#221C2E;color:#fff;padding:12px 18px;border-radius:12px;font-size:16px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:9}
+  .toast.show{opacity:1}
+  @media (max-width:640px){ .wrap{padding:12px 12px 60px} .card{padding:16px} h1{font-size:22px} .kpi b{font-size:22px} }
+  @media print{ .top,.btn,.filtros,.rodape-acoes{display:none !important} .card{box-shadow:none;border:1px solid var(--linha)} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+/* =========================================================
+   PAINEL DE RESULTADOS — Maxipark
+   Junta as três pesquisas do site (equipe/, cliente/, conselho/) numa visão só: indicadores gerais, tabela por unidade,
+   tendência mensal, detalhes por pesquisa, Excel e PDF únicos. Fontes: as respostas guardadas NESTE aparelho pelos três
+   apps (mesma origem → mesmo localStorage) + a nuvem (servidor/Code.gs, as três abas), com a mesma URL e chave dos apps.
+   As contas repetem as de cada app (mesmos pesos, mesma regra de positivo). Área protegida por PIN. LEIA-ME, seção 13.
+   ========================================================= */
+const VERSAO = '1.0.0';
+const PIN_PADRAO = '2819';   // PIN de fábrica das pesquisas. Se alguma pesquisa deste aparelho tiver o PIN trocado, o painel usa esse PIN (pinAtual); troca também em Configurações. Atenção: este código é público.
+const PIN_MAX_FALHAS = 5, PIN_BLOQUEIO_MS = 60000;
+const N_IDENT = 3, N_POUCAS = 5;   // regras de divulgação iguais às dos apps
+const DEMO = /[?&]demo=1/.test(location.search);   // dados de exemplo (demonstração online)
+const LOGO_B64 = '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';
+const UNIDADES_PADRAO = [
+  ['GAZETA','Bela Vista'],['FIESP','Jardins'],['FL.PARA','Bela Vista'],['BP','Bela Vista'],
+  ['HABITAT','Santa Cecília'],['LAV.ANGEL','Consolação'],['LAV.ANGEL II','Santa Cecília'],['ALTA.HIGIE','Higienópolis'],
+  ['NSB','Jardim América'],['ALTA.JARD','Jardins'],['GARDEN','Cerqueira César'],['INCOR','Cerqueira César'],
+  ['ACCAST','Aclimação'],['ACPRUDE','Liberdade'],['AC.PIRES','Liberdade'],['FL.JUND','Paraíso'],
+  ['SAL.PARAI','Paraíso'],['SAL.VMARIA','Vila Clementino'],['DEL.MAIO','Vila Clementino'],['DEL.RICAJAF','Vila Mariana'],
+  ['PAINEIRA','Vila da Saúde'],['LAV.LABAL','Ipiranga'],['A+MOOCA','Cambuci'],['DEL.MOOCA','Mooca'],
+  ['A+MOEMA','Indianópolis'],['LAV.MOE','Indianópolis'],['SAL.MOE','Moema'],['MONTREAL','Moema'],
+  ['FL.IBIRA','Ibirapuera'],['ALTA.IBIRA','Vila Mariana'],['VITA.REP','Moema'],['SAL.IBIRA','Planalto Paulista'],
+  ['ALTA.CBEL','Campo Belo'],['DEL.BROK','Santo Amaro'],['PET.CBEL','Campo Belo'],['GLOBO.SP','Vila Cordeiro'],
+  ['LAV.BORGAT','Santo Amaro'],['A+FLORA','Jd. Marajoara'],['DEL.WASLUIS','Jd. Marajoara'],['ALTA.PAN','Vila Andrade'],['DEL.JSUL','Vila Andrade'],['SAL.PORTAL','Vila Suzana'],
+  ['FL.ITAIM','Vila Olímpia'],['DEL.ITAIM','Itaim Bibi'],['AC.ITAIM','Jardim Paulista'],
+  ['QUITANDA','Pinheiros'],['DEL.PIN','Vila Madalena'],['ALTA.PIN','Vila Ida'],['FL.VILLA','Alto de Pinheiros'],
+  ['FL.SUMA','Perdizes'],['CARL','Perdizes / Sumaré'],['DEL.POM','Pompeia'],
+  ['CVLOP','Vila Romana'],['SAL.LAPA','Alto da Lapa'],['A+LAPA','Lapa'],
+  ['LAV.LAPA','Lapa'],['BR.LAPA','Lapa'],['DEL.LAPA','Lapa'],['DEL.OSASCO','Centro / Osasco'],['SAL.OSASCO','Vila Yara / Osasco'],
+  ['A+ALPHA','Alphaville / Barueri'],['RESERVA','Alphaville / Barueri'],['ARAGUAI','Alphaville / Barueri'],['DEL.ALPHA','Alphaville / Barueri'],
+  ['SAL.TATUA','Vila Gomes Cardim'],['DEL.TATU','Tatuapé'],['FL.AFRA','Vila Carrão'],['ALTA.AFRAN','Jd. Anália Franco'],['LAV.AMARBUE','Penha de França'],
+  ['LAV.DARZAN','Santana'],['SAL.SANTA','Jd. São Paulo'],['DEL.DUMVIL','Jd. São Paulo'],
+  ['LAV.TUCUR','Tucuruvi'],['DEL.GUARU','Macedo / Guarulhos'],['A+GUARU','Centro / Guarulhos'],
+  ['A+SAND','Santo André'],['DEL.SAND II','Santo André'],['DEL.SAND I','Centro / Santo André'],['DEL.SBC','Centro / S.B. Campo'],['FL.SBC','Centro / S.B. Campo'],
+].map(a => ({ codigo: a[0], nome: a[1] }));
+
+/* ---------------- o que o painel sabe de cada pesquisa (espelha os apps) ---------------- */
+const EQ = { app: 'pesquisa-equipe-maxipark', escala: 'B3', itens: [
+  { dim: 'Condições no posto', t: 'Os equipamentos que uso no posto funcionam bem.', p: 3 },
+  { dim: 'Condições no posto', t: 'Consigo parar para comer durante o meu turno.', p: 2 },
+  { dim: 'Condições no posto', t: 'No meu turno tem gente suficiente para atender bem.', p: 2 },
+  { dim: 'Escala, pagamento e apoio do escritório', t: 'Minhas folgas são respeitadas como estão na escala.', p: 2 },
+  { dim: 'Escala, pagamento e apoio do escritório', t: 'Meu pagamento (salário, vales, horas extras) vem certo.', p: 3 },
+  { dim: 'Escala, pagamento e apoio do escritório', t: 'Quando peço algo ao escritório da Maxipark, resolvem em poucos dias.', p: 3 },
+  { dim: 'Escala, pagamento e apoio do escritório', t: 'Recebi treinamento suficiente para fazer meu trabalho neste posto.', p: 2 },
+  { dim: 'Escala, pagamento e apoio do escritório', t: 'Fico sabendo, com antecedência, das mudanças que afetam meu trabalho.', p: 2 },
+  { dim: 'Chefia e reconhecimento', t: 'Meu chefe direto me trata com respeito.', p: 3 },
+  { dim: 'Chefia e reconhecimento', t: 'Meu chefe direto é justo com todos da equipe.', p: 2 },
+  { dim: 'Chefia e reconhecimento', t: 'Meu chefe direto me ouve quando aviso um problema ou dou uma ideia.', p: 2 },
+  { dim: 'Chefia e reconhecimento', t: 'Nos últimos 30 dias, meu chefe direto ou o supervisor elogiou meu trabalho.', p: 2 },
+  { dim: 'Segurança e apoio', t: 'Me sinto seguro(a) no meu posto.', p: 3 },
+  { dim: 'Segurança e apoio', t: 'Se um motorista ou alguém do local me trata mal, a Maxipark me apoia.', p: 2 },
+  { dim: 'Futuro', t: 'Vejo chance de crescer na Maxipark.', p: 1 },
+] };
+const CL = { app: 'pesquisa-clientes-maxipark',
+  fatores: [{ c: 'e1', f: 'Entrada e saída', p: 3 }, { c: 'e2', f: 'Pagamento', p: 3 }, { c: 'e3', f: 'Atendimento', p: 3 }, { c: 'e4', f: 'Segurança', p: 3 }, { c: 'e5', f: 'Limpeza e conservação', p: 2 }, { c: 'e6', f: 'Vagas e sinalização', p: 2 }, { c: 'e7', f: 'Preço', p: 2 }],
+  problemas: { nenhum: 'Não, deu tudo certo', fila: 'Fila ou demora para entrar ou sair', cancela: 'Cancela, ticket ou tag não funcionou', maq: 'Máquina de pagamento com defeito', cobr: 'Cobrança errada ou valor não entendido', vaga: 'Não achou vaga ou sinalização confundiu', atend: 'Faltou alguém para ajudar ou mal atendido', segur: 'Dano no carro, furto ou insegurança', limp: 'Local sujo, escuro ou mal conservado', outro: 'Outro problema' },
+  resolv: { sim: 'Resolvido na hora', parcial: 'Resolvido, mas demorou ou ficou pela metade', nao: 'Não foi resolvido', ninguem: 'Procurou ajuda e não encontrou ninguém', nao_pedi: 'Não pediu ajuda' },
+  tipos: { mensal: 'Mensalista', avulso: 'Avulso', evento: 'Visitante de evento', conv: 'Convênio / cortesia / validação' },
+  cols: ['csat', 'nps', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'prob', 'resolv', 'ces', 'tipo', 'freq', 'coment', 'contato', 'lgpd'], numericas: ['csat', 'nps', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'ces'] };
+const CO = { app: 'pesquisa-conselho-maxipark',
+  reuniao: [{ c: 'r1', f: 'Pauta e materiais com antecedência', p: 2 }, { c: 'r2', f: 'Clareza dos materiais', p: 2 }, { c: 'r3', f: 'Foco estratégico', p: 3 }, { c: 'r4', f: 'Tempo para discutir', p: 2 }, { c: 'r5', f: 'Espaço para divergência', p: 2 }, { c: 'r6', f: 'Decisões claras', p: 3 }, { c: 'r7', f: 'Acompanhamento das pendências', p: 2 }, { c: 'r8', f: 'Condução (quem presidiu)', p: 3 }],
+  criterios: [{ n: 1, f: 'Preparo e entendimento do negócio', p: 2 }, { n: 2, f: 'Contribuição', p: 3 }, { n: 3, f: 'Perguntas que qualificam as decisões', p: 3 }, { n: 4, f: 'Independência construtiva', p: 3 }, { n: 5, f: 'Escuta', p: 2 }],
+  conselheiros: [{ c: 'g', nome: 'Gustavo Succi' }, { c: 'm', nome: 'Maristella Lannuzzi' }],
+  cols: ['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'g1', 'g2', 'g3', 'g4', 'g5', 'm1', 'm2', 'm3', 'm4', 'm5', 'nota', 'mais', 'mudar'] };
+const APPS = { equipe: EQ.app, clientes: CL.app, conselho: CO.app };
+const NOME_PESQ = { equipe: 'Pesquisa com a EQUIPE', clientes: 'Pesquisa com CLIENTES', conselho: 'Avaliação da reunião do CONSELHO' };
+
+/* ---------------- utilidades ---------------- */
+const LS = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } } };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+function hojeISO(d){ d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function dataLabel(iso){ if (!iso || iso.length < 10) return iso || ''; return iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4); }
+function mesLabel(m){ if (!m || m.length < 7) return m || ''; const n = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; return n[parseInt(m.slice(5, 7), 10) - 1] + '/' + m.slice(0, 4); }
+function num(v){ return typeof v === 'number' && !isNaN(v); }
+function pct(v){ return v == null ? '—' : v + '%'; }
+function shuffle(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+let toastT; function toast(m){ const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3400); }
+
+/* ---------------- configurações do painel ---------------- */
+const DEFAULT_SETTINGS = { pin: '', webhook: '', chave: '', ultimaSync: '', pinFails: 0, lockUntil: 0 };
+let settings = Object.assign({}, DEFAULT_SETTINGS, LS.get('mpp_settings', {}));
+if (!settings.webhook || !settings.chave) {   // aproveita a URL e a chave já digitadas em qualquer das três pesquisas neste aparelho
+  const outro = ['mp_settings', 'mpc_settings', 'mpco_settings'].map(k => LS.get(k, null)).find(s => s && s.webhook && s.chave);
+  if (outro) { settings.webhook = outro.webhook; settings.chave = outro.chave; }
+}
+function saveSettings(){ LS.set('mpp_settings', settings); }
+function pinAtual(){ if (settings.pin) return settings.pin; const outro = ['mp_settings', 'mpc_settings', 'mpco_settings'].map(k => LS.get(k, null)).find(s => s && s.pin && String(s.pin) !== PIN_PADRAO); return outro ? String(outro.pin) : PIN_PADRAO; }   // PIN trocado em qualquer pesquisa deste aparelho vale para o painel; só cai no padrão se nenhum foi trocado
+function syncLabel(iso){ const d = new Date(iso); if (!iso || isNaN(d)) return ''; const p = n => String(n).padStart(2, '0'); return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }   // mostra no horário local (a gravação fica em UTC para o desde=)
+let unlockT;
+function syncOk(){ return !!(settings.webhook && settings.chave); }
+
+/* ---------------- unidades e nomes ---------------- */
+function unidades(){ const a = LS.get('mp_unidades', null); if (a && Array.isArray(a.lista) && a.lista.length) return a.lista; const b = LS.get('mpc_unidades', null); if (Array.isArray(b) && b.length) return b; return UNIDADES_PADRAO; }
+function nomeU(c){ const u = unidades().find(x => x.codigo === c); return u && u.nome ? u.nome : ''; }
+function nomeReuniao(c){ return (LS.get('mpco_reunioes', {}) || {})[c] || ''; }
+
+/* ---------------- pesos e nomes editados nos apps (valem os deste aparelho) ---------------- */
+function eqItens(){ const o = LS.get('mp_itens', null); return EQ.itens.map((it, i) => { const x = o && Array.isArray(o.itens) ? o.itens[i] : null; const p = x ? parseInt(x.peso, 10) : NaN; return { dim: (x && x.dim) || it.dim, t: (x && x.t) || it.t, p: (p >= 1 && p <= 3) ? p : it.p }; }); }
+function clFatores(){ const c = LS.get('mpc_perguntas', null) || {}; const s = c.q || {}; return CL.fatores.map(f => { const p = parseInt((s[f.c] || {}).peso, 10); return { c: f.c, f: f.f, p: (p >= 1 && p <= 3) ? p : f.p }; }); }
+function coCfg(){ const c = LS.get('mpco_perguntas', null) || {}; const s = c.q || {}; const cc = c.conselheiros || {}; const peso = (cod, d) => { const p = parseInt((s[cod] || {}).peso, 10); return (p >= 1 && p <= 3) ? p : d; };
+  return { r8: c.r8 === true, reuniao: CO.reuniao.map(q => ({ c: q.c, f: q.f, p: peso(q.c, q.p) })), conselheiros: CO.conselheiros.map(x => ({ c: x.c, nome: (cc[x.c] && typeof cc[x.c].nome === 'string' && cc[x.c].nome.trim()) || x.nome })), pesoCrit: (cs, n, d) => peso(cs + n, d) }; }
+
+/* ---------------- fontes: este aparelho + nuvem ---------------- */
+function locais(){ return { equipe: (LS.get('mp_respostas', []) || []).concat(LS.get('mp_hist', []) || []), clientes: (LS.get('mpc_respostas', []) || []).concat(LS.get('mpc_hist', []) || []), conselho: (LS.get('mpco_respostas', []) || []).concat(LS.get('mpco_hist', []) || []) }; }
+function nuvem(){ const n = LS.get('mpp_nuvem', {}) || {}; return { equipe: n.equipe || [], clientes: n.clientes || [], conselho: n.conselho || [] }; }
+let poolCache = null;
+function pool(){
+  if (poolCache) return poolCache;
+  if (DEMO) { poolCache = demoPool(); return poolCache; }
+  const loc = locais(), nv = nuvem(); const out = { origem: {} };
+  ['equipe', 'clientes', 'conselho'].forEach(k => { const seen = new Set(); out[k] = []; let nLoc = 0, nNuv = 0; (loc[k] || []).forEach(r => { if (!r || !r.id || seen.has(r.id)) return; seen.add(r.id); out[k].push(r); nLoc++; }); (nv[k] || []).forEach(r => { if (!r || !r.id || seen.has(r.id)) return; seen.add(r.id); out[k].push(r); nNuv++; }); out.origem[k] = { aparelho: nLoc, nuvem: nNuv }; });
+  poolCache = out; return out;
+}
+function invalidar(){ poolCache = null; }
+
+/* conversão do que vem do servidor (igual ao registroDe de cada app; o painel nunca guarda contato de cliente) */
+function numOuNA(v){ return (v === 'NA' || v === 'NP') ? v : ((v === '' || v === null || v === undefined) ? undefined : (isNaN(parseInt(v, 10)) ? v : parseInt(v, 10))); }
+function registroEq(p){ if (!p || !p.id) return null; const resp = Array.isArray(p.respostas) ? p.respostas.map(numOuNA) : (typeof p.respostas === 'string' && p.respostas ? p.respostas.split(/\s*\|\s*/).map(numOuNA) : []);
+  return { id: String(p.id), versao: p.versao || '', escala: p.escala || 'B5', unidade: String(p.unidade || '').toUpperCase(), mes: p.mes || '', data: p.data || '', rodada: p.rodada || 'R1', r: resp, enps: numOuNA(p.enps), ces: numOuNA(p.ces), a1: p.aberta1 || '', a2: p.aberta2 || '', nuvem: true }; }
+function registroCl(p){ if (!p || !p.id) return null; const r = {}; CL.cols.forEach(k => { let v = p[k]; if (v === undefined || v === null || v === '') return; if ((CL.numericas.includes(k) || k === 'lgpd') && v !== 'NA') { const n = parseInt(v, 10); v = isNaN(n) ? v : n; } r[k] = v; }); r.contato = ''; r.coment = r.coment || '';
+  const escv = parseInt(p.esc, 10); const ver = p.ver || 'C1'; return { id: String(p.id), versao: p.versao || '', ver, esc: (escv === 3 || escv === 5) ? escv : (ver === 'C1' ? 5 : undefined), unidade: String(p.unidade || '').toUpperCase(), ponto: p.ponto || '', data: p.data || '', hora: p.hora || '', r, nuvem: true }; }
+function registroCo(p){ if (!p || !p.id) return null; const r = {}; CO.cols.forEach(k => { let v = p[k]; if (v === undefined || v === null || v === '') return; if (k !== 'mais' && k !== 'mudar' && v !== 'NA') { const n = parseInt(v, 10); v = isNaN(n) ? v : n; } r[k] = v; }); r.mais = r.mais || ''; r.mudar = r.mudar || '';
+  const escv = parseInt(p.esc, 10); const unidade = String(p.unidade || ''); if (p.reuniao && unidade && !nomeReuniao(unidade)) { const m = LS.get('mpco_reunioes', {}) || {}; m[unidade] = String(p.reuniao); LS.set('mpco_reunioes', m); }
+  const out = { id: String(p.id), versao: p.versao || '', ver: p.ver || 'B1', esc: (escv === 3 || escv === 5) ? escv : undefined, unidade, reuniao: p.reuniao || '', data: p.data || '', r, nuvem: true }; if (typeof p.presentes === 'string') out.presentes = p.presentes; if (typeof p.avaliados === 'string') out.avaliados = p.avaliados; return out; }
+
+/* ---------------- contas (as mesmas de cada app) ---------------- */
+function positivo(v, e){ return num(v) && (e === 3 ? v === 3 : v >= 4); }
+function negativo(v, e){ return num(v) && (e === 3 ? v === 1 : v <= 2); }
+function escPadraoCl(){ return ((LS.get('mpc_perguntas', null) || {}).esc === 5) ? 5 : 3; }   // a escala configurada no app de clientes deste aparelho (ESC)
+function escPadraoCo(){ return ((LS.get('mpco_perguntas', null) || {}).esc === 5) ? 5 : 3; }  // idem, app do conselho
+function escDeCl(r){ return (r.esc === 3 || r.esc === 5) ? r.esc : (r.ver === 'C1' ? 5 : escPadraoCl()); }
+function escDeCo(r){ return (r.esc === 3 || r.esc === 5) ? r.esc : escPadraoCo(); }
+function temProblema(x){ return !!x.prob && x.prob !== 'nenhum' && x.prob !== 'NA'; }
+function agEquipe(list){
+  const itens = eqItens(); const a = { n: list.length, totSim: 0, totN: 0, enps: { n: 0, pro: 0, det: 0 }, ces: { n: 0, sim: 0 }, itens: itens.map(it => ({ dim: it.dim, t: it.t, p: it.p, c: [0, 0, 0], na: 0, n: 0 })), unidades: new Set() };
+  list.forEach(r => { a.unidades.add(r.unidade); (r.r || []).forEach((v, i) => { const it = a.itens[i]; if (!it) return; if (v === 'NA') it.na++; else if (v === 1 || v === 2 || v === 3) { it.c[v - 1]++; it.n++; a.totN++; if (v === 3) a.totSim++; } });
+    if (typeof r.enps === 'number') { a.enps.n++; if (r.enps <= 6) a.enps.det++; else if (r.enps >= 9) a.enps.pro++; }
+    if (r.ces === 1 || r.ces === 2 || r.ces === 3) { a.ces.n++; if (r.ces === 3) a.ces.sim++; } });
+  a.pctSim = a.totN ? Math.round(a.totSim / a.totN * 100) : null;
+  let pS = 0, pN = 0; a.itens.forEach(it => { pS += it.p * it.c[2]; pN += it.p * it.n; it.pctSim = it.n ? Math.round(it.c[2] / it.n * 100) : null; it.pctNao = it.n ? Math.round(it.c[0] / it.n * 100) : null; });
+  a.pctSimPond = pN ? Math.round(pS / pN * 100) : null;
+  a.enpsVal = a.enps.n ? Math.round((a.enps.pro - a.enps.det) / a.enps.n * 100) : null;
+  a.cesFacil = a.ces.n ? Math.round(a.ces.sim / a.ces.n * 100) : null;
+  a.nUnid = a.unidades.size; a.identificavel = a.n > 0 && a.n < N_IDENT; a.poucas = a.n > 0 && a.n < N_POUCAS;
+  return a;
+}
+function agClientes(list){
+  const fat = clFatores(); const g = { n: list.length, unidades: new Set(list.map(r => r.unidade)), problemas: {}, resolv: {}, tipos: {} }; const rr = list.map(r => r.r || {});
+  const npsV = rr.map(x => x.nps).filter(num); g.npsN = npsV.length; g.nps = npsV.length ? Math.round((npsV.filter(v => v >= 9).length - npsV.filter(v => v <= 6).length) / npsV.length * 100) : null;
+  const cs = list.filter(r => num((r.r || {}).csat)); g.csatN = cs.length; g.csat = cs.length ? Math.round(cs.filter(r => positivo(r.r.csat, escDeCl(r))).length / cs.length * 100) : null;
+  let pn = 0, pd = 0; g.fatores = fat.map(f => { const xs = list.filter(r => num((r.r || {})[f.c])); const na = list.filter(r => (r.r || {})[f.c] === 'NA').length; const pos = xs.filter(r => positivo(r.r[f.c], escDeCl(r))).length; const neg = xs.filter(r => negativo(r.r[f.c], escDeCl(r))).length; pn += f.p * pos; pd += f.p * xs.length; return { c: f.c, f: f.f, p: f.p, n: xs.length, na, pct: xs.length ? Math.round(pos / xs.length * 100) : null, neg: xs.length ? Math.round(neg / xs.length * 100) : null }; });
+  g.pond = pd ? Math.round(pn / pd * 100) : null;
+  Object.keys(CL.problemas).forEach(k => { g.problemas[k] = 0; }); Object.keys(CL.resolv).forEach(k => { g.resolv[k] = 0; });
+  rr.forEach(x => { if (x.prob && x.prob !== 'NA') g.problemas[x.prob] = (g.problemas[x.prob] || 0) + 1; if (x.resolv && x.resolv !== 'NA') g.resolv[x.resolv] = (g.resolv[x.resolv] || 0) + 1; if (x.tipo && x.tipo !== 'NA') g.tipos[x.tipo] = (g.tipos[x.tipo] || 0) + 1; });
+  g.comProblema = rr.filter(temProblema).length; g.pctProblema = g.n ? Math.round(g.comProblema / g.n * 100) : null;
+  g.resolvidoHora = g.comProblema ? Math.round((g.resolv.sim || 0) / g.comProblema * 100) : null;
+  const cesL = list.filter(r => { const x = r.r || {}; return temProblema(x) && ['sim', 'parcial', 'nao'].includes(x.resolv) && num(x.ces); }); g.cesN = cesL.length; g.ces = cesL.length ? Math.round(cesL.filter(r => positivo(r.r.ces, escDeCl(r))).length / cesL.length * 100) : null;
+  g.pediramRetorno = rr.filter(x => x.lgpd === 1).length; g.nUnid = g.unidades.size;
+  return g;
+}
+function coAvaliados(r, cons){ if (typeof r.avaliados === 'string') return r.avaliados.split(' ').filter(Boolean); if (typeof r.presentes === 'string') return r.presentes.split(' ').filter(Boolean); return cons.filter(cs => CO.criterios.some(cr => num((r.r || {})[cs.c + cr.n]))).map(cs => cs.c); }
+function agConselho(list){
+  const cfg = coCfg(); const g = { n: list.length, reunioes: [...new Set(list.map(r => r.unidade))].filter(Boolean).sort(), blocos: {}, nBloco: {}, itens: [], nota: null, notaN: 0, nota9: null, conselheiros: cfg.conselheiros };
+  const itensDef = cfg.reuniao.filter(q => q.c !== 'r8' || cfg.r8).map(q => ({ c: q.c, bloco: 'reuniao', f: q.f, p: q.p })).concat(cfg.conselheiros.flatMap(cs => CO.criterios.map(cr => ({ c: cs.c + cr.n, bloco: cs.c, f: cr.f, p: cfg.pesoCrit(cs.c, cr.n, cr.p) }))));
+  const pond = {}; cfg.conselheiros.forEach(cs => { g.nBloco[cs.c] = list.filter(r => coAvaliados(r, cfg.conselheiros).includes(cs.c)).length; });
+  g.itens = itensDef.map(q => { const base = q.bloco === 'reuniao' ? list : list.filter(r => coAvaliados(r, cfg.conselheiros).includes(q.bloco)); const xs = base.filter(r => num((r.r || {})[q.c])); const na = base.filter(r => (r.r || {})[q.c] === 'NA').length; const pos = xs.filter(r => positivo(r.r[q.c], escDeCo(r))).length; const neg = xs.filter(r => negativo(r.r[q.c], escDeCo(r))).length; const p = pond[q.bloco] = pond[q.bloco] || { num: 0, den: 0 }; p.num += q.p * pos; p.den += q.p * xs.length;
+    return { c: q.c, bloco: q.bloco, blocoNome: q.bloco === 'reuniao' ? 'Reunião' : ((cfg.conselheiros.find(x => x.c === q.bloco) || {}).nome || q.bloco), f: q.f, p: q.p, n: xs.length, na, pct: xs.length ? Math.round(pos / xs.length * 100) : null, neg: xs.length ? Math.round(neg / xs.length * 100) : null }; });
+  Object.keys(pond).forEach(b => { g.blocos[b] = pond[b].den ? Math.round(pond[b].num / pond[b].den * 100) : null; });
+  const notas = list.map(r => (r.r || {}).nota).filter(num); if (notas.length) { g.notaN = notas.length; g.nota = Math.round(notas.reduce((a, b) => a + b, 0) / notas.length * 10) / 10; g.nota9 = Math.round(notas.filter(v => v >= 9).length / notas.length * 100); }
+  g.identTotal = g.n > 0 && g.n < N_IDENT; g.identBloco = {}; cfg.conselheiros.forEach(cs => { g.identBloco[cs.c] = g.nBloco[cs.c] > 0 && g.nBloco[cs.c] < N_IDENT; }); g.blocosIdent = cfg.conselheiros.filter(cs => g.identBloco[cs.c]).map(cs => `${cs.nome} (${g.nBloco[cs.c]})`); g.identificavel = g.identTotal || g.blocosIdent.length > 0;
+  g.nReunioes = g.reunioes.length; return g;
+}
+
+/* ---------------- filtros e consolidação ---------------- */
+function mesDe(k, r){ if (k === 'equipe') return (r.mes || '') || (r.data || '').slice(0, 7); if (k === 'clientes') return (r.data || '').slice(0, 7); return (r.unidade || '').slice(0, 7); }
+function filtrar(k, list, cf){ return list.filter(r => { const m = mesDe(k, r); if (cf.ano && m.slice(0, 4) !== cf.ano) return false; if (cf.mes && m.slice(5, 7) !== cf.mes) return false; if (k !== 'conselho' && cf.unidade && r.unidade !== cf.unidade) return false; return true; }); }
+function cfDefault(){ return { ano: '', mes: '', unidade: '' }; }
+function calc(cf){
+  const P = pool(); const eqTodas = P.equipe.filter(r => r.escala === EQ.escala); const legado = P.equipe.length - eqTodas.length;
+  const todosMeses = [...new Set(eqTodas.map(r => mesDe('equipe', r)).concat(P.clientes.map(r => mesDe('clientes', r)), P.conselho.map(r => mesDe('conselho', r))))].filter(m => m && m.length >= 7);
+  const anos = [...new Set(todosMeses.map(m => m.slice(0, 4)))].sort().reverse();
+  const unidadesOpt = [...new Set(eqTodas.map(r => r.unidade).concat(P.clientes.map(r => r.unidade)))].filter(Boolean).sort();
+  if (cf.ano && !anos.includes(cf.ano)) { cf.ano = ''; cf.mes = ''; }   // opção que deixou de existir (ex.: cópia da nuvem apagada): filtro volta a "Todos"
+  if (cf.unidade && !unidadesOpt.includes(cf.unidade)) cf.unidade = '';
+  const mesesOpt = [...new Set(todosMeses.filter(m => !cf.ano || m.slice(0, 4) === cf.ano).map(m => m.slice(5, 7)))].sort();
+  if (cf.mes && !mesesOpt.includes(cf.mes)) cf.mes = '';
+  const eq = filtrar('equipe', eqTodas, cf), cl = filtrar('clientes', P.clientes, cf), co = filtrar('conselho', P.conselho, cf);
+  const gEq = agEquipe(eq), gCl = agClientes(cl), gCo = agConselho(co);
+  const codes = [...new Set(eq.map(r => r.unidade).concat(cl.map(r => r.unidade)))].filter(Boolean).sort();
+  const porUnidade = codes.map(u => ({ unidade: u, nome: nomeU(u), eq: agEquipe(eq.filter(r => r.unidade === u)), cl: agClientes(cl.filter(r => r.unidade === u)) }));
+  const meses = [...new Set(eq.map(r => mesDe('equipe', r)).concat(cl.map(r => mesDe('clientes', r)), co.map(r => mesDe('conselho', r))))].filter(m => m && m.length >= 7).sort();
+  const tendencia = meses.map(m => ({ mes: m, eq: agEquipe(eq.filter(r => mesDe('equipe', r) === m)), cl: agClientes(cl.filter(r => mesDe('clientes', r) === m)), co: agConselho(co.filter(r => mesDe('conselho', r) === m)) }));
+  const reunioes = gCo.reunioes.slice().reverse().map(u => Object.assign({ unidade: u, nome: nomeReuniao(u) }, agConselho(co.filter(r => r.unidade === u))));
+  const filtroTxt = [cf.ano || 'todos os anos', cf.mes ? mesLabel((cf.ano || '0000') + '-' + cf.mes).slice(0, 3) : 'todos os meses', cf.unidade ? 'unidade ' + cf.unidade : 'todas as unidades'].join(' · ');
+  return { cf, gEq, gCl, gCo, porUnidade, tendencia, reunioes, legado, anos, mesesOpt, unidadesOpt, filtroTxt, origem: P.origem || null, totais: { equipe: eqTodas.length, clientes: P.clientes.length, conselho: P.conselho.length } };
+}
+
+/* ---------------- telas ---------------- */
+const state = { screen: 'pin', pin: '', cf: cfDefault() };
+function header(passo){ return `<div class="top"><div class="marca"><a href="../" class="home" title="Página inicial: escolher a pesquisa" aria-label="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a><span>Painel de resultados</span></div><div class="passo">${esc(passo || '')}</div></div>`; }
+function logoHero(){ return `<div class="logo-hero"><a href="../" class="home" title="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a></div>`; }
+function viewPin(){
+  const bloqueado = settings.lockUntil && Date.now() < settings.lockUntil;
+  return header('Área do avaliador') + `<div class="wrap"><div class="card" style="max-width:520px;margin:0 auto;text-align:center">${logoHero()}
+    <h2>Painel de resultados — digite o PIN</h2><p class="small muted">Junta as três pesquisas (equipe, clientes e conselho) deste aparelho e da nuvem.</p>
+    ${bloqueado ? `<div class="ruim">Muitas tentativas. Aguarde ${Math.ceil((settings.lockUntil - Date.now()) / 1000)} s.</div>` : ''}
+    <input class="pininput" id="pin-input" type="text" inputmode="numeric" autocomplete="off" value="${esc(state.pin)}" ${bloqueado ? 'disabled' : ''} aria-label="PIN">
+    <div class="pinpad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button data-action="pinkey" data-k="${k}" ${bloqueado ? 'disabled' : ''}>${k}</button>`).join('')}<button data-action="pinkey" data-k="del" ${bloqueado ? 'disabled' : ''}>⌫</button><button data-action="pinkey" data-k="0" ${bloqueado ? 'disabled' : ''}>0</button><button data-action="pinok" ${bloqueado ? 'disabled' : ''} style="background:var(--roxo);color:#fff">OK</button></div>
+    <div class="linha" style="justify-content:center"><a class="btn ghost" href="../">Voltar à página inicial</a></div>
+  </div></div>`;
+}
+function bar(v, cls){ return v == null ? '<span class="muted">—</span>' : `<span class="mini ${cls || ''}" title="${v}%"><i style="width:${Math.max(0, Math.min(100, v))}%"></i></span> ${v}%`; }
+function avisoEq(a){ if (!a.n) return ''; if (a.identificavel) return '<span class="tag ruim">identificável</span>'; if (a.poucas) return '<span class="tag pend">poucas</span>'; return ''; }
+function graficoLinhas(labels, series){
+  const W = 760, H = 236, L = 40, R = 40, T = 22, B = 34; const n = labels.length; if (!n) return '<p class="muted">Sem dados no filtro.</p>';
+  const x = i => L + (n === 1 ? (W - L - R) / 2 : i * (W - L - R) / (n - 1)); const y = v => T + (100 - v) / 100 * (H - T - B);
+  let s = `<div class="tabela-wrap"><svg class="grafico" viewBox="0 0 ${W} ${H}" role="img" aria-label="Tendência mensal">`;
+  [0, 25, 50, 75, 100].forEach(v => { s += `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#DED8EA" stroke-width="1"/><text x="${L - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" class="rot">${v}%</text>`; });
+  const passo = Math.ceil(n / 12); labels.forEach((m, i) => { if ((n - 1 - i) % passo) return; const anc = n === 1 ? 'middle' : (i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle')); s += `<text x="${x(i).toFixed(1)}" y="${H - B + 18}" text-anchor="${anc}" class="rot">${esc(mesLabel(m))}</text>`; });
+  series.forEach((se, si) => { const dyL = [-9, -9, 17][si] || -9, dxL = [0, 22, 0][si] || 0; const pts = se.pts.map((v, i) => v == null ? null : [x(i), y(v)]); let d = ''; pts.forEach((p, i) => { if (!p) return; d += (i === 0 || !pts[i - 1] ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ' '; }); if (d) s += `<path d="${d.trim()}" fill="none" stroke="${se.cor}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+    pts.forEach((p, i) => { if (!p) return; s += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" fill="${se.cor}"/><text x="${(p[0] + dxL).toFixed(1)}" y="${(p[1] + dyL).toFixed(1)}" text-anchor="middle" class="rot" style="fill:${se.cor};font-weight:700">${se.pts[i]}%</text>`; }); });
+  s += '</svg></div>'; return s + `<div class="legenda-graf">${series.map(se => `<span class="legitem"><i style="background:${se.cor}"></i>${esc(se.nome)}</span>`).join('')}</div>`;
+}
+function blocoEquipe(a, C){
+  return `<div class="bloco"><div class="cab"><div class="ic">👷</div><div><h2>Equipe (cliente interno)</h2><div class="sub">${a.n} resposta(s) · ${a.nUnid} unidade(s)${C.legado ? ` · ${C.legado} de versão antiga fora das contas` : ''}</div></div></div>
+    ${a.n ? `<div class="kpi"><div><b>${pct(a.pctSimPond)}</b><span>% Sim ponderado</span></div><div><b>${pct(a.pctSim)}</b><span>% Sim</span></div><div><b>${a.enpsVal == null ? '—' : a.enpsVal}</b><span>eNPS (${a.enps.n})</span></div><div><b>${pct(a.cesFacil)}</b><span>fácil c/ escritório (${a.ces.n})</span></div></div>
+    ${a.identificavel ? '<div class="ruim">Menos de 3 respostas: identifica quem respondeu — uso restrito.</div>' : (a.poucas ? '<div class="aviso">Poucas respostas: leia como indicação.</div>' : '')}` : '<p class="muted">Sem respostas da equipe no filtro.</p>'}</div>`;
+}
+function blocoClientes(g){
+  return `<div class="bloco"><div class="cab"><div class="ic">🚗</div><div><h2>Clientes (cliente final)</h2><div class="sub">${g.n} resposta(s) · ${g.nUnid} unidade(s)</div></div></div>
+    ${g.n ? `<div class="kpi"><div><b>${pct(g.csat)}</b><span>CSAT (% positivo)</span></div><div><b>${g.nps == null ? '—' : g.nps}</b><span>NPS (${g.npsN})</span></div><div><b>${pct(g.pond)}</b><span>% positivo ponderado</span></div><div><b>${pct(g.pctProblema)}</b><span>tiveram problema</span></div><div><b>${pct(g.resolvidoHora)}</b><span>resolvido na hora</span></div></div>
+    ${g.n < 50 ? '<div class="aviso">Regra de leitura: CSAT a partir de 50 respostas e NPS a partir de 100; antes disso, indicação.</div>' : ''}` : '<p class="muted">Sem respostas de clientes no filtro.</p>'}</div>`;
+}
+function blocoConselho(g){
+  return `<div class="bloco"><div class="cab"><div class="ic">🏛️</div><div><h2>Conselho (governança)</h2><div class="sub">${g.nReunioes} reunião(ões) · ${g.n} resposta(s)</div></div></div>
+    ${g.n ? `<div class="kpi"><div><b>${pct(g.blocos.reuniao)}</b><span>índice da reunião</span></div>${g.conselheiros.map(cs => `<div><b>${pct(g.blocos[cs.c])}</b><span>${esc(cs.nome)} (${g.nBloco[cs.c]} aval.)${g.identBloco[cs.c] ? ' <span class="tag ruim">identificável</span>' : ''}</span></div>`).join('')}<div><b>${g.nota == null ? '—' : g.nota}</b><span>nota "valeu o tempo" (${g.notaN})</span></div></div>
+    ${g.identTotal ? '<div class="ruim">Menos de 3 respostas: identifica quem respondeu — uso restrito da governança.</div>' : (g.blocosIdent.length ? `<div class="ruim">Bloco com menos de 3 avaliações: ${esc(g.blocosIdent.join(', '))} — não discutir individualmente.</div>` : '')}` : '<p class="muted">Sem avaliações do conselho no filtro.</p>'}</div>`;
+}
+function viewPainel(){
+  const C = calc(state.cf); const { cf, gEq, gCl, gCo } = C; const opt = (arr, sel, fmt) => arr.map(v => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(fmt ? fmt(v) : v)}</option>`).join('');
+  const vazio = !gEq.n && !gCl.n && !gCo.n; const semNada = !C.totais.equipe && !C.totais.clientes && !C.totais.conselho;
+  const fontes = DEMO ? '<div class="aviso"><b>Dados de exemplo</b> (demonstração): números inventados só para mostrar o painel.</div>' : (C.origem ? `<p class="small muted">Fontes: ${['equipe', 'clientes', 'conselho'].map(k => `${k} ${C.origem[k].aparelho} deste aparelho + ${C.origem[k].nuvem} da nuvem`).join(' · ')}.</p>` : '');
+  return header('Painel consolidado') + `<div class="wrap">
+  <div class="card">
+    <div class="espaco"><h1 style="margin:0">Painel de resultados — todas as pesquisas</h1><div class="linha" style="margin:0"><button class="btn" data-action="xlsx" ${vazio ? 'disabled' : ''}>Baixar Excel único</button><button class="btn" data-action="pdf" ${vazio ? 'disabled' : ''}>Baixar PDF único</button><button class="btn ghost" data-action="config">Configurações</button></div></div>
+    <div class="linha" style="margin-top:8px">${syncOk() ? `<button class="btn light mini" data-action="sync">Atualizar da nuvem</button><span class="small muted">${settings.ultimaSync ? 'Última atualização: ' + esc(syncLabel(settings.ultimaSync)) : 'Ainda não atualizado da nuvem'} · <button class="btn ghost mini" data-action="syncfull">baixar tudo de novo</button></span>` : '<span class="small muted">Sincronização online desligada: mostrando só o que está neste aparelho. Configure a URL e a chave do servidor em <b>Configurações</b> para ver todos os tablets (LEIA-ME, seção 11).</span>'}</div>
+    ${fontes}
+    ${semNada && !DEMO ? '<div class="aviso">Ainda não há respostas neste aparelho nem baixadas da nuvem. Responda nas pesquisas ou configure o servidor e toque em <i>Atualizar da nuvem</i>.</div>' : ''}
+    <h3>Filtros</h3>
+    <div class="filtros">
+      <div><label>Ano</label><select data-cf="ano"><option value="">Todos</option>${opt(C.anos, cf.ano)}</select></div>
+      <div><label>Mês</label><select data-cf="mes"><option value="">Todos</option>${opt(C.mesesOpt, cf.mes, m => mesLabel('0000-' + m).slice(0, 3))}</select></div>
+      <div><label>Unidade (equipe e clientes)</label><select data-cf="unidade"><option value="">Todas</option>${opt(C.unidadesOpt, cf.unidade, u => u + (nomeU(u) ? ' · ' + nomeU(u) : ''))}</select></div>
+    </div>
+    <p class="small muted">Mostrando: ${esc(C.filtroTxt)}. A avaliação do conselho não tem unidade: entra pelos filtros de ano e mês.</p>
+    <div class="grade">${blocoEquipe(gEq, C)}${blocoClientes(gCl)}${blocoConselho(gCo)}</div>
+  </div>
+  <div class="card"><h2>Por unidade — equipe × clientes</h2>
+    <div class="tabela-wrap"><table><tr><th class="l">Unidade</th><th class="l">Local</th><th>Equipe: resp.</th><th>% Sim pond.</th><th>eNPS</th><th>Clientes: resp.</th><th>CSAT %</th><th>NPS</th><th>% c/ problema</th><th>Aviso</th></tr>
+    ${C.porUnidade.map(u => `<tr><td class="l"><b>${esc(u.unidade)}</b></td><td class="l small muted">${esc(u.nome)}</td><td>${u.eq.n || '—'}</td><td class="l">${u.eq.n ? bar(u.eq.pctSimPond) : '—'}</td><td>${u.eq.enpsVal == null ? '—' : u.eq.enpsVal}</td><td>${u.cl.n || '—'}</td><td class="l">${u.cl.n ? bar(u.cl.csat, 'acento') : '—'}</td><td>${u.cl.nps == null ? '—' : u.cl.nps}</td><td>${pct(u.cl.pctProblema)}</td><td>${avisoEq(u.eq)}</td></tr>`).join('') || '<tr><td colspan="10" class="muted">Sem respostas de equipe ou clientes no filtro.</td></tr>'}</table></div>
+    <p class="legenda">Barra roxa = % Sim ponderado da equipe; barra violeta = CSAT (% positivo) dos clientes. "identificável" = menos de 3 respostas da equipe na unidade (uso restrito); "poucas" = menos de 5.</p>
+  </div>
+  <div class="card"><h2>Tendência mensal</h2>
+    ${graficoLinhas(C.tendencia.map(t => t.mes), [{ nome: 'Equipe · % Sim ponderado', cor: '#6B4A98', pts: C.tendencia.map(t => t.eq.pctSimPond) }, { nome: 'Clientes · CSAT % positivo', cor: '#9935F4', pts: C.tendencia.map(t => t.cl.csat) }, { nome: 'Conselho · índice da reunião', cor: '#2E7D32', pts: C.tendencia.map(t => t.co.blocos.reuniao == null ? null : t.co.blocos.reuniao) }])}
+    <div class="tabela-wrap"><table><tr><th class="l">Mês</th><th>Equipe resp.</th><th>% Sim pond.</th><th>eNPS</th><th>Clientes resp.</th><th>CSAT %</th><th>NPS</th><th>% c/ problema</th><th>Conselho resp.</th><th>Índice reunião</th><th>Aviso</th></tr>
+    ${C.tendencia.map(t => `<tr><td class="l"><b>${esc(mesLabel(t.mes))}</b></td><td>${t.eq.n || '—'}</td><td>${pct(t.eq.pctSimPond)}</td><td>${t.eq.enpsVal == null ? '—' : t.eq.enpsVal}</td><td>${t.cl.n || '—'}</td><td>${pct(t.cl.csat)}</td><td>${t.cl.nps == null ? '—' : t.cl.nps}</td><td>${pct(t.cl.pctProblema)}</td><td>${t.co.n || '—'}</td><td>${pct(t.co.blocos.reuniao)}</td><td>${avisoEq(t.eq)}${t.co.identificavel ? ' <span class="tag ruim">conselho identificável</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="11" class="muted">Sem dados no filtro.</td></tr>'}</table></div>
+    <p class="legenda">"identificável" = menos de 3 respostas da equipe no mês, ou menos de 3 avaliações numa reunião ou num bloco de conselheiro: uso restrito, não discutir individualmente.</p>
+  </div>
+  <div class="card"><h2>Detalhes por pesquisa</h2>
+    <details><summary>Equipe — as 15 frases (${gEq.n} respostas)</summary><div class="tabela-wrap"><table><tr><th>#</th><th class="l">Dimensão</th><th class="l">Frase</th><th>Peso</th><th>Resp.</th><th>N/A</th><th>% Sim</th><th>% Não</th></tr>${gEq.itens.map((it, i) => `<tr><td>${i + 1}</td><td class="l">${esc(it.dim)}</td><td class="l">${esc(it.t)}</td><td>${it.p}</td><td>${it.n}</td><td>${it.na}</td><td class="l">${bar(it.pctSim)}</td><td>${pct(it.pctNao)}</td></tr>`).join('')}</table></div></details>
+    <details><summary>Clientes — 7 fatores e problemas (${gCl.n} respostas)</summary><div class="tabela-wrap"><table><tr><th class="l">Fator</th><th>Peso</th><th>Resp.</th><th>N/A</th><th>% positivo</th><th>% negativo</th></tr>${gCl.fatores.map(f => `<tr><td class="l">${esc(f.f)}</td><td>${f.p}</td><td>${f.n}</td><td>${f.na}</td><td class="l">${bar(f.pct, 'acento')}</td><td>${pct(f.neg)}</td></tr>`).join('')}</table></div>
+      <div class="tabela-wrap"><table><tr><th class="l">Problema principal</th><th>Respostas</th><th>%</th></tr>${Object.keys(CL.problemas).map(k => `<tr><td class="l">${esc(CL.problemas[k])}</td><td>${gCl.problemas[k] || 0}</td><td>${gCl.n ? Math.round((gCl.problemas[k] || 0) / gCl.n * 100) + '%' : '—'}</td></tr>`).join('')}</table></div>
+      <div class="tabela-wrap"><table><tr><th class="l">Como foi resolvido (quem teve problema: ${gCl.comProblema})</th><th>Respostas</th></tr>${Object.keys(CL.resolv).map(k => `<tr><td class="l">${esc(CL.resolv[k])}</td><td>${gCl.resolv[k] || 0}</td></tr>`).join('')}</table></div>
+      <div class="tabela-wrap"><table><tr><th class="l">Tipo de cliente</th><th>Respostas</th><th>%</th></tr>${Object.keys(CL.tipos).map(k => `<tr><td class="l">${esc(CL.tipos[k])}</td><td>${gCl.tipos[k] || 0}</td><td>${gCl.n ? Math.round((gCl.tipos[k] || 0) / gCl.n * 100) + '%' : '—'}</td></tr>`).join('')}</table></div></details>
+    <details><summary>Conselho — reuniões e itens (${gCo.n} respostas)</summary><div class="tabela-wrap"><table><tr><th class="l">Reunião</th><th>Resp.</th><th>Índice reunião</th>${gCo.conselheiros.map(cs => `<th>${esc(cs.nome)}</th>`).join('')}<th>Nota média</th><th>% 9-10</th></tr>${C.reunioes.map(u => `<tr><td class="l"><b>${esc(dataLabel(u.unidade))}</b> <span class="small muted">${esc(u.nome)}</span>${u.identificavel ? ' <span class="tag ruim">identificável</span>' : ''}</td><td>${u.n}</td><td>${pct(u.blocos.reuniao)}</td>${gCo.conselheiros.map(cs => `<td>${pct(u.blocos[cs.c])}${u.nBloco[cs.c] !== u.n ? ` <span class="small muted">(${u.nBloco[cs.c]})</span>` : ''}</td>`).join('')}<td>${u.nota == null ? '—' : u.nota}</td><td>${pct(u.nota9)}</td></tr>`).join('') || `<tr><td colspan="${5 + gCo.conselheiros.length}" class="muted">Sem reuniões no filtro.</td></tr>`}</table></div>
+      <div class="tabela-wrap"><table><tr><th>Código</th><th class="l">Bloco</th><th class="l">Item</th><th>Peso</th><th>Resp.</th><th>Não sei</th><th>% positivo</th><th>% negativo</th></tr>${gCo.itens.map(q => `<tr><td>${esc(q.c)}</td><td class="l">${esc(q.blocoNome)}</td><td class="l">${esc(q.f)}</td><td>${q.p}</td><td>${q.n}</td><td>${q.na}</td><td class="l">${bar(q.pct)}</td><td>${pct(q.neg)}</td></tr>`).join('')}</table></div></details>
+    <p class="legenda">Contas iguais às de cada app: positivo = melhor resposta com escala de 3 (as duas melhores com escala de 5); índices ponderados pelos pesos em uso neste aparelho. Comentários e contatos não aparecem nas telas nem no PDF do painel; no Excel único, as abas Resp. trazem só as respostas abertas (aberta1/aberta2, coment, mais/mudar), sem comentários por frase da equipe e sem contato — esses ficam em cada pesquisa.</p>
+    <div class="linha rodape-acoes"><button class="btn" data-action="xlsx" ${vazio ? 'disabled' : ''}>Baixar Excel único</button><button class="btn" data-action="pdf" ${vazio ? 'disabled' : ''}>Baixar PDF único</button><a class="btn ghost" href="../">Página inicial</a></div>
+    <p class="legenda">Painel v${VERSAO} · uso restrito da área de Experiência do Cliente e da governança.</p>
+  </div></div>`;
+}
+function viewConfig(){
+  return header('Configurações') + `<div class="wrap"><div class="card" style="max-width:820px">
+    <h1>Configurações do painel</h1>
+    <h3 style="margin-top:6px">Servidor de sincronização (o mesmo das três pesquisas)</h3>
+    <label>URL do servidor (Apps Script — LEIA-ME, seção 11)</label><input type="url" id="s-webhook" value="${esc(settings.webhook)}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+    <label>Chave de sincronização</label><input type="text" id="s-chave" value="${esc(settings.chave || '')}" placeholder="a mesma digitada no servidor" autocomplete="off" style="-webkit-text-security:disc">
+    <div class="linha"><button class="btn light" data-action="testarservidor">Testar ligação</button></div>
+    <p class="legenda">O painel só lê da nuvem (nunca envia). Ele baixa as três abas (Equipe, Clientes, Conselho) e guarda uma cópia neste aparelho; contatos de clientes nunca são baixados aqui.</p>
+    <label>Trocar PIN (4 a 8 dígitos; vazio = manter)</label><input type="text" id="s-pin" inputmode="numeric" autocomplete="off" placeholder="novo PIN" style="-webkit-text-security:disc">
+    <div class="linha"><button class="btn" data-action="saveconfig">Salvar</button><button class="btn ghost" data-action="painel">Voltar ao painel</button></div>
+    <h3>Cópia da nuvem neste aparelho</h3>
+    <p class="small muted">${(() => { const n = nuvem(); return `${n.equipe.length} da equipe · ${n.clientes.length} de clientes · ${n.conselho.length} do conselho${settings.ultimaSync ? ' · última atualização ' + syncLabel(settings.ultimaSync) : ''}`; })()}</p>
+    <div class="linha"><button class="btn perigo" data-action="wipenuvem">Apagar a cópia da nuvem deste aparelho</button></div>
+    <p class="legenda">Apagar a cópia não apaga nada no servidor nem nas pesquisas; na próxima atualização o painel baixa tudo de novo.</p>
+  </div></div>`;
+}
+function render(){ const app = document.getElementById('app'); const map = { pin: viewPin, painel: viewPainel, config: viewConfig }; app.innerHTML = (map[state.screen] || viewPin)(); clearTimeout(unlockT); if (state.screen === 'pin' && settings.lockUntil && Date.now() < settings.lockUntil) unlockT = setTimeout(() => { if (state.screen === 'pin') render(); }, settings.lockUntil - Date.now() + 50); const pi = document.getElementById('pin-input'); if (pi && state.screen === 'pin' && !pi.disabled) { pi.focus(); try { pi.setSelectionRange(pi.value.length, pi.value.length); } catch(e) {} } }
+function go(screen){ state.screen = screen; if (screen !== 'pin') state.pin = ''; render(); window.scrollTo(0, 0); }
+
+/* ---------------- nuvem (só leitura) ---------------- */
+async function apiGet(params){ const u = new URL(settings.webhook); Object.entries(Object.assign({ chave: settings.chave }, params)).forEach(([k, v]) => u.searchParams.set(k, v)); const res = await fetch(u.toString()); if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }
+function erroServidor(j){ if (!j) return 'Resposta inesperada do servidor.'; if (j.erro === 'chave') return 'Chave de sincronização diferente da do servidor (Configurações).'; if (j.erro === 'configurar-chave') return 'O servidor ainda está com a chave de exemplo: troque CHAVE no Code.gs e implante de novo.'; if (j.erro === 'app') return 'O servidor não conhece uma das pesquisas: atualize o Code.gs (versão com a aba Conselho).'; return 'Resposta inesperada do servidor' + (j.erro ? ' (' + j.erro + ')' : '') + '.'; }
+let syncing = false;
+async function sincronizar(silencioso, tudo){
+  if (!syncOk()) { if (!silencioso) toast('Configure a URL e a chave do servidor em Configurações.'); return; }
+  if (syncing) return; if (!navigator.onLine) { if (!silencioso) toast('Sem internet agora; tento de novo quando voltar.'); return; }
+  syncing = true; if (!silencioso) toast('Atualizando da nuvem…');
+  try {
+    const atual = tudo ? {} : nuvem(); const incremental = !tudo && !!settings.ultimaSync; const conv = { equipe: registroEq, clientes: registroCl, conselho: registroCo }; const novo = {}; let novas = 0;
+    for (const k of Object.keys(APPS)) { const params = { op: 'list', app: APPS[k] }; if (incremental) params.desde = new Date(new Date(settings.ultimaSync).getTime() - 15 * 60 * 1000).toISOString();
+      const j = await apiGet(params); if (!j || !j.ok) throw new Error(erroServidor(j));
+      const porId = new Map((atual[k] || []).map(r => [r.id, r])); (j.itens || []).map(conv[k]).forEach(x => { if (!x) return; if (!porId.has(x.id)) novas++; porId.set(x.id, x); }); novo[k] = [...porId.values()]; }
+    if (!LS.set('mpp_nuvem', novo)) throw new Error('Não coube na memória deste aparelho.');
+    settings.ultimaSync = new Date().toISOString(); saveSettings(); invalidar();
+    if (!silencioso) toast(`Nuvem atualizada: ${novas} resposta(s) nova(s).`); if (state.screen === 'painel') render();   // não redesenha Configurações no meio da digitação
+  } catch(e) { console.warn('sincronizar', e); if (!silencioso) toast(e.message || 'Não consegui falar com o servidor.'); }
+  finally { syncing = false; }
+}
+async function testarServidor(){
+  const url = ((document.getElementById('s-webhook') || {}).value || '').trim(), chave = ((document.getElementById('s-chave') || {}).value || '').trim();
+  if (!url || !chave) { toast('Preencha a URL e a chave antes de testar.'); return; } toast('Testando…');
+  try { const u = new URL(url); u.searchParams.set('op', 'ping'); u.searchParams.set('chave', chave); const res = await fetch(u.toString()); const j = await res.json(); toast(j && j.ok ? 'Ligação OK: o servidor respondeu.' : erroServidor(j)); }
+  catch(e) { toast('Não consegui falar com o servidor: confira a URL (termina em /exec), a implantação "Qualquer pessoa" e a internet.'); }
+}
+
+/* ---------------- dados de exemplo (demonstração) ---------------- */
+function demoPool(){
+  let seed = 20260917; const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; const pick = arr => arr[Math.floor(rnd() * arr.length)]; const w3 = (pSim, pMeio) => { const r = rnd(); return r < pSim ? 3 : (r < pSim + pMeio ? 2 : 1); };
+  const unids = ['GAZETA', 'FIESP', 'HABITAT', 'BP', 'LAV.ANGEL', 'ALTA.HIGIE'], meses = ['2026-07', '2026-08', '2026-09']; const equipe = [], clientes = [], conselho = []; let k = 0;
+  unids.forEach((u, ui) => meses.forEach((m, mi) => {
+    const nE = 3 + Math.floor(rnd() * 5); for (let i = 0; i < nE; i++) { const bom = 0.42 + ui * 0.06 + mi * 0.04; equipe.push({ id: 'de' + (k++), versao: 'demo', escala: 'B3', unidade: u, mes: m, data: m + '-1' + (i % 9), rodada: 'R' + (mi + 1), r: Array.from({ length: 15 }, (_, j) => ((j === 5 || j === 13) && rnd() < 0.2) ? 'NA' : w3(bom, 0.3)), enps: Math.min(10, Math.max(0, Math.round(5 + bom * 5 + (rnd() - 0.5) * 4))), ces: rnd() < 0.3 ? 'NP' : w3(0.6, 0.25), a1: '', a2: '' }); }
+    const nC = 8 + Math.floor(rnd() * 20); for (let i = 0; i < nC; i++) { const bom = 0.52 + ui * 0.05 + mi * 0.03; const prob = rnd() < 0.22 ? pick(['fila', 'cancela', 'maq', 'vaga', 'atend']) : 'nenhum'; const r = { csat: w3(bom, 0.3), nps: Math.min(10, Math.max(0, Math.round(6 + bom * 4 + (rnd() - 0.5) * 5))), prob, resolv: prob === 'nenhum' ? 'NA' : pick(['sim', 'sim', 'parcial', 'nao', 'nao_pedi']), tipo: pick(['mensal', 'avulso', 'avulso', 'conv']), coment: '', contato: '', lgpd: 0 };
+      ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7'].forEach((c, j) => { r[c] = ((j === 1 || j === 6) && rnd() < 0.15) ? 'NA' : w3(bom - 0.05 + j * 0.01, 0.3); }); r.ces = (prob !== 'nenhum' && ['sim', 'parcial', 'nao'].includes(r.resolv)) ? w3(0.6, 0.25) : 'NA'; r.freq = ['avulso', 'conv'].includes(r.tipo) ? pick(['prim', 'raro', 'mes', 'sem']) : 'NA';
+      clientes.push({ id: 'dc' + (k++), versao: 'demo', ver: 'C2', esc: 3, unidade: u, ponto: 'caixa', data: m + '-' + String(1 + Math.floor(rnd() * 27)).padStart(2, '0'), hora: '', r }); } }));
+  ['2026-07-14', '2026-08-18', '2026-09-15'].forEach((d, mi) => { for (let i = 0; i < 6; i++) { const r = {}; ['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7'].forEach(c => { r[c] = w3(0.55 + mi * 0.1, 0.3); }); r.r8 = 'NA'; const av = i === 4 ? 'g' : (i === 5 ? 'm' : 'g m'); ['g', 'm'].forEach(cs => { for (let n = 1; n <= 5; n++) r[cs + n] = av.includes(cs) ? w3(cs === 'g' ? 0.7 : 0.62, 0.25) : 'NA'; }); r.nota = 6 + Math.floor(rnd() * 5); r.mais = ''; r.mudar = '';
+    conselho.push({ id: 'do' + (k++), versao: 'demo', ver: 'B1', esc: 3, unidade: d, reuniao: 'Reunião ordinária', presentes: 'g m', avaliados: av, data: d, r }); } });
+  return { equipe, clientes, conselho, origem: null };
+}
+
+/* ---------------- exportações: um Excel e um PDF com tudo ---------------- */
+function dadosExport(){
+  const C = calc(state.cf); const { gEq, gCl, gCo } = C; const P = pool(); const cf = state.cf;
+  const titulo = 'Painel de resultados Maxipark — todas as pesquisas'; const escopo = `Filtros: ${C.filtroTxt}`;
+  const resumo = [[titulo], ['Gerado em', dataLabel(hojeISO())], ['Filtros', C.filtroTxt], ['Versão do painel', VERSAO], ['Fontes', DEMO ? 'DADOS DE EXEMPLO (demonstração)' : 'respostas deste aparelho + cópia da nuvem (servidor das pesquisas)'], [],
+    ['Indicador', 'Valor', 'Observação'],
+    ['EQUIPE — respostas', gEq.n, `${gEq.nUnid} unidade(s)${C.legado ? ` · ${C.legado} de versão antiga (escala 1-5) fora das contas` : ''}${gEq.identificavel ? ' · menos de 3: identifica quem respondeu, uso restrito' : ''}`],
+    ['EQUIPE — % Sim ponderado', pct(gEq.pctSimPond), 'melhor resposta das 15 frases × peso (1 a 3)'], ['EQUIPE — % Sim', pct(gEq.pctSim), ''], ['EQUIPE — eNPS', gEq.enpsVal == null ? '' : gEq.enpsVal, `${gEq.enps.n} nota(s); % promotores (9-10) − % detratores (0-6)`], ['EQUIPE — % fácil com o escritório', pct(gEq.cesFacil), `${gEq.ces.n} que precisaram do escritório`],
+    ['CLIENTES — respostas', gCl.n, `${gCl.nUnid} unidade(s)${gCl.n && gCl.n < 50 ? ' · abaixo de 50: leia como indicação' : ''}`], ['CLIENTES — CSAT (% positivo)', pct(gCl.csat), `${gCl.csatN} nota(s)`], ['CLIENTES — NPS', gCl.nps == null ? '' : gCl.nps, `${gCl.npsN} nota(s)`], ['CLIENTES — % positivo ponderado (7 fatores)', pct(gCl.pond), 'fatores × peso (1 a 3)'], ['CLIENTES — % com problema', pct(gCl.pctProblema), `${gCl.comProblema} relataram problema`], ['CLIENTES — % resolvido na hora', pct(gCl.resolvidoHora), 'entre quem teve problema'], ['CLIENTES — % fácil pedir ajuda (CES)', pct(gCl.ces), `${gCl.cesN} na base`], ['CLIENTES — pediram retorno', gCl.pediramRetorno, 'contatos ficam só na pesquisa com clientes'],
+    ['CONSELHO — reuniões', gCo.nReunioes, ''], ['CONSELHO — respostas', gCo.n, gCo.identTotal ? 'menos de 3: identifica quem respondeu, uso restrito' : ''], ['CONSELHO — índice da reunião', pct(gCo.blocos.reuniao), 'itens da reunião × peso']].concat(gCo.conselheiros.map(cs => [`CONSELHO — índice · ${cs.nome}`, pct(gCo.blocos[cs.c]), `avaliado em ${gCo.nBloco[cs.c]} de ${gCo.n} resposta(s)${gCo.identBloco[cs.c] ? ' — menos de 3 avaliações: identifica quem respondeu' : ''}`])).concat([
+    ['CONSELHO — nota média "valeu o tempo" (0-10)', gCo.nota == null ? '' : gCo.nota, gCo.notaN ? `${gCo.notaN} nota(s) · ${pct(gCo.nota9)} deram 9 ou 10` : ''], [],
+    ['Uso restrito da área de Experiência do Cliente e da governança da Maxipark. Unidades com menos de 3 respostas da equipe e reuniões (ou blocos de conselheiro) com menos de 3 avaliações identificam quem respondeu: não discutir individualmente.']]);
+  const porUnidade = [['Unidade', 'Local', 'Equipe: respostas', '% Sim', '% Sim ponderado', 'eNPS', '% fácil c/ escritório', 'Clientes: respostas', 'CSAT %', 'NPS', '% positivo ponderado', '% com problema', '% resolvido na hora', 'Aviso']].concat(C.porUnidade.map(u => [u.unidade, u.nome, u.eq.n, pct2(u.eq.pctSim), pct2(u.eq.pctSimPond), u.eq.enpsVal == null ? '' : u.eq.enpsVal, pct2(u.eq.cesFacil), u.cl.n, pct2(u.cl.csat), u.cl.nps == null ? '' : u.cl.nps, pct2(u.cl.pond), pct2(u.cl.pctProblema), pct2(u.cl.resolvidoHora), u.eq.identificavel ? 'equipe: menos de 3 respostas (identificável, uso restrito)' : (u.eq.poucas ? 'equipe: menos de 5 respostas (eNPS e CES não divulgar por unidade)' : '')]));
+  const tendencia = [['Mês', 'Equipe: respostas', '% Sim ponderado', 'eNPS', 'Clientes: respostas', 'CSAT %', 'NPS', '% com problema', 'Conselho: respostas', 'Índice da reunião'].concat(gCo.conselheiros.map(cs => 'Índice · ' + cs.nome), ['Aviso'])].concat(C.tendencia.map(t => [mesLabel(t.mes), t.eq.n, pct2(t.eq.pctSimPond), t.eq.enpsVal == null ? '' : t.eq.enpsVal, t.cl.n, pct2(t.cl.csat), t.cl.nps == null ? '' : t.cl.nps, pct2(t.cl.pctProblema), t.co.n, pct2(t.co.blocos.reuniao)].concat(gCo.conselheiros.map(cs => pct2(t.co.blocos[cs.c])), [[t.eq.identificavel ? 'equipe: menos de 3 respostas (identificável, uso restrito)' : (t.eq.poucas ? 'equipe: menos de 5 respostas' : ''), t.co.identificavel ? 'conselho: menos de 3 avaliações (identificável)' : ''].filter(Boolean).join(' · ')])));
+  const eqFrases = [['#', 'Dimensão', 'Frase', 'Peso', 'Responderam', 'N/A', '% Sim', '% Não', 'Sim', 'Meio', 'Não']].concat(gEq.itens.map((it, i) => [i + 1, it.dim, it.t, it.p, it.n, it.na, pct2(it.pctSim), pct2(it.pctNao), it.c[2], it.c[1], it.c[0]]));
+  const clFat = [['Código', 'Fator', 'Peso', 'Responderam', 'N/A', '% positivo', '% negativo']].concat(gCl.fatores.map(f => [f.c, f.f, f.p, f.n, f.na, pct2(f.pct), pct2(f.neg)])).concat([[], ['Problema principal', 'Respostas', '% das respostas']], Object.keys(CL.problemas).map(k => [CL.problemas[k], gCl.problemas[k] || 0, gCl.n ? Math.round((gCl.problemas[k] || 0) / gCl.n * 100) + '%' : '']), [[], ['Como foi resolvido', 'Respostas', '']], Object.keys(CL.resolv).map(k => [CL.resolv[k], gCl.resolv[k] || 0, '']), [[], ['Tipo de cliente', 'Respostas', '']], Object.keys(CL.tipos).map(k => [CL.tipos[k], gCl.tipos[k] || 0, '']));
+  const coReunioes = [['Reunião', 'Nome', 'Respostas', 'Índice da reunião'].concat(gCo.conselheiros.map(cs => 'Índice · ' + cs.nome), ['Nota média (0-10)', '% 9-10', 'Aviso'])].concat(C.reunioes.map(u => [dataLabel(u.unidade), u.nome, u.n, pct2(u.blocos.reuniao)].concat(gCo.conselheiros.map(cs => pct2(u.blocos[cs.c]) + (u.nBloco[cs.c] !== u.n ? ` (${u.nBloco[cs.c]} aval.)` : '')), [u.nota == null ? '' : u.nota, pct2(u.nota9), u.identTotal ? 'identificável (menos de 3 respostas)' : (u.blocosIdent.length ? 'identificável: ' + u.blocosIdent.join(', ') + ' com menos de 3 avaliações' : '')])));
+  const coItens = [['Código', 'Bloco', 'Item', 'Peso', 'Responderam', 'Não sei / n.a.', '% positivo', '% negativo']].concat(gCo.itens.map(q => [q.c, q.blocoNome, q.f, q.p, q.n, q.na, pct2(q.pct), pct2(q.neg)]));
+  const eqF = filtrar('equipe', P.equipe.filter(r => r.escala === EQ.escala), cf), clF = filtrar('clientes', P.clientes, cf), coF = filtrar('conselho', P.conselho, cf);
+  const v = x => (x === undefined || x === null) ? '' : x;
+  const respEq = [['versao', 'escala', 'id', 'unidade', 'mes', 'data', 'rodada'].concat(Array.from({ length: 15 }, (_, i) => 'B' + (i + 1)), ['eNPS', 'CES', 'aberta1', 'aberta2'])].concat(shuffle(eqF).map(r => [r.versao, r.escala, r.id, r.unidade, r.mes, r.data, r.rodada || 'R1'].concat(Array.from({ length: 15 }, (_, i) => v((r.r || [])[i])), [v(r.enps), v(r.ces), v(r.a1), v(r.a2)]).map(v)));
+  const clCols = CL.cols.filter(c => c !== 'contato'); const respCl = [['versao', 'ver', 'esc', 'id', 'unidade', 'ponto', 'data', 'hora'].concat(clCols)].concat(shuffle(clF).map(r => [r.versao, r.ver, escDeCl(r), r.id, r.unidade, r.ponto, r.data, r.hora].concat(clCols.map(c => v((r.r || {})[c]))).map(v)));
+  const respCo = [['versao', 'ver', 'esc', 'id', 'unidade', 'reuniao', 'presentes', 'avaliados', 'data'].concat(CO.cols)].concat(shuffle(coF).map(r => [r.versao, r.ver, escDeCo(r), r.id, r.unidade, r.reuniao || nomeReuniao(r.unidade), r.presentes, coAvaliados(r, gCo.conselheiros).join(' '), r.data].concat(CO.cols.map(c => v((r.r || {})[c]))).map(v)));
+  const legenda = [['Campo / regra', 'Significado'], ['% Sim / % positivo', 'melhor resposta com escala de 3 (as duas melhores com escala de 5); NA = não sei / não se aplica, fora das contas'], ['ponderado', 'cada frase, fator ou item entra com o peso 1 a 3 em uso neste aparelho (Configurações → Editar perguntas de cada app)'], ['eNPS / NPS', '% de notas 9-10 menos % de notas 0-6 (0 a 10)'], ['CES', 'equipe: % que achou fácil resolver com o escritório (NP = nunca precisou, fora da base); clientes: % que achou fácil pedir ajuda, entre quem teve problema e pediu'], ['Aviso identificável', 'menos de 3 respostas (ou 3 avaliações num bloco de conselheiro): o resultado identifica quem respondeu — uso restrito'], ['Respostas (abas)', 'uma linha por pessoa, ordem embaralhada; sem comentários por frase da equipe e sem contato de clientes (estão nas exportações de cada pesquisa)'], ['Fontes', 'respostas guardadas neste aparelho pelos três apps + cópia da nuvem (servidor/Code.gs). Filtros de ano/mês valem para as três; unidade só para equipe e clientes']];
+  const nome = `painel_maxipark_${cf.ano || 'todos'}_${cf.mes || 'todos-meses'}_${cf.unidade || 'todas'}_${hojeISO()}`;
+  return { titulo, escopo, C, resumo, porUnidade, tendencia, eqFrases, clFat, coReunioes, coItens, respEq, respCl, respCo, legenda, nome };
+}
+function pct2(v){ return v == null ? '' : v + '%'; }
+function folhasExcel(D){
+  return [{ nome: 'Resumo', aoa: D.resumo, larguras: [48, 14, 70], semCab: true }, { nome: 'Por unidade', aoa: D.porUnidade, larguras: [14, 22, 10, 9, 12, 8, 12, 10, 9, 8, 12, 12, 12, 44] }, { nome: 'Tendência', aoa: D.tendencia, larguras: [12, 10, 12, 8, 10, 9, 8, 12, 10, 12].concat(D.C.gCo.conselheiros.map(() => 16), [44]) },
+    { nome: 'Equipe por frase', aoa: D.eqFrases, larguras: [5, 30, 70, 6, 12, 6, 8, 8, 6, 6, 6] }, { nome: 'Clientes', aoa: D.clFat, larguras: [40, 12, 12, 12, 6, 12, 12] }, { nome: 'Conselho reuniões', aoa: D.coReunioes, larguras: [12, 28, 10, 14].concat(D.C.gCo.conselheiros.map(() => 22), [12, 8, 44]) }, { nome: 'Conselho itens', aoa: D.coItens, larguras: [8, 22, 40, 6, 12, 12, 12, 12] },
+    { nome: 'Resp. equipe', aoa: D.respEq, larguras: [7, 6, 14, 12, 8, 11, 7].concat(Array.from({ length: 15 }, () => 5), [6, 6, 40, 40]) }, { nome: 'Resp. clientes', aoa: D.respCl, larguras: [7, 5, 4, 14, 12, 8, 11, 6].concat(D.respCl[0].slice(8).map(c => c === 'coment' ? 50 : 6)) }, { nome: 'Resp. conselho', aoa: D.respCo, larguras: [7, 5, 4, 14, 12, 26, 11, 11, 11].concat(CO.cols.map(c => (c === 'mais' || c === 'mudar') ? 50 : 6)) }, { nome: 'Legenda', aoa: D.legenda, larguras: [24, 110] }];
+}
+const PCT_RE = /^-?\d+%$/;
+const AVISO_EXPORT = 'Uso restrito da área de Experiência do Cliente e da governança da Maxipark. Unidades com menos de 3 respostas da equipe e reuniões (ou blocos de conselheiro) com menos de 3 avaliações identificam quem respondeu: não discutir individualmente.';
+async function excelComLogo(EJ, D, folhas){
+  const wb = new EJ.Workbook(); wb.creator = 'Maxipark - Experiência do Cliente'; wb.created = new Date();
+  const img = wb.addImage({ base64: LOGO_B64, extension: 'png' });
+  const ROXO = 'FF6B4A98', ZEBRA = 'FFF4F1F8', BRANCO = 'FFFFFFFF', CINZA = 'FF5E5670', VERMELHO = 'FF9B1C1C';
+  const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+  const sub = `Gerado em ${dataLabel(hojeISO())} - ${D.escopo} - Painel v${VERSAO}`;
+  folhas.forEach(f => {
+    let aoa = f.aoa; if (f.semCab && aoa.length && aoa[0].length === 1 && aoa[0][0] === D.titulo) aoa = aoa.slice(1);
+    const ncol = Math.max(3, ...aoa.map(r => r.length)); const larg = aoa.length ? aoa[0].length : ncol;
+    const ws = wb.addWorksheet(f.nome); (f.larguras || []).forEach((w, i) => { ws.getColumn(i + 1).width = w; });
+    ws.getRow(1).height = 26; ws.getRow(2).height = 26; ws.getRow(3).height = 8; ws.addImage(img, { tl: { col: 0.1, row: 0.15 }, ext: { width: 268, height: 62 } });
+    const mc = 10; const wch = Array.from({ length: mc }, (_, i) => (f.larguras && f.larguras[i]) || 8.43).reduce((a, b) => a + b, 0);
+    const linha = (r, txt, font, h) => { ws.mergeCells(r, 1, r, mc); const c = ws.getCell(r, 1); c.value = txt; c.font = font; c.alignment = { vertical: 'middle', wrapText: true }; const nLin = Math.max(1, Math.ceil(String(txt).length * font.size / 11 / wch)); ws.getRow(r).height = Math.max(h, nLin * font.size * 1.35 + 6); };
+    linha(4, D.titulo, { name: 'Calibri', size: 15, bold: true, color: { argb: ROXO } }, 24); linha(5, sub, { name: 'Calibri', size: 9, italic: true, color: { argb: CINZA } }, 16); linha(6, AVISO_EXPORT, { name: 'Calibri', size: 9, bold: true, color: { argb: VERMELHO } }, 30);
+    ws.getRow(7).height = 5; for (let c = 1; c <= Math.max(ncol, mc); c++) ws.getCell(7, c).fill = fill(ROXO);
+    let r = 8, zebra = 0;
+    aoa.forEach((row, ri) => { const isCab = f.semCab ? row[0] === 'Indicador' : ri === 0; const xr = ws.getRow(r);
+      if (!isCab && !f.semCab && row.length && zebra % 2 === 1) for (let c = 1; c <= larg; c++) xr.getCell(c).fill = fill(ZEBRA);
+      row.forEach((v, ci) => { if (v === undefined || v === null) return; const c = xr.getCell(ci + 1); if (typeof v === 'string' && PCT_RE.test(v)) { c.value = parseInt(v, 10); c.numFmt = '0"%"'; } else c.value = v; if (isCab) { c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: BRANCO } }; c.fill = fill(ROXO); c.alignment = { vertical: 'middle', wrapText: true }; } });
+      if (isCab) { xr.height = 30; zebra = 0; if (!f.semCab && ri === 0) ws.autoFilter = { from: { row: r, column: 1 }, to: { row: r, column: row.length } }; } else if (row.length) zebra++; r++; });
+  });
+  return await wb.xlsx.writeBuffer();
+}
+function excelSimples(XLSX, folhas){ const wb = XLSX.utils.book_new(); folhas.forEach(f => { const ws = XLSX.utils.aoa_to_sheet(f.aoa); Object.keys(ws).forEach(a => { const c = ws[a]; if (a[0] !== '!' && c && c.t === 's' && PCT_RE.test(c.v)) { c.t = 'n'; c.v = parseInt(c.v, 10); c.z = '0"%"'; } }); if (f.larguras) ws['!cols'] = f.larguras.map(w => ({ wch: w })); XLSX.utils.book_append_sheet(wb, ws, f.nome); }); return XLSX.write(wb, { bookType: 'xlsx', type: 'array' }); }
+async function shareOrDownload(name, data, mime){
+  const blob = data instanceof Blob ? data : new Blob([data], { type: mime || 'text/csv;charset=utf-8' });
+  try { if (navigator.canShare && navigator.canShare({ files: [new File([blob], name, { type: blob.type })] })) { await navigator.share({ files: [new File([blob], name, { type: blob.type })], title: name }); return true; } } catch(e) { if (e && e.name === 'AbortError') return false; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); return true;
+}
+const _scriptP = {};
+function loadScript(src){ if (!_scriptP[src]) _scriptP[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('sem internet')); document.head.appendChild(s); }).catch(e => { delete _scriptP[src]; throw e; }); return _scriptP[src]; }
+async function loadExcelJS(){ if (!window.ExcelJS) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'); return window.ExcelJS; }
+async function loadSheetJS(){ if (!window.XLSX) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'); return window.XLSX; }
+async function loadJsPDF(){ if (!(window.jspdf && window.jspdf.jsPDF)) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'); if (!(window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable)) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'); return window.jspdf.jsPDF; }
+let exportando = false;
+async function exportarExcel(){ if (exportando) return; exportando = true; try { await _exportarExcel(); } finally { exportando = false; } }
+async function _exportarExcel(){
+  const MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  let D, folhas; try { D = dadosExport(); folhas = folhasExcel(D); } catch(e) { console.error(e); toast('Não consegui montar os dados do Excel.'); return; }
+  toast('Preparando o Excel…'); let out = null, comLogo = false;
+  try { const EJ = await loadExcelJS(); out = await excelComLogo(EJ, D, folhas); comLogo = true; } catch(e) { console.warn('Excel com logo indisponível', e); }
+  if (!out) { let XLSX; try { XLSX = await loadSheetJS(); } catch(e) { toast('Para gerar o Excel é preciso internet na primeira vez.'); return; } try { out = excelSimples(XLSX, folhas); } catch(e) { console.error(e); toast('Não consegui gerar o Excel.'); return; } }
+  try { const ok = await shareOrDownload(D.nome + '.xlsx', new Blob([out], { type: MIME }), MIME); if (ok) toast(comLogo ? 'Excel gerado.' : 'Excel gerado (versão simples, sem logo).'); } catch(e) { console.error(e); toast('Não consegui gerar o Excel.'); }
+}
+function pdfTxt(s){ return String(s == null ? '' : s).replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}\u{20E3}]/gu, '').replace(/[—–−]/g, '-').replace(/…/g, '...').replace(/≠/g, '<>').replace(/→/g, '->').replace(/[‹«]/g, '<').replace(/[›»]/g, '>').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/×/g, 'x').replace(/[^\x09\x0A\x20-\x7E\xA0-\xFF]/g, '?'); }
+async function exportarPdf(){ if (exportando) return; exportando = true; try { await _exportarPdf(); } finally { exportando = false; } }
+async function _exportarPdf(){
+  let jsPDF; try { toast('Preparando o PDF…'); jsPDF = await loadJsPDF(); } catch(e) { toast('Para gerar o PDF é preciso internet na primeira vez.'); return; }
+  try {
+    const D = dadosExport(); const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(); const cor = [107, 74, 152];
+    const tabela = (titulo, aoa, opts) => { let y = doc.lastAutoTable && doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY + 8 : 24; if (y > H - 40) { doc.addPage(); y = 22; }
+      doc.setFontSize(12); doc.setTextColor(cor[0], cor[1], cor[2]); doc.text(pdfTxt(titulo), 12, y); doc.setTextColor(0, 0, 0);
+      const linhas = aoa.slice(1).map(r => r.map(pdfTxt));
+      doc.autoTable(Object.assign({ head: [aoa[0].map(pdfTxt)], body: linhas.length ? linhas : [['(sem dados)']], startY: y + 3, margin: { top: 21, left: 12, right: 12, bottom: 14 }, styles: { fontSize: 7.5, cellPadding: 1.4, overflow: 'linebreak' }, headStyles: { fillColor: cor, textColor: 255, fontSize: 7.5 }, alternateRowStyles: { fillColor: [244, 243, 252] } }, opts || {})); };
+    try { doc.addImage('data:image/png;base64,' + LOGO_B64, 'PNG', 12, 7, 60, 13.8); } catch(e) {}
+    doc.setDrawColor(cor[0], cor[1], cor[2]); doc.setLineWidth(1.2); doc.line(12, 24, W - 12, 24);
+    doc.setFontSize(18); doc.setTextColor(cor[0], cor[1], cor[2]); const tl = doc.splitTextToSize(pdfTxt(D.titulo), W - 24); const dy = (tl.length - 1) * 7.3; doc.text(tl, 12, 33); doc.setTextColor(0, 0, 0);
+    doc.setFontSize(9.5); doc.text(pdfTxt(`Gerado em ${dataLabel(hojeISO())} - ${D.escopo} - Painel v${VERSAO}`), 12, 40 + dy, { maxWidth: W - 24 });
+    doc.setFontSize(8.5); doc.setTextColor(155, 28, 28); const av = doc.splitTextToSize(pdfTxt(AVISO_EXPORT), W - 24); doc.text(av, 12, 47 + dy); doc.setTextColor(0, 0, 0);
+    doc.lastAutoTable = { finalY: 47 + dy + (av.length - 1) * 3.6 };
+    tabela('Resumo — as três pesquisas', D.resumo.slice(D.resumo.findIndex(r => r[0] === 'Indicador')).filter(r => r.length === 3), { columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 30 } } });
+    doc.addPage(); doc.lastAutoTable = { finalY: 14 };
+    tabela('Por unidade — equipe x clientes', D.porUnidade, { styles: { fontSize: 7, cellPadding: 1.2, overflow: 'linebreak' }, columnStyles: { 13: { cellWidth: 48 } } });
+    tabela('Tendência mensal', D.tendencia);
+    doc.addPage(); doc.lastAutoTable = { finalY: 14 };
+    tabela('Equipe — as 15 frases', D.eqFrases, { columnStyles: { 2: { cellWidth: 110 } } });
+    doc.addPage(); doc.lastAutoTable = { finalY: 14 };
+    tabela('Clientes — fatores, problemas, resolução e tipo de cliente', D.clFat.filter(r => r.length), { columnStyles: { 0: { cellWidth: 90 } } });
+    doc.addPage(); doc.lastAutoTable = { finalY: 14 };
+    tabela('Conselho — evolução por reunião', D.coReunioes);
+    tabela('Conselho — por item', D.coItens, { columnStyles: { 2: { cellWidth: 90 } } });
+    doc.addPage(); doc.lastAutoTable = { finalY: 14 };
+    tabela('Legenda', D.legenda, { columnStyles: { 0: { cellWidth: 45 } } });
+    const total = doc.internal.getNumberOfPages(); const rodape = pdfTxt(`${D.titulo} - ${D.escopo} - gerado em ${dataLabel(hojeISO())} - uso restrito`); const tituloFaixa = doc.splitTextToSize(pdfTxt(D.titulo), W - 72)[0];
+    for (let p = 1; p <= total; p++) { doc.setPage(p); doc.setFontSize(7.5); doc.setTextColor(120, 120, 120); const lr = doc.splitTextToSize(rodape, W - 60); doc.text(lr, 12, H - 6 - 3.04 * (lr.length - 1)); doc.text(pdfTxt(`página ${p} de ${total}`), W - 12, H - 6, { align: 'right' }); if (p > 1) { try { doc.addImage('data:image/png;base64,' + LOGO_B64, 'PNG', 12, 5, 40, 9.2); doc.setDrawColor(cor[0], cor[1], cor[2]); doc.setLineWidth(0.8); doc.line(12, 16.5, W - 12, 16.5); doc.setFontSize(8); doc.setTextColor(cor[0], cor[1], cor[2]); doc.text(tituloFaixa, W - 12, 12, { align: 'right' }); } catch(e) {} } }
+    const ok = await shareOrDownload(D.nome + '.pdf', doc.output('blob'), 'application/pdf'); if (ok) toast('PDF gerado.');
+  } catch(e) { console.error(e); toast('Não consegui gerar o PDF. Tente de novo.'); }
+}
+
+/* ---------------- eventos ---------------- */
+function pinTentativa(){
+  if (settings.lockUntil && Date.now() < settings.lockUntil) { render(); return; }
+  if (state.pin === pinAtual()) { settings.pinFails = 0; saveSettings(); state.pin = ''; go('painel'); if (syncOk()) sincronizar(true); }
+  else { settings.pinFails = (settings.pinFails || 0) + 1; if (settings.pinFails >= PIN_MAX_FALHAS) { settings.lockUntil = Date.now() + PIN_BLOQUEIO_MS; settings.pinFails = 0; } saveSettings(); state.pin = ''; toast('PIN incorreto.'); render(); }
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]'); if (!el || el.disabled) return; const a = el.dataset.action;
+  switch (a) {
+    case 'pinkey': { if (el.dataset.k === 'del') state.pin = state.pin.slice(0, -1); else if (state.pin.length < 8) state.pin += el.dataset.k; render(); break; }
+    case 'pinok': pinTentativa(); break;
+    case 'painel': go('painel'); break;
+    case 'config': go('config'); break;
+    case 'sync': sincronizar(false); break;
+    case 'syncfull': sincronizar(false, true); break;
+    case 'testarservidor': testarServidor(); break;
+    case 'saveconfig': { const w = ((document.getElementById('s-webhook') || {}).value || '').trim(); const ch = ((document.getElementById('s-chave') || {}).value || '').trim(); const np = ((document.getElementById('s-pin') || {}).value || '').trim();
+      if (w && !/^https?:\/\//.test(w)) { toast('A URL precisa começar com https://'); return; } if (np && !/^\d{4,8}$/.test(np)) { toast('O PIN deve ter de 4 a 8 dígitos.'); return; } if (w && !ch) { toast('Digite também a chave de sincronização.'); return; }
+      if (w !== settings.webhook) { settings.ultimaSync = ''; LS.set('mpp_nuvem', {}); invalidar(); }
+      settings.webhook = w; settings.chave = ch; if (np) settings.pin = np; saveSettings(); toast('Configurações salvas.'); go('painel'); if (syncOk()) sincronizar(true); break; }
+    case 'wipenuvem': LS.set('mpp_nuvem', {}); settings.ultimaSync = ''; saveSettings(); invalidar(); toast('Cópia da nuvem apagada deste aparelho.'); render(); break;
+    case 'xlsx': exportarExcel(); break;
+    case 'pdf': exportarPdf(); break;
+  }
+});
+document.addEventListener('change', e => { const el = e.target; if (el.matches('[data-cf]')) { state.cf[el.dataset.cf] = el.value; if (el.dataset.cf === 'ano') state.cf.mes = ''; render(); } });
+document.addEventListener('input', e => { const el = e.target; if (el.id === 'pin-input') { state.pin = el.value.replace(/\D/g, '').slice(0, 8); if (el.value !== state.pin) el.value = state.pin; } });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && state.screen === 'pin' && e.target && e.target.id === 'pin-input') { e.preventDefault(); if (state.pin) pinTentativa(); } });
+window.addEventListener('online', () => { if (state.screen === 'painel' && syncOk()) sincronizar(true); });
+window.addEventListener('storage', () => { invalidar(); if (state.screen === 'painel') render(); });   // outra aba do mesmo aparelho gravou respostas
+
+/* ---------------- início ---------------- */
+render();
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { navigator.serviceWorker.register('../sw.js').catch(() => {}); }
+</script>
+</body>
+</html>
