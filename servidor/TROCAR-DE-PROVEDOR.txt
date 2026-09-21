@@ -1,0 +1,231 @@
+===========================================================================
+MAXIPARK - PESQUISAS
+COMO TROCAR A SENHA DO SERVIDOR, TROCAR DE PROVEDOR E MUDAR O SITE DE LUGAR
+(este arquivo e so um bilhete: nao roda nada, e so leitura)
+Atualizado em 21/09/2026 (v1.32.0)
+---------------------------------------------------------------------------
+
+ONDE ESTA CADA COISA
+
+  Site dos apps (tablets e celulares):
+    https://maxipark.github.io/pesquisa-equipe-maxipark/
+
+  Codigo do site (GitHub):
+    https://github.com/Maxipark/pesquisa-equipe-maxipark
+
+  Endereco deste servidor (App da Web):
+    https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec
+
+  Chave de sincronizacao:
+    NAO esta escrita aqui de proposito: este arquivo esta no GitHub, que e publico.
+    Ela fica em:
+    Apps Script > Configuracoes do projeto > Propriedades do script > CHAVE
+    (a copia deste bilhete que esta dentro do proprio Apps Script, que e
+     privado, traz a chave escrita para consulta rapida)
+
+  PIN das Configuracoes dos apps:  2819
+
+  Cadastro de quem entra no app (usuarios):
+    Fica na planilha, na aba  Usuarios,  celula A1.
+    NAO editar a mao. Use a tela USUARIOS da pagina inicial: cadastrar,
+    bloquear, mudar perfil ou trocar senha ja salva no servidor na hora, e
+    todos os aparelhos ligados passam a ver a lista nova sozinhos.
+
+  Historico de uso:
+    Fica na planilha, na aba  Historico,  uma linha por evento.
+    Registra: quem entrou, quem abriu e aplicou cada pesquisa (com a unidade,
+    o periodo e quantas respostas), quem consultou quais resultados, e toda
+    mexida no cadastro de usuarios.
+    NAO registra o horario de cada resposta (as pesquisas sao anonimas).
+    NAO registra quando o administrador apaga ou reescreve o historico.
+    So o administrador ve: pagina inicial > USUARIOS > Abrir o historico.
+    A coluna 'quando' e TEXTO de proposito: se virar data, a planilha muda o fuso.
+
+
+===========================================================================
+1) TROCAR SO A SENHA (CHAVE) - o jeito rapido, sem publicar nada
+===========================================================================
+
+No Apps Script:
+  1. Menu da esquerda:  Configuracoes do projeto  (icone de engrenagem).
+  2. Role ate  Propriedades do script  e clique em
+     Editar propriedades do script.
+  3. Na linha  CHAVE,  troque o Valor pela chave nova.
+     Use letras e numeros, sem espacos e sem acento.
+  4. Clique em  Salvar propriedades do script.
+
+  >>> Pronto. Vale na hora. NAO precisa mexer no codigo.
+  >>> NAO precisa Implantar / publicar nova versao.
+  >>> O endereco do servidor nao muda.
+
+Nos aparelhos (cada tablet/celular, uma vez so):
+  5. Abra o site, entre com seu e-mail e senha.
+  6. No rodape da pagina inicial toque em  ver ou trocar a chave.
+  7. Digite a chave nova e toque em  Ligar agora.
+     Isso vale de uma vez para as quatro telas daquele aparelho.
+
+  Ou, dentro de qualquer app: Configuracoes (PIN 2819), digite a chave no
+  campo e toque no botao  Pronto - usar esta chave.
+
+Se a propriedade CHAVE for apagada por engano, o servidor volta a usar a
+chave de reserva escrita no Codigo.gs, em  const CHAVE_DE_RESERVA.
+
+
+===========================================================================
+2) MEXER NO CODIGO DO SERVIDOR (so quando mudar o funcionamento)
+===========================================================================
+
+  1. Edite o Codigo.gs e salve com Ctrl+S.
+  2. Botao azul  Implantar  >  Gerenciar implantacoes.
+  3. Clique no lapis (editar), em  Versao  escolha  Nova versao,
+     e clique em  Implantar.   >>> O endereco NAO muda. <<<
+
+Salvar sozinho nao basta: sem publicar a nova versao, o servidor continua
+rodando a versao antiga. (Trocar so a CHAVE nao precisa disso - ver item 1.)
+
+
+===========================================================================
+3) TROCAR DE PROVEDOR DO SERVIDOR (sair do Google)
+===========================================================================
+
+O servidor novo precisa responder, em JSON:
+
+  GET   ?op=ping&chave=SUA_CHAVE
+        -> ok verdadeiro, ou erro 'chave' se a chave nao confere
+
+  GET   ?op=list&app=NOME_DO_APP&chave=SUA_CHAVE
+        -> ok verdadeiro + a lista de respostas daquele app
+
+  POST  op 'add', a chave e a lista de respostas novas
+        -> ok verdadeiro (id repetido deve ser ignorado, para nao duplicar)
+
+  GET   ?op=usuarios&chave=SUA_CHAVE        -> o cadastro de usuarios
+  POST  op 'usuarios-salvar', chave, dados  -> grava o cadastro
+
+  GET   ?op=historico&chave=SUA_CHAVE       -> o historico de uso
+  POST  op 'historico-add', chave, itens    -> grava eventos novos
+  POST  op 'historico-apagar', chave, ids   -> apaga (so o administrador usa)
+  POST  op 'historico-editar', chave, itens -> reescreve (so o administrador)
+
+Os tres nomes de app usados pelos tablets:
+  pesquisa-clientes-maxipark
+  pesquisa-equipe-maxipark
+  pesquisa-conselho-maxipark
+
+O codigo inteiro deste servidor esta no Codigo.gs e no GitHub, em
+servidor/Code.gs - serve de modelo para montar o servidor novo.
+
+IMPORTANTE: o servidor novo precisa liberar chamadas de outro site
+(cabecalho  Access-Control-Allow-Origin: *  ), senao os apps nao conseguem
+falar com ele.
+
+Depois que o servidor novo estiver de pe, nos aparelhos:
+  1. Entre no site com o seu acesso de administrador (so ele troca o endereco).
+  2. No rodape da pagina inicial toque em  ver ou trocar a chave.
+  3. Preencha  Endereco do servidor  e a  Chave do servidor.
+  4. Toque em  Ligar agora.
+
+O app so aceita se o servidor responder de verdade. O endereco e a chave
+passam a valer para as quatro telas daquele aparelho. Cada aparelho precisa
+ser ligado uma vez.
+
+
+===========================================================================
+4) MUDAR O SITE DE LUGAR - sair do GitHub e ir para o site da Maxipark
+===========================================================================
+
+O site e feito so de arquivos parados (HTML). Nao precisa de nenhum programa
+rodando no servidor: e so copiar a pasta para a hospedagem da Maxipark.
+O servidor das respostas (Apps Script) NAO muda nada nisso.
+
+--- 4.1 O QUE COPIAR -------------------------------------------------------
+
+Baixe tudo do GitHub (botao verde  Code  >  Download ZIP) e suba, mantendo
+exatamente esta estrutura de pastas:
+
+  index.html
+  sw.js
+  manifest.webmanifest
+  icon-192.png
+  icon-512.png
+  cliente/index.html      cliente/manifest.webmanifest      cliente/qr.html
+  equipe/index.html       equipe/manifest.webmanifest
+  conselho/index.html     conselho/manifest.webmanifest
+  painel/index.html       painel/manifest.webmanifest
+
+A pasta  servidor/  NAO precisa ir para o site: ela e so a copia do codigo
+do Apps Script e deste bilhete, para consulta.
+
+Os links entre as paginas sao todos relativos, entao funciona tanto na raiz
+(pesquisas.maxipark.com.br) quanto numa subpasta
+(www.maxipark.com.br/pesquisas/).
+
+--- 4.2 O QUE A HOSPEDAGEM PRECISA TER ------------------------------------
+
+  * HTTPS obrigatorio (endereco comecando com https://).
+    Sem HTTPS o app NAO funciona offline e NAO instala no tablet.
+  * Servir arquivos como estao, sem processar nada. Qualquer hospedagem
+    comum serve.
+  * Nada de "index" automatico diferente: a pasta cliente/ tem que abrir o
+    cliente/index.html.
+
+--- 4.3 ANTES DE VIRAR A CHAVE (o cuidado que evita perder resposta) -------
+
+Cada endereco de site guarda as coisas separadamente no aparelho. Ao mudar
+de endereco, cada tablet comeca do zero: a chave do servidor tem que ser
+digitada de novo, e o que ainda NAO tinha subido para a nuvem fica preso no
+endereco antigo.
+
+  1. Em cada tablet, abra a Area do usuario (PIN 2819) e confirme que esta
+     tudo enviado (o app avisa quando ha pendencia).
+  2. So depois disso mude o endereco.
+  3. Deixe o endereco antigo do GitHub no ar por pelo menos uns dias, como
+     rede de seguranca.
+
+--- 4.4 PASSO A PASSO -----------------------------------------------------
+
+  1. Suba os arquivos na hospedagem da Maxipark, na estrutura do item 4.1.
+  2. Abra o endereco novo no computador e confira:
+     - a pagina de login aparece;
+     - entre e veja se os cards aparecem certos.
+  3. Entre com o seu acesso de administrador e, no rodape, em
+     ver ou trocar a chave,  digite a chave (veja onde encontra-la no topo deste arquivo) e toque em Ligar agora.
+     Confirme que o rodape passa a dizer que o servidor esta ligado.
+  4. Abra o painel e confira se as respostas antigas aparecem: elas vem da
+     nuvem, entao tem que estar todas la.
+  5. Em cada tablet/celular:
+     a) apague o atalho antigo da tela inicial (o que aponta para o GitHub);
+     b) abra o endereco novo no navegador;
+     c) faca login e digite a chave uma vez;
+     d) instale de novo na tela inicial (menu do navegador >
+        "Adicionar a tela de inicio" / "Instalar app").
+  6. Depois que todos os tablets estiverem no endereco novo, voce pode
+     desativar o GitHub Pages (Settings > Pages > desligar) ou simplesmente
+     deixar como esta.
+
+--- 4.5 SE ALGO DER ERRADO ------------------------------------------------
+
+  * "Abre mas nao conecta": faltou digitar a chave no endereco novo (item 1,
+     passos 5 a 7). O Diagnostico do servidor, em Configuracoes, diz o motivo.
+  * "Continua abrindo o site antigo": o tablet guardou a versao antiga.
+     Toque em  Atualizar app agora,  ou feche e abra o app de novo.
+  * "Some tudo ao trocar de endereco": e o esperado - cada endereco tem a sua
+     propria memoria no aparelho. As respostas nao se perdem: elas estao na
+     nuvem e voltam sozinhas assim que a chave for digitada.
+  * Para voltar atras, e so usar de novo o endereco do GitHub: ele continua
+     funcionando enquanto o GitHub Pages estiver ligado.
+
+
+===========================================================================
+5) SE ALGUMA COISA NAO LIGAR
+===========================================================================
+
+Em qualquer um dos quatro apps: Configuracoes (PIN 2819) >
+botao  Diagnostico do servidor.  Ele diz em portugues o que esta faltando:
+se a chave confere, se as duas chaves do aparelho batem, qual versao esta
+instalada e o que o servidor respondeu.
+
+Erro mais comum: letras trocadas de lugar na chave. O diagnostico mostra o
+que foi digitado, para voce comparar letra por letra.
+
+===========================================================================
