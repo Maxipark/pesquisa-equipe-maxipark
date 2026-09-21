@@ -24,6 +24,55 @@ function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     const erro = verificaChave(body.chave); if (erro) return erro;
+    if (body.op === 'historico-add') {            // eventos novos vindos dos apps
+      const ws = abaHistorico();
+      const lock = LockService.getScriptLock(); lock.waitLock(25000);
+      let n = 0;
+      try {
+        const ids = idsHistorico(ws);
+        const linhas = [];
+        (body.itens || []).forEach(function (it) {
+          const id = String((it && it.id) || ''); if (!id || ids[id]) return; ids[id] = true;
+          linhas.push(linhaHistorico(it)); n++;
+        });
+        if (linhas.length) ws.getRange(ws.getLastRow() + 1, 1, linhas.length, COLS_HIST.length).setValues(linhas);
+      } finally { lock.releaseLock(); }
+      return json({ ok: true, n: n });
+    }
+    if (body.op === 'historico-apagar') {         // so o administrador chama isto
+      const ws = abaHistorico();
+      const lock = LockService.getScriptLock(); lock.waitLock(25000);
+      let n = 0;
+      try {
+        const alvo = {}; (body.ids || []).forEach(function (x) { alvo[String(x)] = true; });
+        const last = ws.getLastRow();
+        if (last >= 2) {
+          const vals = ws.getRange(2, 1, last - 1, COLS_HIST.length).getValues();
+          for (var i = vals.length - 1; i >= 0; i--) {
+            if (alvo[String(vals[i][0])]) { ws.deleteRow(i + 2); n++; }
+          }
+        }
+      } finally { lock.releaseLock(); }
+      return json({ ok: true, n: n });
+    }
+    if (body.op === 'historico-editar') {         // so o administrador chama isto
+      const ws = abaHistorico();
+      const lock = LockService.getScriptLock(); lock.waitLock(25000);
+      let n = 0;
+      try {
+        const last = ws.getLastRow();
+        if (last >= 2) {
+          const vals = ws.getRange(2, 1, last - 1, COLS_HIST.length).getValues();
+          const porId = {}; vals.forEach(function (r, i) { porId[String(r[0])] = i; });
+          (body.itens || []).forEach(function (it) {
+            const i = porId[String((it && it.id) || '')];
+            if (i === undefined) return;
+            ws.getRange(i + 2, 1, 1, COLS_HIST.length).setValues([linhaHistorico(it)]); n++;
+          });
+        }
+      } finally { lock.releaseLock(); }
+      return json({ ok: true, n: n });
+    }
     if (body.op === 'usuarios-salvar') {          // cadastro de usuarios do app: guarda a lista inteira
       const ws = abaUsuarios();
       const lock = LockService.getScriptLock(); lock.waitLock(25000);
@@ -56,7 +105,17 @@ function doGet(e) {
   try {
     const p = (e && e.parameter) || {};
     const erro = verificaChave(p.chave); if (erro) return erro;
-    if (p.op === 'ping') return json({ ok: true, servidor: 'apps-script', versao: 3, abas: Object.keys(ABAS), usuarios: true });
+    if (p.op === 'ping') return json({ ok: true, servidor: 'apps-script', versao: 4, abas: Object.keys(ABAS), usuarios: true, historico: true });
+    if (p.op === 'historico') {
+      const ws = abaHistorico(); const last = ws.getLastRow();
+      if (last < 2) return json({ ok: true, itens: [] });
+      const vals = ws.getRange(2, 1, last - 1, COLS_HIST.length).getValues();
+      const itens = vals.map(function (r) {
+        const o = {}; COLS_HIST.forEach(function (c, i) { o[c] = (r[i] instanceof Date) ? r[i].toISOString() : String(r[i] === null || r[i] === undefined ? '' : r[i]); });
+        return o;
+      });
+      return json({ ok: true, itens: itens });
+    }
     if (p.op === 'usuarios') {                    // cadastro de usuarios do app
       const t = String(abaUsuarios().getRange(1, 1).getValue() || '').trim();
       let d = null; try { d = t ? JSON.parse(t) : null; } catch (x) { d = null; }
@@ -83,6 +142,29 @@ function aba(app) {
   let ws = ss.getSheetByName(ABAS[app]);
   if (!ws) { ws = ss.insertSheet(ABAS[app]); ws.appendRow(FIXAS); ws.setFrozenRows(1); ws.getRange(1, 1, 1, FIXAS.length).setFontWeight('bold'); }
   return ws;
+}
+const COLS_HIST = ['id', 'quando', 'quem_nome', 'quem_email', 'evento', 'pesquisa', 'unidade', 'detalhe'];
+function abaHistorico() {   // uma linha por evento: quem fez o que, quando
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let ws = ss.getSheetByName('Historico');
+  if (!ws) {
+    ws = ss.insertSheet('Historico');
+    ws.appendRow(COLS_HIST); ws.setFrozenRows(1);
+    ws.getRange(1, 1, 1, COLS_HIST.length).setFontWeight('bold');
+    ws.setColumnWidth(2, 160); ws.setColumnWidth(8, 320);
+  }
+  /* A data fica como TEXTO puro: se a planilha converter em data, ela mexe no fuso
+     e o horario mostrado deixa de ser o que aconteceu de verdade. */
+  try { ws.getRange('A:H').setNumberFormat('@'); } catch (e) {}
+  return ws;
+}
+function idsHistorico(ws) {
+  const last = ws.getLastRow(); const m = {};
+  if (last >= 2) ws.getRange(2, 1, last - 1, 1).getValues().forEach(function (r) { if (r[0] !== '') m[String(r[0])] = true; });
+  return m;
+}
+function linhaHistorico(it) {
+  return COLS_HIST.map(function (c) { return semFormula(String((it && it[c]) === undefined || (it && it[c]) === null ? '' : it[c])); });
 }
 function abaUsuarios() {   // uma aba so para o cadastro de quem entra no app; o JSON inteiro fica na celula A1
   const ss = SpreadsheetApp.getActiveSpreadsheet();
