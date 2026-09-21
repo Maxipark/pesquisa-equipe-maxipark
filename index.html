@@ -181,7 +181,21 @@
   <section id="tela-inicio" hidden>
     <div class="saudacao"><h1 id="ola">Olá</h1><p id="resumo-acesso">—</p></div>
     <div class="escolhas" id="cards"></div>
+    <p class="rodape" id="estado-sync">—</p>
     <p class="rodape">Maxipark · Experiência do Cliente · uso interno</p>
+  </section>
+
+  <!-- CHAVE DO SERVIDOR (primeiro acesso no aparelho) -->
+  <section id="tela-chave" class="entrada" hidden>
+    <h1>Ligar este aparelho ao servidor</h1>
+    <p>Com o servidor ligado, as respostas deste aparelho vão para a planilha e aparecem no painel de qualquer lugar.
+      Sem ele, ficam guardadas só aqui.</p>
+    <div id="erro-chave" class="erro" hidden></div>
+    <label for="k-chave"><span class="nm">Chave do servidor</span>
+      <input id="k-chave" type="text" autocomplete="off" spellcheck="false" placeholder="cole ou digite a chave"></label>
+    <button id="btn-chave-ok" type="button">Ligar agora</button>
+    <button class="sair" id="btn-chave-depois" type="button">Fazer isso mais tarde</button>
+    <p style="font-size:14px">Pergunto isso uma vez por aparelho. Depois dá para ligar pelo aviso no rodapé da página inicial.</p>
   </section>
 
   <!-- AVALIADORES -->
@@ -344,7 +358,8 @@
     b.disabled = false; b.textContent = 'Entrar';
     if (!ok) { err.textContent = 'E-mail ou senha não conferem.'; err.hidden = false; return; }
     if (c.bloqueado) { err.textContent = 'Este acesso está bloqueado. Fale com o administrador.'; err.hidden = false; return; }
-    sessao = c; guarda(c.email); $('i-senha').value = ''; ir('inicio');
+    sessao = c; guarda(c.email); $('i-senha').value = '';
+    ir((!chaveDoAparelho() && !adiado()) ? 'chave' : 'inicio');
   }
   function sairDaConta() {
     apaga(); sessao = null;
@@ -364,6 +379,50 @@
     sessao = c;
   }
 
+  /* ---------- chave do servidor neste aparelho ---------- */
+  const SERVIDOR = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';
+  const GUARDA_CHAVE = 'maxipark_chave_sync', GUARDA_DEPOIS = 'maxipark_chave_depois';
+  const chaveDoAparelho = () => { try { return localStorage.getItem(GUARDA_CHAVE) || ''; } catch (e) { return ''; } };
+  const adiado = () => { try { return localStorage.getItem(GUARDA_DEPOIS) === '1'; } catch (e) { return false; } };
+  function guardaChave(k) {
+    try {
+      localStorage.setItem(GUARDA_CHAVE, k);
+      ['mpc_settings', 'mp_settings', 'mpco_settings', 'mpp_settings'].forEach(n => {
+        let o = {}; try { o = JSON.parse(localStorage.getItem(n)) || {}; } catch (e) {}
+        o.chave = k; if (!o.webhook) o.webhook = SERVIDOR;
+        localStorage.setItem(n, JSON.stringify(o));
+      });
+    } catch (e) {}
+  }
+  async function testaChave(k) {
+    try {
+      const j = await (await fetch(SERVIDOR + '?op=ping&chave=' + encodeURIComponent(k))).json();
+      if (j && j.ok) return 'ok';
+      if (j && j.erro === 'chave') return 'Essa chave não confere com a do servidor.';
+      return 'O servidor respondeu algo inesperado.';
+    } catch (e) { return 'Não consegui falar com o servidor (sem internet?).'; }
+  }
+  async function ligarServidor() {
+    const el = $('k-chave'), err = $('erro-chave'), b = $('btn-chave-ok');
+    const k = (el.value || '').trim();
+    err.hidden = true;
+    if (!k) { err.textContent = 'Digite a chave, ou toque em “Fazer isso mais tarde”.'; err.hidden = false; return; }
+    b.disabled = true; b.textContent = 'Conferindo…';
+    const r = await testaChave(k);
+    b.disabled = false; b.textContent = 'Ligar agora';
+    if (r !== 'ok') { err.textContent = r; err.hidden = false; return; }
+    guardaChave(k);
+    try { localStorage.removeItem(GUARDA_DEPOIS); } catch (e) {}
+    el.value = '';
+    toast('Aparelho ligado ao servidor.');
+    ir('inicio');
+  }
+  function pintaEstadoSync() {
+    const el = $('estado-sync'); if (!el) return;
+    if (chaveDoAparelho()) { el.innerHTML = 'Servidor: <b>ligado</b> neste aparelho.'; }
+    else { el.innerHTML = 'Servidor: <b>não ligado</b> neste aparelho — as respostas ficam só aqui. <a href="#chave">Ligar agora</a>'; }
+  }
+
   // ───────── telas ─────────
   let tela = 'entrada';
   function ir(t) { tela = t; pinta(); window.scrollTo(0, 0); }
@@ -372,6 +431,7 @@
     const dentro = !!sessao;
     $('tela-entrada').hidden = dentro;
     $('tela-inicio').hidden = !(dentro && tela === 'inicio');
+    $('tela-chave').hidden = !(dentro && tela === 'chave');
     $('tela-admin').hidden = !(dentro && tela === 'admin');
     $('btn-sair').hidden = !dentro;
     $('quem').hidden = !dentro;
@@ -379,7 +439,8 @@
       $('quem').innerHTML = '<b></b><span></span>';
       $('quem').querySelector('b').textContent = sessao.nome;
       $('quem').querySelector('span').textContent = NOME_PAPEL[sessao.papel] || '';
-      if (tela === 'inicio') inicio();
+      if (tela === 'inicio') { inicio(); pintaEstadoSync(); }
+      if (tela === 'chave') { const k = $('k-chave'); if (k) setTimeout(() => k.focus(), 60); }
       if (tela === 'admin') admin();
     }
   }
@@ -599,10 +660,14 @@
   document.addEventListener('click', async ev => {
     const a = ev.target.closest('a[href="#admin"]');
     if (a) { ev.preventDefault(); return ir('admin'); }
+    const ak = ev.target.closest('a[href="#chave"]');
+    if (ak) { ev.preventDefault(); return ir('chave'); }
     const b = ev.target.closest('button'); if (!b) return;
     if (b.id === 'btn-entrar') return entrar();
     if (b.id === 'btn-sair') return sairDaConta();
     if (b.id === 'btn-cad') return cadastrar();
+    if (b.id === 'btn-chave-ok') return ligarServidor();
+    if (b.id === 'btn-chave-depois') { try { localStorage.setItem(GUARDA_DEPOIS, '1'); } catch (e) {} return ir('inicio'); }
     if (b.dataset.ir) return ir(b.dataset.ir);
     const acha = id => dados.contas.find(c => c.id === id);
     if (b.dataset.p) { const c = acha(b.dataset.p); if (!c) return;
@@ -636,6 +701,7 @@
     if (ev.key !== 'Enter') return;
     const id = ev.target && ev.target.id;
     if (id === 'i-email' || id === 'i-senha') { ev.preventDefault(); entrar(); }
+    if (id === 'k-chave') { ev.preventDefault(); ligarServidor(); }
     if (id === 'c-nome' || id === 'c-email' || id === 'c-senha') { ev.preventDefault(); cadastrar(); }
   });
 
