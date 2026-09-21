@@ -15,18 +15,28 @@
   :root{
     --roxo:#6B4A98; --roxo-escuro:#4E3572; --roxo-claro:#EEE8F5; --acento:#9935F4; --bg:#F5F3F9; --card:#FFFFFF;
     --texto:#221C2E; --cinza:#5E5670; --linha:#DED8EA; --sel:#FFD54F; --sel-texto:#3A2E00; --perigo:#B23A3A; --ok:#2E7D32; --raio:18px;
+    /* cores que antes estavam escritas à mão: viraram variáveis para o modo escuro */
+    --branco:#FFFFFF; --suave:#FAFBFB; --sobre-roxo:#FFFFFF; --sobre-ok:#FFFFFF;
+    --sombra:0 2px 10px rgba(34,28,46,.06);
+    --aviso-bg:#FFF4D6; --aviso-br:#E0B400; --aviso-tx:#3D3000;
+    --ruim-bg:#FBE3E3; --ruim-tx:#7A1F1F;
+    --bom-bg:#E6F4EA; --bom-br:#9CCFA9; --bom-tx:#1B3D26;
+    --tag-ok-bg:#E6F4EA; --tag-ok-tx:#1B5E20; --tag-pend-bg:#FFF4D6; --tag-pend-tx:#7A5A00;
+    --toast-bg:#221C2E; --toast-tx:#FFFFFF;
+    --ok-tx:#1B7A52; --ok-bg:#E4F4EC; --neutro-bg:#EFEDF4;
+    --grade:#DED8EA; --serie-c:#9935F4; --serie-e:#6B4A98; --serie-n:#2E7D32;
     color-scheme: light;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;min-height:100%;background:var(--bg);color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:18px;line-height:1.35}
   button{font-family:inherit;color:var(--texto)}
-  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:#fff;border-bottom:3px solid var(--roxo)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:var(--card);border-bottom:3px solid var(--roxo)}
   .top .marca{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--roxo-escuro);font-size:17px}
   .top .marca img{height:40px;width:auto}
   .top .passo{font-size:15px;color:var(--roxo-escuro);font-weight:600;text-align:right}
   .barra{height:6px;background:var(--linha)} .barra > div{height:100%;background:linear-gradient(90deg,var(--roxo),var(--acento));transition:width .25s}
   .wrap{max-width:900px;margin:0 auto;padding:16px 18px 80px}
-  .card{background:var(--card);border-radius:var(--raio);padding:20px 22px;box-shadow:0 2px 10px rgba(34,28,46,.06)}
+  .card{background:var(--card);border-radius:var(--raio);padding:20px 22px;box-shadow:var(--sombra)}
   h1{font-size:28px;line-height:1.2;margin:0 0 10px;color:var(--roxo-escuro)}
   h2{font-size:23px;line-height:1.25;margin:0 0 12px}
   h3{font-size:19px;margin:18px 0 8px;color:var(--roxo-escuro)}
@@ -34,13 +44,13 @@
   .small{font-size:14px} .muted{color:var(--cinza)} .legenda{font-size:13px;color:var(--cinza);margin:6px 0 0}
   .pergunta{font-size:27px;font-weight:600;line-height:1.3;margin:4px 0 18px}
   .opcoes{display:grid;gap:12px}
-  .opt{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:12px 18px;border:2px solid var(--linha);border-radius:14px;background:#fff;font-size:20px;text-align:left;cursor:pointer}
+  .opt{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:12px 18px;border:2px solid var(--linha);border-radius:14px;background:var(--branco);font-size:20px;text-align:left;cursor:pointer}
   .opt.sel{background:var(--sel);border-color:#E0B400;color:var(--sel-texto);font-weight:700}
   .opt .num{min-width:36px;height:36px;border-radius:50%;background:var(--roxo-claro);color:var(--roxo-escuro);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
   .escala{display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:10px;margin:8px 0 6px}
   .escala .opt .rot{font-size:14px;color:var(--cinza);line-height:1.2;text-align:center} .escala .opt.sel .rot{color:var(--sel-texto)}
   .escala.n3 .opt{min-height:112px} .escala.n3 .opt .rot{font-size:18px;font-weight:600}
-  .pergunta-cfg{border:1px solid var(--linha);border-radius:12px;padding:10px 14px 14px;margin:10px 0;background:#FAFBFB}
+  .pergunta-cfg{border:1px solid var(--linha);border-radius:12px;padding:10px 14px 14px;margin:10px 0;background:var(--suave)}
   .pergunta-cfg label{font-size:14px;margin:8px 0 4px} .pergunta-cfg input,.pergunta-cfg textarea,.pergunta-cfg select{font-size:16px;padding:8px 10px} .pergunta-cfg textarea{min-height:0}
   .escala .opt{flex-direction:column;justify-content:center;text-align:center;gap:6px;padding:12px 6px;min-height:92px}
   .escala .opt .n{font-size:30px;font-weight:700;color:var(--roxo-escuro)} .escala .opt.sel .n{color:var(--sel-texto)}
@@ -51,12 +61,12 @@
   .nps .opt{justify-content:center;min-height:64px;padding:8px 4px;font-size:22px;font-weight:700}
   .pontas{display:flex;justify-content:space-between;font-size:14px;color:var(--cinza);margin:2px 2px 10px}
   .na{margin-top:12px}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:58px;padding:12px 22px;border:0;border-radius:14px;background:var(--roxo);color:#fff;font-size:20px;font-weight:700;cursor:pointer}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:58px;padding:12px 22px;border:0;border-radius:14px;background:var(--roxo);color:var(--sobre-roxo);font-size:20px;font-weight:700;cursor:pointer}
   .btn:disabled{opacity:.4;cursor:default}
-  .btn.ghost{background:var(--roxo-claro);color:var(--roxo-escuro)} .btn.light{background:#fff;border:2px solid var(--roxo);color:var(--roxo-escuro)}
+  .btn.ghost{background:var(--roxo-claro);color:var(--roxo-escuro)} .btn.light{background:var(--branco);border:2px solid var(--roxo);color:var(--roxo-escuro)}
   .btn.perigo{background:var(--perigo)} .btn.block{width:100%} .btn.grande{min-height:110px;font-size:30px;border-radius:22px}
   .linha{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px} .espaco{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-  textarea,input,select{width:100%;font:inherit;font-size:19px;padding:12px 14px;border:2px solid var(--linha);border-radius:14px;background:#fff;color:var(--texto)}
+  textarea,input,select{width:100%;font:inherit;font-size:19px;padding:12px 14px;border:2px solid var(--linha);border-radius:14px;background:var(--branco);color:var(--texto)}
   textarea{min-height:120px;resize:vertical}
   label{display:block;font-weight:600;margin:14px 0 6px}
   .check{display:flex;gap:12px;align-items:flex-start;font-weight:500;margin:12px 0 4px;font-size:16px} .check input{width:26px;height:26px;margin-top:2px;flex:none}
@@ -69,34 +79,127 @@
   .quem-titulo{font-size:22px;margin:18px 0 6px;color:var(--roxo-escuro)}
   .quem-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:6px 0 0}
   .quem-grid.n1{grid-template-columns:minmax(0,340px);justify-content:center} .quem-grid.n2{grid-template-columns:repeat(2,minmax(0,340px));justify-content:center}
-  .quem{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;min-height:176px;padding:18px 12px 16px;border:2px solid var(--linha);border-radius:18px;background:#fff;cursor:pointer;font-family:inherit}
+  .quem{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;min-height:176px;padding:18px 12px 16px;border:2px solid var(--linha);border-radius:18px;background:var(--branco);cursor:pointer;font-family:inherit}
   .quem:active{background:var(--roxo-claro);border-color:var(--roxo)} .quem:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
-  .quem .avatar{width:72px;height:72px;border-radius:50%;background:var(--roxo);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;letter-spacing:1px}
-  .quem .avatar.duo{width:auto;height:72px;background:none;letter-spacing:0} .quem .avatar.duo span{width:62px;height:62px;border-radius:50%;background:var(--roxo);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:21px;border:3px solid #fff} .quem .avatar.duo span+span{margin-left:-16px;background:var(--acento)}
+  .quem .avatar{width:72px;height:72px;border-radius:50%;background:var(--roxo);color:var(--sobre-roxo);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;letter-spacing:1px}
+  .quem .avatar.duo{width:auto;height:72px;background:none;letter-spacing:0} .quem .avatar.duo span{width:62px;height:62px;border-radius:50%;background:var(--roxo);color:var(--sobre-roxo);display:inline-flex;align-items:center;justify-content:center;font-size:21px;border:3px solid var(--branco)} .quem .avatar.duo span+span{margin-left:-16px;background:var(--acento)}
   .quem-nome{font-size:20px;font-weight:700;color:var(--roxo-escuro);line-height:1.2;text-wrap:balance;overflow-wrap:anywhere;max-width:100%} .quem-sub{font-size:14px;color:var(--cinza);line-height:1.25;overflow-wrap:anywhere;max-width:100%} .quem{min-width:0}
   .so-reuniao{margin-top:12px} .so-reuniao .btn{min-height:44px;font-size:15px;padding:8px 14px}
   .rodape-kiosk{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:center;padding:8px 18px;font-size:13px;color:var(--cinza);background:transparent}
   .rodape-kiosk button{background:none;border:0;color:var(--cinza);font-size:13px;text-decoration:underline;cursor:pointer;padding:10px}
   .obrigado{text-align:center;padding:30px 20px}
-  .obrigado .ok{width:96px;height:96px;border-radius:50%;background:var(--ok);color:#fff;font-size:56px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+  .obrigado .ok{width:96px;height:96px;border-radius:50%;background:var(--ok);color:var(--sobre-ok);font-size:56px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
   .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
   .kpi div{background:var(--roxo-claro);border-radius:14px;padding:12px;text-align:center} .kpi b{display:block;font-size:30px;color:var(--roxo-escuro)} .kpi span{font-size:13px;color:var(--cinza)}
   table{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0} th,td{padding:8px 8px;border-bottom:1px solid var(--linha);text-align:center;vertical-align:top} th{background:var(--roxo-claro);color:var(--roxo-escuro)} td.l,th.l{text-align:left}
   .tabela-wrap{overflow-x:auto}
-  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700} .tag.ok{background:#E6F4EA;color:#1B5E20} .tag.pend{background:#FFF4D6;color:#7A5A00}
-  .aviso{background:#FFF4D6;border-left:5px solid #E0B400;padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
-  .ruim{background:#FBE3E3;border-left:5px solid var(--perigo);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
-  .bom{background:#E6F4EA;border:1px solid #9CCFA9;border-radius:12px;padding:12px 14px;margin:10px 0 14px;font-size:16px;color:#1B3D26}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700} .tag.ok{background:var(--tag-ok-bg);color:var(--tag-ok-tx)} .tag.pend{background:var(--tag-pend-bg);color:var(--tag-pend-tx)}
+  .aviso{background:var(--aviso-bg);border-left:5px solid var(--aviso-br);color:var(--aviso-tx);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  .ruim{background:var(--ruim-bg);border-left:5px solid var(--perigo);color:var(--ruim-tx);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  .bom{background:var(--bom-bg);border:1px solid var(--bom-br);border-radius:12px;padding:12px 14px;margin:10px 0 14px;font-size:16px;color:var(--bom-tx)}
   .filtros{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0} .filtros label{margin:0 0 4px;font-size:13px;color:var(--cinza)} .filtros select,.filtros input{font-size:16px;padding:8px 10px}
-  .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:12px auto} .pinpad button{min-height:64px;font-size:26px;border-radius:14px;border:2px solid var(--linha);background:#fff}
+  .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:12px auto} .pinpad button{min-height:64px;font-size:26px;border-radius:14px;border:2px solid var(--linha);background:var(--branco)}
   .pininput{display:block;max-width:320px;margin:8px auto 6px;text-align:center;font-size:30px;letter-spacing:12px;min-height:60px;-webkit-text-security:disc}
   details{margin:8px 0 14px} details summary{color:var(--roxo-escuro);cursor:pointer;font-weight:600}
   ul.lista{padding-left:20px;font-size:16px} ul.lista li{margin:6px 0}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#221C2E;color:#fff;padding:12px 18px;border-radius:12px;font-size:16px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:9}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-tx);padding:12px 18px;border-radius:12px;font-size:16px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:9}
   .toast.show{opacity:1}
   @media (max-width:640px){ .quem-grid,.quem-grid.n2{grid-template-columns:repeat(2,minmax(0,1fr))} .quem-grid.n3 .quem:nth-child(3){grid-column:1 / -1} .quem{min-height:150px} .pergunta{font-size:22px} .escala .opt{min-height:80px;padding:10px 4px} .escala .opt .n{font-size:24px} .escala .opt .rot{font-size:12px} .nps{gap:5px} .nps .opt{min-height:52px;font-size:18px} .boasvindas h1{font-size:28px} .wrap{padding:12px 12px 80px} .card{padding:16px} }
   @media (max-height:600px) and (orientation:landscape){ .pergunta{font-size:21px;margin:2px 0 10px} .opt{min-height:52px;font-size:18px} .escala .opt{min-height:76px} .wrap{padding:8px 16px 70px} .boasvindas{padding:14px 18px} .boasvindas h1{font-size:26px;margin:6px 0 6px} .boasvindas p{font-size:17px} .logo-hero img{height:44px} .quem-titulo{font-size:19px;margin:8px 0 4px} .quem{min-height:120px;padding:10px 12px;gap:6px} .quem .avatar{width:52px;height:52px;font-size:20px} .quem .avatar.duo{height:52px} .quem .avatar.duo span{width:46px;height:46px;font-size:17px} .quem-nome{font-size:17px} }
+
+  /* ═══════════ MODO ESCURO ═══════════
+     Só troca as cores: o desenho das telas continua igual.
+     Entra com o botão 🌙, ou sozinho quando o aparelho está no escuro
+     e ninguém escolheu nada ainda. */
+  :root[data-theme="dark"]{
+    --roxo:#B18BE0; --roxo-escuro:#D3BCEF; --roxo-claro:#2E2340; --acento:#C08BFF;
+    --bg:#17111E; --card:#211A2B; --texto:#F2EDF8; --cinza:#B3A8C2; --linha:#382C48;
+    --perigo:#F0A0A8; --ok:#3F8F63;
+    --branco:#2A2136; --suave:#241D30; --sobre-roxo:#1B1226; --sobre-ok:#F2EDF8;
+    --sombra:0 2px 10px rgba(0,0,0,.45);
+    --aviso-bg:#3A3117; --aviso-br:#8A6D1F; --aviso-tx:#F0E2BC;
+    --ruim-bg:#3C2027; --ruim-tx:#F6C9CE;
+    --bom-bg:#1C3A2C; --bom-br:#2F6B4C; --bom-tx:#CFEEDD;
+    --tag-ok-bg:#1C3A2C; --tag-ok-tx:#8FE0B6; --tag-pend-bg:#3A3117; --tag-pend-tx:#EBD08A;
+    --toast-bg:#E9E2F3; --toast-tx:#1B1226;
+    --ok-tx:#6FD3A4; --ok-bg:#1C3A2C; --neutro-bg:#2A2136;
+    --grade:#3E3152; --serie-c:#C08BFF; --serie-e:#B18BE0; --serie-n:#6FD3A4;
+    color-scheme: dark;
+  }
+  /* o logo é roxo sobre fundo transparente: no escuro ele é clareado */
+  :root[data-theme="dark"] .top img,
+  :root[data-theme="dark"] .logo-hero img,
+  :root[data-theme="dark"] .entrada img{filter:brightness(1.6)}
+
+  /* ---- botão claro/escuro: canto de baixo à direita, nas cinco telas ---- */
+  .botao-tema{position:fixed;right:14px;bottom:calc(52px + env(safe-area-inset-bottom,0px));
+    width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;
+    border:1px solid var(--linha);background:var(--card);color:var(--texto);
+    font-size:21px;line-height:1;cursor:pointer;z-index:30;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);-webkit-appearance:none;appearance:none}
+  /* o botao nao herda a cor dos outros botoes: no escuro ficaria invisivel */
+  :root[data-theme="dark"] .botao-tema,
+  :root[data-theme="light"] .botao-tema{background:var(--card);color:var(--texto)}
+  .botao-tema:active{transform:scale(.94)}
+  .botao-tema:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+  @media print{ .botao-tema{display:none!important} }
 </style>
+<script>
+/* ═════════ BOTÃO CLARO / ESCURO  (🌙 escurece · ☀ clareia) ═════════════════
+   Fica no canto de baixo à direita de todas as telas.
+   A escolha é guardada NO APARELHO e vale para as CINCO telas de uma vez,
+   porque todas moram no mesmo endereço de site.
+   Enquanto ninguém escolher, o app segue o modo claro/escuro do aparelho.
+   Roda antes de a tela ser desenhada: no escuro, não pisca branco.          */
+(function () {
+  'use strict';
+  var GUARDA = 'maxipark_tema', raiz = document.documentElement;
+  function escolhido() { try { return localStorage.getItem(GUARDA); } catch (e) { return null; } }
+  function doAparelho() {
+    try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro'; }
+    catch (e) { return 'claro'; }
+  }
+  function agora() { var e = escolhido(); return (e === 'escuro' || e === 'claro') ? e : doAparelho(); }
+  function aplica(t) {
+    raiz.setAttribute('data-theme', t === 'escuro' ? 'dark' : 'light');
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', t === 'escuro' ? '#17111E' : '#6B4A98');
+    var b = document.getElementById('btn-tema');
+    if (b) {
+      b.textContent = t === 'escuro' ? '\u2600' : '\uD83C\uDF19';
+      var r = t === 'escuro' ? 'Clarear a tela' : 'Escurecer a tela';
+      b.setAttribute('aria-label', r); b.title = r;
+    }
+  }
+  aplica(agora());
+  function troca() {
+    var novo = agora() === 'escuro' ? 'claro' : 'escuro';
+    try { localStorage.setItem(GUARDA, novo); } catch (e) {}
+    aplica(novo);
+  }
+  /* ninguém escolheu ainda: acompanha o aparelho quando ele troca de modo */
+  try {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var ouve = function () { if (!escolhido()) aplica(doAparelho()); };
+    if (mq.addEventListener) mq.addEventListener('change', ouve);
+    else if (mq.addListener) mq.addListener(ouve);
+  } catch (e) {}
+  /* trocou numa tela com outra aberta ao lado: a outra acompanha na hora */
+  try { window.addEventListener('storage', function (ev) { if (ev.key === GUARDA) aplica(agora()); }); } catch (e) {}
+  function poeBotao() {
+    if (document.getElementById('btn-tema')) return;
+    var b = document.createElement('button');
+    b.id = 'btn-tema'; b.type = 'button'; b.className = 'botao-tema';
+    b.addEventListener('click', troca);
+    document.body.appendChild(b);
+    aplica(agora());
+  }
+  if (document.body) poeBotao();
+  else document.addEventListener('DOMContentLoaded', poeBotao);
+})();
+</script>
+
 </head>
 <body>
 <div id="app"></div>
@@ -380,7 +483,7 @@ function viewAdmin(){
     '<p class="small muted">Esta área não mostra mais as respostas. Entre na página inicial com seu ' +
     'e-mail e senha: lá aparecem só as pesquisas e os resultados liberados para o seu acesso.</p>' +
     '<p style="margin-top:20px"><a href="../" ' +
-    'style="display:inline-block;padding:14px 24px;border-radius:12px;background:#6B4A98;color:#fff;' +
+    'style="display:inline-block;padding:14px 24px;border-radius:12px;background:var(--roxo);color:var(--sobre-roxo);' +
     'font-weight:700;font-size:17px;text-decoration:none">Ir para a página inicial &rarr;</a></p>' +
     '<p style="margin-top:16px"><button class="btn" data-action="welcome">Voltar ao atendimento</button></p>' +
     '</div></div>';
@@ -846,7 +949,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
   if (!/^https?:/.test(location.protocol)) return;
   const ID = 'estado-servidor';
   let ultimo = '', pedido = 0, tempo = null;
-  const cores = { ok: ['#1B7A52', '#E4F4EC'], ruim: ['#A8323F', '#FBE9EB'], neutro: ['#5E5670', '#EFEDF4'] };
+  const cores = { ok: ['var(--ok-tx)', 'var(--ok-bg)'], ruim: ['var(--ruim-tx)', 'var(--ruim-bg)'], neutro: ['var(--cinza)', 'var(--neutro-bg)'] };
   function pinta(tipo, texto) {
     const el = document.getElementById(ID); if (!el) return;
     const c = cores[tipo] || cores.neutro;
@@ -900,10 +1003,10 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     let txt = partes.join(' \u00b7 ');
     if (publicada && aqui && publicada !== aqui) {
       txt += ' \u2014 h\u00e1 uma vers\u00e3o nova (' + publicada + '): toque em Atualizar app agora.';
-      el.style.color = '#A8323F'; el.style.fontWeight = '700';
+      el.style.color = 'var(--ruim-tx)'; el.style.fontWeight = '700';
     } else if (publicada && aqui && publicada === aqui) {
       txt += ' \u2014 est\u00e1 na vers\u00e3o mais nova.';
-      el.style.color = '#1B7A52'; el.style.fontWeight = '600';
+      el.style.color = 'var(--ok-tx)'; el.style.fontWeight = '600';
     }
     el.textContent = txt;
   }
@@ -931,7 +1034,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
       el.id = ID;
       const bt = document.createElement('button');
       bt.type = 'button'; bt.id = 'btn-atualizar-app'; bt.textContent = 'Atualizar app agora';
-      bt.style.cssText = 'padding:10px 16px;border:2px solid #6B4A98;border-radius:10px;background:#fff;color:#6B4A98;font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap';
+      bt.style.cssText = 'padding:10px 16px;border:2px solid var(--roxo);border-radius:10px;background:var(--branco);color:var(--roxo-escuro);font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap';
       bt.addEventListener('click', async () => {
         bt.disabled = true; bt.textContent = 'Atualizando\u2026';
         try {
@@ -950,7 +1053,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
       cx.insertAdjacentElement('afterend', linha);
       const ver = document.createElement('div');
       ver.id = 'versao-app';
-      ver.style.cssText = 'margin:2px 0 6px;font-size:13.5px;color:#5E5670';
+      ver.style.cssText = 'margin:2px 0 6px;font-size:13.5px;color:var(--cinza)';
       ver.textContent = 'Conferindo a vers\u00e3o deste aparelho\u2026';
       linha.insertAdjacentElement('afterend', ver);
       mostraVersao();
@@ -1043,10 +1146,10 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     else resposta = 'falta a chave neste aparelho';
 
     let veredito, cor;
-    if (/^LIGADO/.test(resposta)) { veredito = 'Est\u00e1 tudo certo: este aparelho fala com o servidor.'; cor = '#0a7d3c'; }
-    else if (!doApp) { veredito = 'Falta digitar a chave neste aparelho. Digite no campo acima e toque em Salvar.'; cor = '#b00020'; }
-    else if (/NAO confere/.test(resposta)) { veredito = 'A chave deste aparelho esta errada. Apague o campo acima, digite a chave certa e toque em Salvar.'; cor = '#b00020'; }
-    else { veredito = 'O aparelho nao conseguiu falar com o servidor. Confira a internet.'; cor = '#b00020'; }
+    if (/^LIGADO/.test(resposta)) { veredito = 'Est\u00e1 tudo certo: este aparelho fala com o servidor.'; cor = 'var(--ok-tx)'; }
+    else if (!doApp) { veredito = 'Falta digitar a chave neste aparelho. Digite no campo acima e toque em Salvar.'; cor = 'var(--ruim-tx)'; }
+    else if (/NAO confere/.test(resposta)) { veredito = 'A chave deste aparelho esta errada. Apague o campo acima, digite a chave certa e toque em Salvar.'; cor = 'var(--ruim-tx)'; }
+    else { veredito = 'O aparelho nao conseguiu falar com o servidor. Confira a internet.'; cor = 'var(--ruim-tx)'; }
 
     return '<div style="font-size:14.5px;line-height:1.5">' +
       '<div style="padding:10px 12px;border-radius:10px;background:' + cor + '11;color:' + cor + ';font-weight:700;margin-bottom:10px">' + veredito + '</div>' +
@@ -1066,10 +1169,10 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     if (!cx || document.getElementById(ID + '-bt')) return;
     const bt = document.createElement('button');
     bt.type = 'button'; bt.id = ID + '-bt'; bt.textContent = 'Diagn\u00f3stico do servidor';
-    bt.style.cssText = 'margin:10px 0 2px;padding:10px 16px;border:2px solid #6B4A98;border-radius:10px;background:#fff;color:#6B4A98;font-weight:700;font-size:14.5px;cursor:pointer';
+    bt.style.cssText = 'margin:10px 0 2px;padding:10px 16px;border:2px solid var(--roxo);border-radius:10px;background:var(--branco);color:var(--roxo-escuro);font-weight:700;font-size:14.5px;cursor:pointer';
     const cx2 = document.createElement('div'); cx2.id = ID; cx2.style.cssText = 'margin:8px 0';
     bt.addEventListener('click', async () => {
-      bt.disabled = true; cx2.innerHTML = '<span style="color:#666">Conferindo\u2026</span>';
+      bt.disabled = true; cx2.innerHTML = '<span style="color:var(--cinza)">Conferindo\u2026</span>';
       try { cx2.innerHTML = await levantar(); } catch (e) { cx2.textContent = 'Nao consegui conferir: ' + e.message; }
       bt.disabled = false;
     });
@@ -1140,7 +1243,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     if (!cx || document.getElementById(ID)) return;
     const bt = document.createElement('button');
     bt.type = 'button'; bt.id = ID; bt.textContent = 'Pronto \u2014 usar esta chave';
-    bt.style.cssText = 'margin:8px 0 2px;padding:12px 20px;border:0;border-radius:10px;background:#6B4A98;color:#fff;font-weight:700;font-size:15.5px;cursor:pointer';
+    bt.style.cssText = 'margin:8px 0 2px;padding:12px 20px;border:0;border-radius:10px;background:var(--roxo);color:var(--sobre-roxo);font-weight:700;font-size:15.5px;cursor:pointer';
     const av = document.createElement('div'); av.id = AVISO;
     bt.addEventListener('click', () => confirmar(bt));
     cx.parentNode.insertBefore(bt, cx.nextSibling);
