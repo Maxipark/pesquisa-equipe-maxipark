@@ -235,7 +235,13 @@ const LS = {
   set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
 };
 const DEFAULT_SETTINGS = { pin:'', unidade:'', mes:'', data:'', rodada:'R1', webhook:'', chave:'', ultimaSync:'', exported:{}, pinFails:0, lockUntil:0 };   // sem nome do avaliador (pedido do gestor): o app não guarda nome de ninguém
+const SERVIDOR_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';   /* servidor das respostas (Apps Script + Planilha) */
+const CHAVE_PADRAO = '';   /* a chave nao fica no codigo: digite uma vez em Configuracoes (PIN 2819) */
 let settings = Object.assign({}, DEFAULT_SETTINGS, LS.get('mp_settings', {}));
+/* servidor ligado de fabrica: quem nunca configurou nada ja nasce sincronizado; quem digitou um endereco proprio nas Configuracoes continua com o dele */
+if (!settings.webhook) settings.webhook = SERVIDOR_PADRAO;
+if (!settings.chave) settings.chave = CHAVE_PADRAO;
+try { LS.set('mp_settings', settings); } catch (e) {}
 function saveSettings(){ LS.set('mp_settings', settings); }
 aplicarTextos();   // perguntas, respostas e pesos: padrão ou alterados pelo gestor
 if ('avaliador' in settings) { delete settings.avaliador; saveSettings(); }   // apaga o nome do avaliador gravado por versões anteriores
@@ -1110,6 +1116,7 @@ function submitCurrent(){
   list.splice(pos, 0, current);
   if (!saveResponses(list)) { busy = false; go('saveerror'); return; }
   current = null; busy = false;
+  agendaLote();   /* sobe em lote embaralhado, com atraso, para o horario nao entregar quem respondeu */
   startThanks();
 }
 
@@ -1635,6 +1642,17 @@ history.pushState({ app: 1 }, '');
 window.addEventListener('popstate', () => { history.pushState({ app: 1 }, ''); });   // gesto "voltar" do Android: não sai do app e não volta de página (sem botão Voltar)
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; if (state.screen === 'setup') render(); });
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { navigator.serviceWorker.register('../sw.js').catch(() => {}); }
+/* envio automatico do lote (anonimato): nunca na hora da resposta — em lote embaralhado,
+   com atraso aleatorio de 2 a 8 minutos, e o que sobrar sobe na proxima vez que o app abre */
+let loteAgendado = null;
+function agendaLote(){
+  if (!syncOk() || loteAgendado) return;
+  const espera = (120 + Math.floor(Math.random() * 360)) * 1000;
+  loteAgendado = setTimeout(() => { loteAgendado = null; sendPending(true); }, espera);
+}
+window.addEventListener('online', () => agendaLote());
+setTimeout(() => { if (syncOk() && navigator.onLine) sendPending(true); }, 4000);
+setInterval(() => { if (syncOk() && navigator.onLine) sendPending(true); }, 15 * 60 * 1000);
 state.screen = 'setup';   // abre SEMPRE em "Preparar a coleta" (escolher/confirmar a unidade), como as outras pesquisas; homeScreen() continua valendo dentro do app (idle, cancelar, voltar à coleta)
 render();
 </script>
