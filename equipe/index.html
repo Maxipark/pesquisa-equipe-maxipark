@@ -234,7 +234,7 @@ const LS = {
   get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
   set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
 };
-const DEFAULT_SETTINGS = { pin:'', unidade:'', mes:'', data:'', rodada:'R1', webhook:'', chave:'', ultimaSync:'', exported:{}, pinFails:0, lockUntil:0 };   // sem nome do avaliador (pedido do gestor): o app não guarda nome de ninguém
+const DEFAULT_SETTINGS = { pin:'', unidade:'', mes:'', data:'', rodada:'R1', webhook:'', chave:'', ultimaSync:'', exported:{}, pinFails:0, lockUntil:0 };   // sem nome do usuário (pedido do gestor): o app não guarda nome de ninguém
 const SERVIDOR_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';   /* servidor das respostas (Apps Script + Planilha) */
 const CHAVE_PADRAO = '';   /* a chave nao fica no codigo: digite uma vez em Configuracoes (PIN 2819) */
 let settings = Object.assign({}, DEFAULT_SETTINGS, LS.get('mp_settings', {}));
@@ -244,7 +244,7 @@ if (!settings.chave) settings.chave = CHAVE_PADRAO;
 try { LS.set('mp_settings', settings); } catch (e) {}
 function saveSettings(){ LS.set('mp_settings', settings); }
 aplicarTextos();   // perguntas, respostas e pesos: padrão ou alterados pelo gestor
-if ('avaliador' in settings) { delete settings.avaliador; saveSettings(); }   // apaga o nome do avaliador gravado por versões anteriores
+if ('avaliador' in settings) { delete settings.avaliador; saveSettings(); }   // apaga o nome do usuário gravado por versões anteriores
 // PIN programado: aplica o PIN padrão uma única vez (também em tablets que já tinham outro PIN de teste); depois disso, um PIN trocado em Configurações é respeitado.
 if (settings.pinPadraoAplicado !== PIN_PADRAO_MARCA) { settings.pin = PIN_PADRAO; settings.pinFails = 0; settings.lockUntil = 0; settings.pinPadraoAplicado = PIN_PADRAO_MARCA; saveSettings(); }
 if (settings.senhaZerarAplicada !== SENHA_ZERAR_MARCA) { settings.senhaZerar = SENHA_ZERAR_PADRAO; settings.senhaZerarAplicada = SENHA_ZERAR_MARCA; saveSettings(); }
@@ -356,7 +356,7 @@ function header(step, pct){
   return `<div class="top"><div class="brand"><a href="../" class="home" title="Página inicial: escolher a pesquisa" aria-label="Página inicial: escolher a pesquisa"><img class="logo" src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a><span>Pesquisa com a equipe</span></div><div class="step">${esc(step || '')}</div></div>
           <div class="progress"><div style="width:${pct || 0}%"></div></div>`;
 }
-function cornerBtn(){ return `<button class="corner" data-action="pin" data-target="admin" aria-label="Área do avaliador (com PIN)">⚙ Avaliador</button>`; }
+function cornerBtn(){ return `<button class="corner" data-action="pin" data-target="admin" aria-label="Área do usuário (com PIN)">⚙ Usuário</button>`; }
 function logoHero(){ return `<div class="logo-hero"><a href="../" class="home" title="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a></div>`; }   // logo grande no topo dos cartões principais
 function unidadeLabel(c){ const u = unidadePorCodigo(c); if (!u) return c || ''; return u.codigo + (u.nome ? ' · ' + u.nome : '') + (u.bairro ? ' · ' + u.bairro : ''); }
 function unitField(idPrefix, ret){
@@ -376,21 +376,21 @@ function viewSetup(){
     fim = `<div class="good"><b>Pesquisa finalizada · ${esc(settings.unidade)} · ${settings.data ? dataLabel(settings.data) : mesLabel(settings.mes)}</b><br>${n} resposta${n === 1 ? '' : 's'} gravada${n === 1 ? '' : 's'}${rec ? ` · ${rec} preferi${rec === 1 ? 'u' : 'ram'} não responder` : ''}. Exporte as contagens antes de preparar outra unidade.
       <div class="row" style="margin-top:10px"><button class="btn block" data-action="admin">Ver contagens e exportar</button></div></div>`;
   }
-  return header('Avaliador · configuração', 0) + `<div class="wrap"><div class="card">
+  return header('Usuário · configuração', 0) + `<div class="wrap"><div class="card">
     ${logoHero()}
     <h1>Preparar a coleta</h1>
     ${fim}
     <p class="muted">Escolha a unidade antes de entregar o tablet à equipe. Com as respostas ficam gravados só o código da unidade e a data da coleta — nenhum nome, cargo ou horário.</p>
-    ${pinOk ? '' : '<div class="warn">Primeiro uso: defina o <b>PIN do avaliador</b>. Ele protege as contagens e as configurações.</div>'}
+    ${pinOk ? '' : '<div class="warn">Primeiro uso: defina o <b>PIN do usuário</b>. Ele protege as contagens e as configurações.</div>'}
     ${unitField('f', 'setup')}
     <label>Data da coleta (preenchida automaticamente)</label>
     <div class="datefield">${dataLabel(hojeISO())} <span class="small muted">· mês de referência ${mesLabel(hojeISO().slice(0, 7))} · <b>${esc(rodadaNome(settings.rodada))}</b></span></div>
     ${settings.avisoZerado ? `<div class="warn">Ao atualizar para a versão ${VERSAO}, o histórico deste tablet foi zerado (${settings.avisoZerado === true ? 'respostas, recusas, rodadas e importadas' : esc(settings.avisoZerado)}), a pedido do gestor. O PIN e a lista de unidades foram mantidos. <button class="btn link" data-action="okzerado">OK, entendi</button></div>` : ''}
     <div class="row">
-      ${pinOk ? '<button class="btn block" data-action="start">Iniciar coleta com a equipe</button>' : '<button class="btn block" data-action="gosetpin">Definir PIN do avaliador</button>'}
+      ${pinOk ? '<button class="btn block" data-action="start">Iniciar coleta com a equipe</button>' : '<button class="btn block" data-action="gosetpin">Definir PIN do usuário</button>'}
     </div>
     <div class="row">
-      <button class="btn ghost" data-action="pin" data-target="admin" ${pinOk ? '' : 'disabled'}>Área do avaliador (contagens e exportar)</button>
+      <button class="btn ghost" data-action="pin" data-target="admin" ${pinOk ? '' : 'disabled'}>Área do usuário (contagens e exportar)</button>
       ${deferredInstall ? '<button class="btn light" data-action="install">Instalar como app no tablet</button>' : ''}
     </div>
     <p class="small muted" style="margin-top:18px">Versão ${VERSAO} · funciona sem internet · <b>exporte as respostas no fim de cada visita</b> e apague-as depois de conferir que o CSV chegou à área de Experiência do Cliente — o histórico para comparar rodadas fica nos CSVs e no aparelho onde eles são importados.</p>
@@ -427,8 +427,8 @@ function viewSetPin(){
   const repeat = state.newPinStage === 1;
   const zerar = state.setPinMode === 'zerar';
   return header(zerar ? 'Senha de zerar' : 'Definir PIN', 0) + `<div class="wrap"><div class="card" style="max-width:520px">
-    <h2 style="text-align:center">${repeat ? (zerar ? 'Digite a senha de novo para confirmar' : 'Digite o PIN de novo para confirmar') : (zerar ? 'Nova senha para zerar o histórico' : (settings.pin ? 'Novo PIN do avaliador' : 'Crie o PIN do avaliador'))}</h2>
-    <p class="small muted" style="text-align:center">${repeat ? 'Repita os mesmos números e toque em OK.' : '4 a 8 números. Não use 1234, 0000 ou datas fáceis. Digite e toque em <b>OK</b>.'}${zerar ? ' Esta senha só serve para apagar todo o histórico do tablet; é diferente do PIN do avaliador.' : ''}</p>
+    <h2 style="text-align:center">${repeat ? (zerar ? 'Digite a senha de novo para confirmar' : 'Digite o PIN de novo para confirmar') : (zerar ? 'Nova senha para zerar o histórico' : (settings.pin ? 'Novo PIN do usuário' : 'Crie o PIN do usuário'))}</h2>
+    <p class="small muted" style="text-align:center">${repeat ? 'Repita os mesmos números e toque em OK.' : '4 a 8 números. Não use 1234, 0000 ou datas fáceis. Digite e toque em <b>OK</b>.'}${zerar ? ' Esta senha só serve para apagar todo o histórico do tablet; é diferente do PIN do usuário.' : ''}</p>
     <input type="text" id="newpin-input" class="pininput" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" enterkeyhint="done" placeholder="toque nos números ou digite aqui" value="${esc(state.newPin)}">
     <div class="pinpad">${keys.map(k => `<button class="${k === 'OK' ? 'ok' : ''}" data-action="newpinkey" data-k="${k}">${k}</button>`).join('')}</div>
     <div class="row"><button class="btn link block" data-action="cancelsetpin">Cancelar</button></div>
@@ -514,22 +514,22 @@ function viewOpen(){
 }
 
 function viewThanks(){
-  // Só 2 botões (pedido do gestor); sem o "⚙ Avaliador" de canto nesta tela, que repetiria o segundo botão.
+  // Só 2 botões (pedido do gestor); sem o "⚙ Usuário" de canto nesta tela, que repetiria o segundo botão.
   return header(settings.unidade + ' · ' + (settings.data ? dataLabel(settings.data) : mesLabel(settings.mes)), 100) + `<div class="wrap"><div class="card thanks">
     ${logoHero()}
     <div class="check">✓</div>
     <h1>Obrigado!</h1>
-    <p>Pronto — você já terminou. Pode entregar o tablet ao avaliador.</p>
+    <p>Pronto — você já terminou. Pode entregar o tablet ao usuário.</p>
     <p class="muted">Em até 15 dias vem o retorno — da sua unidade ou, se a equipe é pequena, da região: o que ouvimos, o que vamos fazer e quando.</p>
     <div class="row"><button class="btn block" data-action="nextperson">Próximo colaborador</button></div>
-    <div class="row"><button class="btn ghost block" data-action="pin" data-target="setup" data-fin="1">Finalizar pesquisa — só o avaliador (pede o PIN)</button></div>
+    <div class="row"><button class="btn ghost block" data-action="pin" data-target="setup" data-fin="1">Finalizar pesquisa — só o usuário (pede o PIN)</button></div>
   </div></div>`;
 }
 
 function viewSaveError(){
   return header('Atenção', 100) + `<div class="wrap"><div class="card">
-    <div class="bad"><b>Não foi possível guardar a resposta neste tablet</b> (memória do navegador cheia ou bloqueada). A resposta ainda está na tela — chame o avaliador.</div>
-    <div class="row"><button class="btn" data-action="retrysave">Tentar guardar de novo</button><button class="btn ghost" data-action="pin" data-target="admin">Área do avaliador</button></div>
+    <div class="bad"><b>Não foi possível guardar a resposta neste tablet</b> (memória do navegador cheia ou bloqueada). A resposta ainda está na tela — chame o usuário.</div>
+    <div class="row"><button class="btn" data-action="retrysave">Tentar guardar de novo</button><button class="btn ghost" data-action="pin" data-target="admin">Área do usuário</button></div>
   </div></div>`;
 }
 
@@ -544,11 +544,11 @@ function viewPin(){
   const locked = Date.now() < (settings.lockUntil || 0);
   const dots = '●'.repeat(state.pin.length);
   const keys = ['1','2','3','4','5','6','7','8','9','←','0','OK'];
-  return header('Área do avaliador', 0) + `<div class="wrap"><div class="card" style="max-width:520px">
+  return header('Área do usuário', 0) + `<div class="wrap"><div class="card" style="max-width:520px">
     ${logoHero()}
-    <h2 style="text-align:center">${state.pinTarget === 'zerar' ? 'Confirmação final: digite a senha de zerar' : 'Digite o PIN do avaliador'}</h2>
+    <h2 style="text-align:center">${state.pinTarget === 'zerar' ? 'Confirmação final: digite a senha de zerar' : 'Digite o PIN do usuário'}</h2>
     <input type="text" id="pin-input" class="pininput" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" enterkeyhint="done" placeholder="toque nos números ou digite aqui" value="${esc(state.pin)}" ${locked ? 'disabled' : ''}>
-    ${state.pinTarget === 'zerar' ? '<div class="bad">A senha de zerar é diferente do PIN do avaliador (troca em Configurações). Ao confirmar, todas as respostas, recusas, rodadas e importadas deste tablet são apagadas. Isso não tem volta.</div>' : ''}
+    ${state.pinTarget === 'zerar' ? '<div class="bad">A senha de zerar é diferente do PIN do usuário (troca em Configurações). Ao confirmar, todas as respostas, recusas, rodadas e importadas deste tablet são apagadas. Isso não tem volta.</div>' : ''}
     ${current ? '<div class="warn">Há uma pesquisa em andamento. Ao entrar, ela será descartada sem gravar.</div>' : ''}
     ${locked ? `<div class="bad">Muitas tentativas erradas. Aguarde ${Math.ceil((settings.lockUntil - Date.now())/1000)} s.</div>` : ''}
     <div class="pinpad">${keys.map(k => `<button class="${k === 'OK' ? 'ok' : ''}" data-action="pinkey" data-k="${k}" ${locked ? 'disabled' : ''}>${k}</button>`).join('')}</div>
@@ -624,7 +624,7 @@ function csvText(list){
 }
 
 function viewAdmin(){
-  return (typeof header === 'function' ? header('Área do avaliador') : '') +
+  return (typeof header === 'function' ? header('Área do usuário') : '') +
     '<div class="wrap"><div class="card" style="max-width:560px;margin:0 auto;text-align:center">' +
     (typeof logoHero === 'function' ? logoHero() : '') +
     '<h2>Os resultados abrem pela página inicial</h2>' +
@@ -667,7 +667,7 @@ function viewAdminAntigo(){
         if (t.obsCes.length) blocos.push(`<li><b>Escritório (CES)</b><ul>${t.obsCes.map(c => `<li>${esc(c)}</li>`).join('')}</ul></li>`);
         return blocos.length ? `<h3 style="font-size:17px">Comentários escritos nas páginas da pesquisa</h3><ul class="obslist">${blocos.join('')}</ul>` : ''; })()
       + `<p class="legend">Ordem embaralhada. Na ficha, registre só os temas — nunca copie frases.${t.poucasDetalhe ? ` Com menos de ${N_DIVULGA_DETALHE} respostas, os comentários não se divulgam por unidade.` : ''}</p>`;
-  return header('Área do avaliador', 0) + `<div class="wrap"><div class="card" style="max-width:980px">
+  return header('Área do usuário', 0) + `<div class="wrap"><div class="card" style="max-width:980px">
     <h1>Contagens · ${esc(settings.unidade || '—')} · ${esc(rodadaNome(settings.rodada))}${settings.data ? ` <span class="small muted">· coleta em ${dataLabel(settings.data)}</span>` : ''}</h1>
     <div class="row"><button class="btn ghost" data-action="tosetup">← Tela inicial (Preparar a coleta)</button><button class="btn ghost" data-action="tocollect">Voltar à coleta com a equipe</button></div>
     ${state.notice ? `<div class="warn">${esc(state.notice)}</div>` : ''}
@@ -736,7 +736,7 @@ function viewSettings(){
     <label>Chave de sincronização (a mesma digitada no servidor)</label>
     <input type="text" id="s-chave" value="${esc(settings.chave || '')}" placeholder="letras e números, sem espaços" autocomplete="off">
     <div class="row" style="margin-top:8px"><button class="btn light" data-action="testarservidor">Testar ligação</button>${settings.ultimaSync ? `<span class="small muted" style="align-self:center">Última atualização da nuvem: ${esc(dataLabel(settings.ultimaSync.slice(0, 10)))} ${esc(settings.ultimaSync.slice(11, 16))}</span>` : ''}</div>
-    <p class="small muted">Sem servidor, as respostas ficam só no tablet e você exporta por arquivo. Com servidor, o envio acontece <b>em lote</b> e em ordem embaralhada (ao tocar em "Enviar para a nuvem agora" ou ao abrir a Área do avaliador com internet): o servidor registra a hora do lote, não a de cada pessoa. O Consolidado baixa as respostas de todos os tablets em "Atualizar da nuvem".</p>
+    <p class="small muted">Sem servidor, as respostas ficam só no tablet e você exporta por arquivo. Com servidor, o envio acontece <b>em lote</b> e em ordem embaralhada (ao tocar em "Enviar para a nuvem agora" ou ao abrir a Área do usuário com internet): o servidor registra a hora do lote, não a de cada pessoa. O Consolidado baixa as respostas de todos os tablets em "Atualizar da nuvem".</p>
     <div class="row">
       <button class="btn" data-action="savesettings">Salvar</button>
       <button class="btn light" data-action="gosetpin">Trocar PIN</button>
@@ -764,7 +764,7 @@ function viewPerguntas(){
   return header('Perguntas, respostas e pesos', 0) + `<div class="wrap"><div class="card" style="max-width:980px">
     <h1>Perguntas, respostas e pesos</h1>
     <p class="small muted">Você pode mudar o texto das 15 frases, os rótulos das 3 respostas, o "Não se aplica" e o peso de cada frase, além da pergunta de 0 a 10, da pergunta do escritório e das duas perguntas abertas. A estrutura não muda: continuam 15 frases (B1…B15) com 3 respostas, gravadas como 3 = Resposta 1, 2 = Resposta 2, 1 = Resposta 3.${textosAlterados() ? ' <b>Há alterações salvas neste tablet.</b>' : ' Textos padrão em uso.'}</p>
-    <div class="warn"><b>A 1ª resposta é sempre a positiva</b> (é ela que conta no % Sim) e a 3ª, a negativa. Mudar o texto de uma frase <b>não muda as respostas já gravadas</b> — e as telas, o Excel e o PDF mostram sempre o texto atual, mesmo para rodadas antigas. Por isso, para uma pergunta realmente nova, altere o texto e <b>inicie uma nova rodada</b> no Consolidado. O <b>peso</b> (1 a 3) é quanto a frase pesa no indicador "% Sim ponderado" (Área do avaliador, Consolidado, Excel e PDF) e pode ser trocado a qualquer hora. As alterações valem só neste tablet: use <i>Baixar perguntas</i> / <i>Importar perguntas</i> para igualar os outros.</div>
+    <div class="warn"><b>A 1ª resposta é sempre a positiva</b> (é ela que conta no % Sim) e a 3ª, a negativa. Mudar o texto de uma frase <b>não muda as respostas já gravadas</b> — e as telas, o Excel e o PDF mostram sempre o texto atual, mesmo para rodadas antigas. Por isso, para uma pergunta realmente nova, altere o texto e <b>inicie uma nova rodada</b> no Consolidado. O <b>peso</b> (1 a 3) é quanto a frase pesa no indicador "% Sim ponderado" (Área do usuário, Consolidado, Excel e PDF) e pode ser trocado a qualquer hora. As alterações valem só neste tablet: use <i>Baixar perguntas</i> / <i>Importar perguntas</i> para igualar os outros.</div>
     ${rows}
     <h3>Outras perguntas</h3>
     <label>Pergunta da nota de 0 a 10 (eNPS)</label><textarea id="p-enps" maxlength="240" rows="2">${esc(ENPS_Q)}</textarea>
@@ -838,7 +838,7 @@ function agregar(list){   // um grupo de respostas (uma unidade ou todas)
   // % Sim ponderado pelos pesos das frases (pesos em Configurações → Perguntas, respostas e pesos)
   let pSim = 0, pN = 0; a.itens.forEach((it, i) => { const p = (ITENS[i] && ITENS[i].peso) || 1; pSim += p * it.c[2]; pN += p * it.n; });
   a.pctSimPond = pN ? Math.round(pSim / pN * 100) : null;
-  // mesmo critério da Área do avaliador: calcula a partir de 1 resposta e sinaliza quando há poucas (regra de divulgação)
+  // mesmo critério da Área do usuário: calcula a partir de 1 resposta e sinaliza quando há poucas (regra de divulgação)
   a.enpsVal = a.enps.n ? Math.round((a.enps.pro - a.enps.det) / a.enps.n * 100) : null;
   a.cesFacil = a.ces.n ? Math.round(a.ces.sim / a.ces.n * 100) : null;
   a.identificavel = a.n > 0 && a.n < N_DIVULGA_FRASE;
@@ -924,7 +924,7 @@ function viewConsolidado(){
   const rodRows = rl.map(r => { const lst = todas.filter(x => rodadaDe(x) === r.id); return `<tr class="${r.id === settings.rodada ? 'cur' : ''}"><td class="l"><b>${esc(r.nome)}</b>${r.id === settings.rodada ? ' <span class="tag ok">atual</span>' : ''}</td><td>${r.inicio ? dataLabel(r.inicio) : '—'}</td><td>${r.fim ? dataLabel(r.fim) : (r.id === settings.rodada ? 'em andamento' : '—')}</td><td>${lst.length}</td><td>${new Set(lst.map(x => x.unidade)).size}</td></tr>`; }).join('');
   return header('Consolidado', 0) + `<div class="wrap"><div class="card" style="max-width:1100px">
     <h1>Consolidado de todas as unidades</h1>
-    <div class="row" style="margin-top:6px"><button class="btn" data-action="admin">← Voltar (Área do avaliador)</button><button class="btn ghost" data-action="tosetup">Tela inicial (Preparar a coleta)</button></div>
+    <div class="row" style="margin-top:6px"><button class="btn" data-action="admin">← Voltar (Área do usuário)</button><button class="btn ghost" data-action="tosetup">Tela inicial (Preparar a coleta)</button></div>
     <div class="row" style="margin-top:4px">${syncOk() ? `<button class="btn" data-action="sync">Atualizar da nuvem</button><span class="small muted" style="align-self:center">${settings.ultimaSync ? 'Última atualização: ' + esc(dataLabel(settings.ultimaSync.slice(0, 10))) + ' ' + esc(settings.ultimaSync.slice(11, 16)) + ' · ' : 'Ainda não atualizado · '}<button class="btn link" data-action="syncfull">baixar tudo de novo</button></span>` : '<span class="small muted">Sincronização online desligada — configure o servidor em Configurações (LEIA-ME, seção 11) para ver as respostas de todos os tablets aqui.</span>'}</div>
     <p class="small muted">Junta as respostas deste tablet com as da <b>nuvem</b> (todos os tablets ligados ao mesmo servidor) e com CSVs importados à mão. Rodada atual da coleta: <b>${esc(rodadaNome(settings.rodada))}</b>.${pool.legado ? ` ${pool.legado} resposta(s) de versão antiga do app (escala 1-5) ficam fora das contas.` : ''}${histResponses().length ? ` ${histResponses().length} resposta(s) importada(s) de outros tablets.` : ' <b>Ainda não há respostas importadas de outros tablets</b> — o que está abaixo é só deste aparelho. Para juntar, use "Importar respostas de outro tablet" no fim da tela.'}</p>
     <h3>Filtros</h3>
@@ -986,7 +986,7 @@ function viewConsolidado(){
     <h3>Zerar (só para testes)</h3>
     <div class="row"><button class="btn danger" data-action="zerartudo">Zerar todo o histórico deste tablet</button></div>
     <p class="legend">Apaga todas as respostas (de todas as unidades e rodadas), recusas, rodadas e respostas importadas deste aparelho, e volta à Rodada 1. Mantém o PIN e a lista de unidades. Pede confirmação e depois a <b>senha de zerar</b> (diferente do PIN; troca em Configurações). Use para começar um teste do zero — exporte antes o que quiser guardar.</p>
-    <div class="row"><button class="btn" data-action="admin">← Voltar (Área do avaliador)</button><button class="btn ghost" data-action="tosetup">Tela inicial (Preparar a coleta)</button></div>
+    <div class="row"><button class="btn" data-action="admin">← Voltar (Área do usuário)</button><button class="btn ghost" data-action="tosetup">Tela inicial (Preparar a coleta)</button></div>
   </div></div>`;
 }
 function hashStr(s){ let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
@@ -1393,7 +1393,7 @@ function handle(action, el){
     case 'start': {
       const u = readUnitInput('f');
       if (!u) { toast('Escolha a unidade.'); return; }
-      if (!settings.pin) { toast('Defina o PIN do avaliador primeiro.'); return; }
+      if (!settings.pin) { toast('Defina o PIN do usuário primeiro.'); return; }
       settings.unidade = u; fixarData(); saveSettings();   // data da coleta = hoje, automática
       if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
       go('welcome'); break;
@@ -1424,7 +1424,7 @@ function handle(action, el){
         }
         if (state.newPin !== state.newPinFirst) { toast('Os números não conferem. Comece de novo.'); state.newPin = ''; state.newPinFirst = ''; state.newPinStage = 0; render(); return; }
         if (state.setPinMode === 'zerar') {
-          if (state.newPin === settings.pin) { toast('A senha de zerar não pode ser igual ao PIN do avaliador.'); state.newPin = ''; state.newPinFirst = ''; state.newPinStage = 0; render(); return; }
+          if (state.newPin === settings.pin) { toast('A senha de zerar não pode ser igual ao PIN do usuário.'); state.newPin = ''; state.newPinFirst = ''; state.newPinStage = 0; render(); return; }
           settings.senhaZerar = state.newPin; saveSettings(); state.newPin = ''; state.newPinFirst = ''; state.newPinStage = 0;
           toast('Senha de zerar definida.'); go('settings'); return;
         }
@@ -1472,7 +1472,7 @@ function handle(action, el){
       } else if (state.pin.length < 8) state.pin += k;
       render(); break;
     }
-    case 'admin': go('admin', { notice: '' }); if (syncOk() && navigator.onLine) sendPending(true); break;   // com servidor: envia o lote pendente ao abrir a área do avaliador
+    case 'admin': go('admin', { notice: '' }); if (syncOk() && navigator.onLine) sendPending(true); break;   // com servidor: envia o lote pendente ao abrir a área do usuário
     case 'settings': go('settings'); break;
     case 'consolidado': if (!state.cf) state.cf = cfDefault(); go('consolidado'); if (syncOk()) sincronizar(true); break;   // ao abrir, já atualiza da nuvem em silêncio
     case 'sync': sincronizar(false); break;
@@ -1510,7 +1510,7 @@ function handle(action, el){
     }
     case 'zerartudo': {
       const n = allResponses().length + histResponses().length;
-      // duas etapas: pergunta Sim/Não e, depois, o PIN do avaliador (pedido do gestor)
+      // duas etapas: pergunta Sim/Não e, depois, o PIN do usuário (pedido do gestor)
       askConfirm(`Zerar TODO o histórico deste tablet? Somem ${n} resposta(s) de todas as unidades e rodadas, as recusas, as rodadas e as respostas importadas. O PIN e a lista de unidades ficam. Isso não tem volta. Se confirmar, o app ainda vai pedir a senha de zerar.`, () => { state.pin = ''; state.pinTarget = 'zerar'; state.pinFin = false; go('pin'); });
       break;
     }
