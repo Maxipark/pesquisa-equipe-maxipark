@@ -226,6 +226,14 @@
 
   <section id="tela-admin" hidden>
     <div class="voltar"><button class="leve" type="button" data-ir="inicio">← Voltar ao início</button></div>
+    <div class="cartao" id="cx-sair-todos" hidden>
+      <h2>Desconectar todos os usuários</h2>
+      <p class="dica">Todo mundo — inclusive você — precisa entrar de novo com e-mail e senha, em todos os
+        aparelhos. Use quando alguém sair da empresa, quando um tablet se perder, ou depois de trocar senhas.
+        As respostas já gravadas não são afetadas.</p>
+      <div class="linha-editor"><button type="button" id="btn-sair-todos">Desconectar todos agora</button></div>
+    </div>
+
     <div class="cartao" id="cx-hist-atalho" hidden>
       <h2>Histórico de uso</h2>
       <p class="dica">Tudo o que cada pessoa fez no app: entradas, pesquisas aplicadas e consultas a resultados.</p>
@@ -353,10 +361,11 @@
     : (!u || !u.length) ? 'Nenhuma unidade'
     : (u.length === 1 ? 'Unidade ' + u[0] : (u.length <= 3 ? 'Unidades ' + u.join(', ') : u.length + ' unidades'));
 
-  const CHAVE = 'maxipark_conta_v1';
-  const guarda = e => { try { localStorage.setItem(CHAVE, e); } catch (x) {} };
+  const CHAVE = 'maxipark_conta_v1', CHAVE_HORA = 'maxipark_conta_hora';
+  const guarda = e => { try { localStorage.setItem(CHAVE, e); localStorage.setItem(CHAVE_HORA, String(Date.now())); } catch (x) {} };
   const guardado = () => { try { return localStorage.getItem(CHAVE); } catch (x) { return null; } };
-  const apaga = () => { try { localStorage.removeItem(CHAVE); } catch (x) {} };
+  const horaDoLogin = () => { try { return Number(localStorage.getItem(CHAVE_HORA) || 0); } catch (x) { return 0; } };
+  const apaga = () => { try { localStorage.removeItem(CHAVE); localStorage.removeItem(CHAVE_HORA); } catch (x) {} };
 
   let sessao = null, salvando = false, editando = null;
   function semEdicao() {
@@ -412,8 +421,15 @@
     $('i-email').value = ''; $('i-senha').value = ''; $('erro-entrada').hidden = true;
     ir('entrada'); $('i-email').focus();
   }
+  /* O administrador pode desconectar todo mundo: ele marca a hora do corte no
+     servidor e quem entrou ANTES dela precisa fazer login de novo. */
+  function foraPeloCorte() {
+    const corte = Number(dados.sairTodos || 0);
+    return !!corte && horaDoLogin() > 0 && horaDoLogin() < corte;
+  }
   function retomar() {
     const e = guardado(); if (!e) return;
+    if (foraPeloCorte()) { apaga(); return; }
     const c = dados.contas.find(x => x.email === e);
     if (!c) { apaga(); return; }
     if (c.bloqueado) {
@@ -794,6 +810,7 @@
   function admin() {
     semEdicao();
     const atalho = $('cx-hist-atalho'); if (atalho) atalho.hidden = !(sessao && sessao.admin);
+    const cxSair = $('cx-sair-todos'); if (cxSair) cxSair.hidden = !(sessao && sessao.admin);
     const cs = dados.contas;
     $('contagem').textContent = cs.length === 1 ? 'Uma pessoa cadastrada.' : cs.length + ' pessoas cadastradas.';
     $('pessoas').innerHTML = cs.map(c => {
@@ -855,7 +872,15 @@
       if (!d) return;
       if ((d.versao || 0) >= (dados.versao || 0)) {   /* o servidor manda: e ele que todo mundo enxerga */
         dados = d; guardaUsuarios(d);
-        if (sessao) { const a = dados.contas.find(c => c.id === sessao.id); if (!a || a.bloqueado) sair(); }
+        if (sessao && foraPeloCorte()) {
+          try { if (window.__historico) { window.__historico.registra('saiu', { detalhe: 'desconectado pelo administrador' });
+                                          window.__historico.envia(); window.__historico.esqueceQuem(); } } catch (e) {}
+          apaga(); sessao = null; ir('entrada');
+          const err = $('erro-entrada');
+          if (err) { err.textContent = 'O administrador desconectou todos os acessos. Entre de novo com seu e-mail e senha.'; err.hidden = false; }
+          return;
+        }
+        if (sessao) { const a = dados.contas.find(c => c.id === sessao.id); if (!a || a.bloqueado) sairDaConta(); }
         if ($('tela-admin') && !$('tela-admin').hidden) admin();
       } else {
         await mandaUsuariosAoServidor();            /* este aparelho tem algo mais novo: sobe */
@@ -953,6 +978,20 @@
     if (b.id === 'btn-cad') return cadastrar();
     if (b.id === 'btn-chave-ok') return ligarServidor();
     if (b.id === 'btn-chave-depois') { try { localStorage.setItem(GUARDA_DEPOIS, '1'); } catch (e) {} return ir('inicio'); }
+    if (b.id === 'btn-sair-todos') {
+      if (!sessao || !sessao.admin) return;
+      if (!confirm('Desconectar TODOS os usuários, em todos os aparelhos?\n\nTodo mundo (você também) vai precisar entrar de novo com e-mail e senha. As respostas já gravadas não se perdem.')) return;
+      b.disabled = true; b.textContent = 'Desconectando…';
+      dados.sairTodos = Date.now();
+      reg('desconectou todos os usuarios');
+      await grava('Todos os acessos foram desconectados.');
+      b.disabled = false; b.textContent = 'Desconectar todos agora';
+      try { if (window.__historico) { window.__historico.envia(); window.__historico.esqueceQuem(); } } catch (e) {}
+      apaga(); sessao = null; ir('entrada');
+      const err = $('erro-entrada');
+      if (err) { err.textContent = 'Todos os acessos foram desconectados. Entre de novo para continuar.'; err.hidden = false; }
+      return;
+    }
     if (b.dataset.ir) return ir(b.dataset.ir);
 
     /* ----- histórico (só o administrador) ----- */
