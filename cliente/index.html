@@ -917,9 +917,51 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     } catch (e) { if (meu === pedido) pinta('ruim', '\u2717 N\u00e3o consegui falar com o servidor (internet ou endere\u00e7o errado).'); }
   }
   function agenda(ms) { clearTimeout(tempo); tempo = setTimeout(conferir, ms); }
+
+  async function mostraVersao() {
+    const el = document.getElementById('versao-app'); if (!el) return;
+    const app = (typeof VERSAO !== 'undefined' && VERSAO) ? String(VERSAO) : '';
+    let aqui = '';
+    try {
+      const ks = await caches.keys();
+      const k = ks.find(x => /^pesquisa-maxipark-/.test(x));
+      if (k) aqui = k.replace('pesquisa-maxipark-', '');
+    } catch (e) {}
+    let publicada = '';
+    try {
+      const t = await (await fetch('../sw.js', { cache: 'no-store' })).text();
+      const m = /VERSAO\s*=\s*'([0-9.]+)'/.exec(t);
+      if (m) publicada = m[1];
+    } catch (e) {}
+    const partes = [];
+    partes.push('Neste aparelho: vers\u00e3o ' + (aqui || (publicada || '\u2014')) + (aqui ? '' : ' (ainda sem c\u00f3pia guardada)'));
+    if (app) partes.push('tela ' + app);
+    let txt = partes.join(' \u00b7 ');
+    if (publicada && aqui && publicada !== aqui) {
+      txt += ' \u2014 h\u00e1 uma vers\u00e3o nova (' + publicada + '): toque em Atualizar app agora.';
+      el.style.color = '#A8323F'; el.style.fontWeight = '700';
+    } else if (publicada && aqui && publicada === aqui) {
+      txt += ' \u2014 est\u00e1 na vers\u00e3o mais nova.';
+      el.style.color = '#1B7A52'; el.style.fontWeight = '600';
+    }
+    el.textContent = txt;
+  }
+  function escondeChave(cx) {
+    /* chave ja salva nao fica a mostra; quando a pessoa digita uma nova, aparece */
+    if (cx.dataset.mostrando === '1') return;
+    const cheia = !!(cx.value || '').trim();
+    cx.style.webkitTextSecurity = cheia ? 'disc' : 'none';
+    if (!cx.dataset.ligado) {
+      cx.dataset.ligado = '1';
+      const abre = () => { cx.dataset.mostrando = '1'; cx.style.webkitTextSecurity = 'none'; };
+      cx.addEventListener('focus', () => { cx.value = ''; abre(); });
+      cx.addEventListener('input', abre);
+    }
+  }
   function montar() {
     const cx = document.getElementById('s-chave');
     if (!cx) { ultimo = ''; return; }
+    escondeChave(cx);
     if (!document.getElementById(ID)) {
       const linha = document.createElement('div');
       linha.style.cssText = 'display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0 2px';
@@ -944,6 +986,12 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
       });
       linha.appendChild(el); linha.appendChild(bt);
       cx.insertAdjacentElement('afterend', linha);
+      const ver = document.createElement('div');
+      ver.id = 'versao-app';
+      ver.style.cssText = 'margin:2px 0 6px;font-size:13.5px;color:#5E5670';
+      ver.textContent = 'Conferindo a vers\u00e3o deste aparelho\u2026';
+      linha.insertAdjacentElement('afterend', ver);
+      mostraVersao();
       ultimo = '';
     }
     const agora = valores().join('|');
@@ -967,11 +1015,18 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
   function salvar() {
     try { if (typeof saveSettings === 'function') saveSettings(); else if (typeof LS === 'object' && LS.set) LS.set('mpc_settings', settings); } catch (e) {}
   }
+  let vista = null;
   function sincroniza() {
     if (typeof settings !== 'object' || !settings) return;
     const guardada = le(), minha = (settings.chave || '').trim();
-    if (minha && minha !== guardada) { grava(minha); return; }
-    if (!minha && guardada) { settings.chave = guardada; salvar(); }
+    if (vista === null) vista = minha;
+    if (minha !== vista) {            /* a pessoa digitou/salvou aqui: essa passa a valer no aparelho */
+      vista = minha; if (minha) grava(minha); return;
+    }
+    if (guardada && guardada !== minha) {   /* o aparelho tem uma chave: vale mais que a antiga guardada aqui */
+      settings.chave = guardada; vista = guardada; salvar(); return;
+    }
+    if (!guardada && minha) grava(minha);
   }
   sincroniza();
   setInterval(sincroniza, 3000);
