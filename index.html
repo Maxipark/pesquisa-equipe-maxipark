@@ -191,6 +191,7 @@
     <p>Com o servidor ligado, as respostas deste aparelho vão para a planilha e aparecem no painel de qualquer lugar.
       Sem ele, ficam guardadas só aqui.</p>
     <div id="erro-chave" class="erro" hidden></div>
+    <p id="aviso-chave" class="small" style="margin:0;color:var(--cinza);font-size:14.5px" hidden></p>
     <label for="k-chave"><span class="nm">Chave do servidor</span>
       <input id="k-chave" type="text" autocomplete="off" spellcheck="false" placeholder="cole ou digite a chave"></label>
     <button id="btn-chave-ok" type="button">Ligar agora</button>
@@ -424,7 +425,7 @@
     if (!k) { el.innerHTML = 'Servidor: <b>não ligado</b> neste aparelho — as respostas ficam só aqui. <a href="#chave">Ligar agora</a>'; return; }
     el.textContent = 'Servidor: conferindo…';
     const r = await testaChave(k);
-    if (r === 'ok') el.innerHTML = 'Servidor: <b>ligado</b> neste aparelho. <a href="#chave">trocar a chave</a>';
+    if (r === 'ok') el.innerHTML = 'Servidor: <b>ligado</b> neste aparelho.' + ((sessao && sessao.admin) ? ' <a href="#chave">ver ou trocar a chave</a>' : '');
     else el.innerHTML = 'Servidor: <b>' + (/confere/.test(r) ? 'chave recusada' : 'sem resposta') + '</b> — ' + r + ' <a href="#chave">Corrigir agora</a>';
   }
 
@@ -445,7 +446,20 @@
       $('quem').querySelector('b').textContent = sessao.nome;
       $('quem').querySelector('span').textContent = NOME_PAPEL[sessao.papel] || '';
       if (tela === 'inicio') { inicio(); pintaEstadoSync(); }
-      if (tela === 'chave') { const k = $('k-chave'); if (k) { if (!k.value) k.value = chaveDoAparelho(); setTimeout(() => { k.focus(); k.select(); }, 60); } }
+      if (tela === 'chave') {
+        const k = $('k-chave'), aviso = $('aviso-chave'), eAdmin = !!(sessao && sessao.admin), jaTem = !!chaveDoAparelho();
+        if (k) {
+          k.value = eAdmin ? chaveDoAparelho() : '';
+          k.style.webkitTextSecurity = eAdmin ? 'none' : (jaTem ? 'disc' : 'none');
+          k.placeholder = (jaTem && !eAdmin) ? 'já configurada — digite outra só se for trocar' : 'cole ou digite a chave';
+          setTimeout(() => { k.focus(); if (eAdmin) k.select(); }, 60);
+        }
+        if (aviso) {
+          aviso.hidden = !jaTem;
+          aviso.textContent = eAdmin ? 'Você é administrador: a chave aparece aqui para você conferir.'
+                                     : 'Este aparelho já está ligado ao servidor. A chave não é exibida.';
+        }
+      }
       if (tela === 'admin') admin();
     }
   }
