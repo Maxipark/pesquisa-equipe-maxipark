@@ -138,6 +138,11 @@
   @media (max-width:620px){ .pessoa{grid-template-columns:6px 1fr}
     .acoes{grid-column:2;padding:0 16px 14px 0;justify-content:flex-start} }
 
+  .editor-perfil{grid-column:1/-1;border-top:2px dashed var(--linha);margin:0 16px 16px;padding-top:14px}
+  .editor-perfil .rot{margin-top:12px}
+  .editor-perfil #e-cx-un{max-height:220px;overflow:auto;align-content:flex-start;padding:4px;border:1px solid var(--linha);border-radius:14px}
+  .editor-perfil #e-cx-un .todas{flex:1 0 100%}
+  .linha-editor{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
   .nota{border-left:4px solid var(--acento);background:var(--roxo-claro);border-radius:0 12px 12px 0;
     padding:16px 18px;font-size:15px;color:var(--cinza);margin-top:20px}
   .nota b{color:var(--texto)}
@@ -206,7 +211,7 @@
       </div>
 
       <div id="quais">
-        <span class="rot">Quais pesquisas</span>
+        <span class="rot">Quais ícones aparecem na página inicial</span>
         <div class="caixas" id="cx-pq"></div>
         <span class="rot">Quais unidades</span>
         <input id="busca-un" type="search" placeholder="Procurar unidade (código ou bairro)" style="margin-bottom:10px">
@@ -233,7 +238,7 @@
 </div>
 
 <script type="application/json" id="dados-acesso">
-/*DADOS_INICIO*/{"versao":3,"contas":[{"id":"adm-raphael","nome":"Raphael","email":"raphael@maxipark.com.br","papel":"admin","pesquisas":["clientes","equipe","conselho"],"unidades":"todas","admin":true,"bloqueado":false,"iter":150000,"salt":"lA7qJrItN1wPb9IhV5tr1A==","hash":"K8A0kdT3goPdSq98K4pNONbyUknIRHZ0i/Zr3XS3H/w=","criadoEm":"2026-09-21"},{"id":"av-mub729ou","nome":"Paulo Frascino","email":"paulo@maxipark.com.br","papel":"total","pesquisas":["clientes","equipe","conselho"],"unidades":"todas","admin":false,"bloqueado":false,"criadoEm":"2026-09-21","iter":150000,"salt":"Lk1eEvx6euj6IrYn73nrNA==","hash":"RF+EGBAC7Au7Td3NqhQHA0q0imjvE4AyT07vN7OFHm8="},{"id":"av-mub736uc","nome":"Sandra Frascino","email":"sandra@maxipark.com.br","papel":"total","pesquisas":["clientes","equipe","conselho"],"unidades":"todas","admin":false,"bloqueado":false,"criadoEm":"2026-09-21","iter":150000,"salt":"O6IEqLhglBLxuD8ZHY5obA==","hash":"Dp5IfiJjOdTXPAkiep8GRpcDnJDBEXzbCpYSCHQzTcc="}],"atualizadoEm":"2026-09-21"}/*DADOS_FIM*/
+/*DADOS_INICIO*/{"versao":3,"contas":[{"id":"adm-raphael","nome":"Raphael","email":"raphael@maxipark.com.br","papel":"admin","pesquisas":["clientes","equipe","conselho","consolidado"],"unidades":"todas","admin":true,"bloqueado":false,"iter":150000,"salt":"lA7qJrItN1wPb9IhV5tr1A==","hash":"K8A0kdT3goPdSq98K4pNONbyUknIRHZ0i/Zr3XS3H/w=","criadoEm":"2026-09-21"},{"id":"av-mub729ou","nome":"Paulo Frascino","email":"paulo@maxipark.com.br","papel":"total","pesquisas":["clientes","equipe","conselho"],"unidades":"todas","admin":false,"bloqueado":false,"criadoEm":"2026-09-21","iter":150000,"salt":"Lk1eEvx6euj6IrYn73nrNA==","hash":"RF+EGBAC7Au7Td3NqhQHA0q0imjvE4AyT07vN7OFHm8="},{"id":"av-mub736uc","nome":"Sandra Frascino","email":"sandra@maxipark.com.br","papel":"total","pesquisas":["clientes","equipe","conselho"],"unidades":"todas","admin":false,"bloqueado":false,"criadoEm":"2026-09-21","iter":150000,"salt":"O6IEqLhglBLxuD8ZHY5obA==","hash":"Dp5IfiJjOdTXPAkiep8GRpcDnJDBEXzbCpYSCHQzTcc="}],"atualizadoEm":"2026-09-21"}/*DADOS_FIM*/
 </script>
 
 <script>
@@ -259,6 +264,16 @@
       url: 'conselho/' }
   ];
   const URL_PAINEL = 'painel/';
+  const RESULTADOS = [
+    { id: 'clientes',    nome: 'Resultados \u00b7 CLIENTES', tag: 'Cliente final', icone: '\ud83d\ude97',
+      desc: 'Satisfa\u00e7\u00e3o, NPS, os sete pontos do servi\u00e7o e problemas \u2014 por unidade e por m\u00eas.' },
+    { id: 'equipe',      nome: 'Resultados \u00b7 EQUIPE', tag: 'Cliente interno', icone: '\ud83d\udc77',
+      desc: 'As quinze frases, % Sim ponderado e eNPS \u2014 por unidade e por m\u00eas.' },
+    { id: 'conselho',    nome: 'Resultados \u00b7 CONSELHO', tag: 'Governan\u00e7a', icone: '\ud83c\udfdb\ufe0f',
+      desc: '\u00cdndice da reuni\u00e3o, blocos por conselheiro e itens avaliados.' },
+    { id: 'consolidado', nome: 'Painel CONSOLIDADO', tag: 'Vis\u00e3o geral', icone: '\ud83d\udcca',
+      desc: 'As tr\u00eas pesquisas numa visão s\u00f3: indicadores lado a lado, unidades e tend\u00eancia.' }
+  ];
   const UNIDADES_PADRAO = [['GAZETA','Bela Vista'],['FIESP','Jardins'],['FL.PARA','Bela Vista'],['BP','Bela Vista'],['HABITAT','Santa Cecília'],['LAV.ANGEL','Consolação'],['LAV.ANGEL II','Santa Cecília'],['ALTA.HIGIE','Higienópolis'],['NSB','Jardim América'],['ALTA.JARD','Jardins'],['GARDEN','Cerqueira César'],['INCOR','Cerqueira César'],['ACCAST','Aclimação'],['ACPRUDE','Liberdade'],['AC.PIRES','Liberdade'],['FL.JUND','Paraíso'],['SAL.PARAI','Paraíso'],['SAL.VMARIA','Vila Clementino'],['DEL.MAIO','Vila Clementino'],['DEL.RICAJAF','Vila Mariana'],['PAINEIRA','Vila da Saúde'],['LAV.LABAL','Ipiranga'],['A+MOOCA','Cambuci'],['DEL.MOOCA','Mooca'],['A+MOEMA','Indianópolis'],['LAV.MOE','Indianópolis'],['SAL.MOE','Moema'],['MONTREAL','Moema'],['FL.IBIRA','Ibirapuera'],['ALTA.IBIRA','Vila Mariana'],['VITA.REP','Moema'],['SAL.IBIRA','Planalto Paulista'],['ALTA.CBEL','Campo Belo'],['DEL.BROK','Santo Amaro'],['PET.CBEL','Campo Belo'],['GLOBO.SP','Vila Cordeiro'],['LAV.BORGAT','Santo Amaro'],['A+FLORA','Jd. Marajoara'],['DEL.WASLUIS','Jd. Marajoara'],['ALTA.PAN','Vila Andrade'],['DEL.JSUL','Vila Andrade'],['SAL.PORTAL','Vila Suzana'],['FL.ITAIM','Vila Olímpia'],['DEL.ITAIM','Itaim Bibi'],['AC.ITAIM','Jardim Paulista'],['QUITANDA','Pinheiros'],['DEL.PIN','Vila Madalena'],['ALTA.PIN','Vila Ida'],['FL.VILLA','Alto de Pinheiros'],['FL.SUMA','Perdizes'],['CARL','Perdizes / Sumaré'],['DEL.POM','Pompeia'],['CVLOP','Vila Romana'],['SAL.LAPA','Alto da Lapa'],['A+LAPA','Lapa'],['LAV.LAPA','Lapa'],['BR.LAPA','Lapa'],['DEL.LAPA','Lapa'],['DEL.OSASCO','Centro / Osasco'],['SAL.OSASCO','Vila Yara / Osasco'],['A+ALPHA','Alphaville / Barueri'],['RESERVA','Alphaville / Barueri'],['ARAGUAI','Alphaville / Barueri'],['DEL.ALPHA','Alphaville / Barueri'],['SAL.TATUA','Vila Gomes Cardim'],['DEL.TATU','Tatuapé'],['FL.AFRA','Vila Carrão'],['ALTA.AFRAN','Jd. Anália Franco'],['LAV.AMARBUE','Penha de França'],['LAV.DARZAN','Santana'],['SAL.SANTA','Jd. São Paulo'],['DEL.DUMVIL','Jd. São Paulo'],['LAV.TUCUR','Tucuruvi'],['DEL.GUARU','Macedo / Guarulhos'],['A+GUARU','Centro / Guarulhos'],['A+SAND','Santo André'],['DEL.SAND II','Santo André'],['DEL.SAND I','Centro / Santo André'],['DEL.SBC','Centro / S.B. Campo'],['FL.SBC','Centro / S.B. Campo']];
   function lerUnidades(){
     const pega = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
@@ -287,7 +302,7 @@
   const guardado = () => { try { return localStorage.getItem(CHAVE); } catch (x) { return null; } };
   const apaga = () => { try { localStorage.removeItem(CHAVE); } catch (x) {} };
 
-  let sessao = null, artefato = null, salvando = false;
+  let sessao = null, artefato = null, salvando = false, editando = null;
   if (window.claude && window.claude.use) {
     window.claude.use('artifact').then(a => { artefato = a; if (!a) semEdicao(); }).catch(() => semEdicao());
   } else { semEdicao(); }
@@ -383,11 +398,11 @@
     if (podeAplicar) PESQUISAS.filter(p => (c.pesquisas || []).includes(p.id)).forEach(p =>
       cards.push({ cls:'opcao', icone:p.icone, tag:p.tag, h:p.nome, p:p.desc, vai:'Abrir pesquisa →', url:p.url }));
 
-    if (podePainel) cards.push({ cls:'opcao destaque', icone:'📊', tag:'Resultados', h:'Painel de RESULTADOS',
-      p: c.papel === 'respostas'
-        ? 'As três pesquisas reunidas, já filtradas pelo seu acesso: ' + (c.pesquisas||[]).length + ' pesquisa(s), ' + txtUn(c.unidades).toLowerCase() + '.'
-        : 'Junta as três pesquisas numa visão só: indicadores, por unidade e tendência mensal.',
-      vai:'Abrir painel →', url: URL_PAINEL + '#a=' + passe(c) });
+    const liberados = (c.papel === 'admin' || c.papel === 'total') ? RESULTADOS.map(r => r.id) : (c.pesquisas || []);
+    if (podePainel) RESULTADOS.filter(r => liberados.includes(r.id)).forEach(r =>
+      cards.push({ cls: r.id === 'consolidado' ? 'opcao destaque' : 'opcao', icone:r.icone, tag:r.tag, h:r.nome,
+        p: r.desc + (c.unidades && c.unidades !== 'todas' ? ' Filtrado para ' + txtUn(c.unidades).toLowerCase() + '.' : ''),
+        vai:'Ver resultados →', url: URL_PAINEL + '#a=' + passe(c) + '&aba=' + r.id }));
 
     if (c.papel === 'admin') cards.push({ cls:'opcao', icone:'🔑', tag:'Administração', h:'AVALIADORES',
       p:'Cadastre quem pode entrar, defina o que cada um enxerga e bloqueie o acesso quando precisar.',
@@ -401,14 +416,64 @@
     Array.from($('cards').querySelectorAll('a.opcao p')).forEach((el, i) => { el.textContent = cards[i].p; });
   }
 
+
+  /* ---- editor de perfil de um avaliador (botao "Mudar perfil") ---- */
+  function editorPerfil(c) {
+    const e = t => String(t == null ? '' : t).replace(/[&<>"]/g, x => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' })[x]);
+    const papel = editPapel || c.papel;
+    const pq = editPq || (c.pesquisas || []);
+    const un = editUn === null ? (c.unidades === 'todas' ? 'todas' : (c.unidades || [])) : editUn;
+    const todas = un === 'todas';
+    const rad = (v, t, d) => '<label class="papel"><input type="radio" name="e-papel" value="' + v + '"' + (papel === v ? ' checked' : '') +
+      '><span><span class="t">' + t + '</span><span class="d">' + d + '</span></span></label>';
+    const marcado = k => (pq.indexOf(k) >= 0 ? ' checked' : '');
+    return '<div class="editor-perfil">' +
+      '<span class="rot">O que ' + e(c.nome.split(' ')[0]) + ' pode fazer</span>' +
+      '<div class="papeis">' +
+        rad('total', 'Visualizar tudo — todas as pesquisas e todas as unidades', 'Vê o painel e as respostas das três pesquisas. Não abre pesquisa para responder.') +
+        rad('respostas', 'Somente ver as respostas', 'Abre o painel com as pesquisas e unidades marcadas abaixo.') +
+        rad('aplicar', 'Somente aplicar as pesquisas', 'Abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.') +
+      '</div>' +
+      (papel === 'total' ? '' :
+        '<span class="rot">Quais ícones aparecem na página inicial</span>' +
+        '<div class="caixas">' +
+          '<label class="cx"><input type="checkbox" data-epq="clientes"' + marcado('clientes') + '> \ud83d\ude97 Clientes</label>' +
+          '<label class="cx"><input type="checkbox" data-epq="equipe"' + marcado('equipe') + '> \ud83d\udc77 Equipe</label>' +
+          '<label class="cx"><input type="checkbox" data-epq="conselho"' + marcado('conselho') + '> \ud83c\udfdb\ufe0f Conselho</label>' +
+          '<label class="cx"><input type="checkbox" data-epq="consolidado"' + marcado('consolidado') + '> \ud83d\udcca Consolidado</label>' +
+        '</div>' +
+        '<span class="rot">Quais unidades</span>' +
+        '<input id="e-busca" type="search" placeholder="Procurar unidade (código ou bairro)" style="margin-bottom:10px">' +
+        '<div class="caixas" id="e-cx-un">' +
+          '<label class="cx todas"><input type="checkbox" id="e-un-todas"' + (todas ? ' checked' : '') + '> <b>Todas as unidades</b></label>' +
+          UNS.map(u => '<label class="cx" data-ebusca="' + e((u.codigo + ' ' + u.nome).toLowerCase()) + '">' +
+            '<input type="checkbox" data-eun="' + e(u.codigo) + '"' + (!todas && un.indexOf(u.codigo) >= 0 ? ' checked' : '') + '> ' +
+            e(u.codigo) + (u.nome ? ' <span class="muted-un">· ' + e(u.nome) + '</span>' : '') + '</label>').join('') +
+        '</div>') +
+      '<div id="e-erro" class="erro" hidden style="margin-top:12px"></div>' +
+      '<div class="linha-editor"><button type="button" data-esalvar="' + c.id + '">Salvar perfil</button>' +
+      '<button class="leve" type="button" data-ecancelar="1">Cancelar</button></div>' +
+    '</div>';
+  }
+  let editPapel = null, editPq = null, editUn = null;
+  function limpaEdicao() { editando = null; editPapel = null; editPq = null; editUn = null; }
+  function leEditor() {
+    const papel = (document.querySelector('input[name=e-papel]:checked') || {}).value || 'total';
+    if (papel === 'total') return { papel, pesquisas: ['clientes','equipe','conselho','consolidado'], unidades: 'todas' };
+    const pesquisas = Array.from(document.querySelectorAll('[data-epq]')).filter(i => i.checked).map(i => i.dataset.epq);
+    const todas = (document.getElementById('e-un-todas') || {}).checked;
+    const unidades = todas ? 'todas' : Array.from(document.querySelectorAll('[data-eun]')).filter(i => i.checked).map(i => i.dataset.eun);
+    return { papel, pesquisas, unidades };
+  }
+
   // ───────── administração ─────────
   function caixasForm() {
     $('cx-pq').innerHTML = PESQUISAS.map(p =>
       '<label class="cx"><input type="checkbox" data-pq="' + p.id + '" checked> ' + p.tag.split(' ')[0] + '</label>')
       .join('').replace('Cliente<', 'Clientes<');
-    $('cx-pq').innerHTML = PESQUISAS.map(p =>
-      '<label class="cx"><input type="checkbox" data-pq="' + p.id + '" checked> ' +
-      ({ clientes:'Clientes', equipe:'Equipe', conselho:'Conselho' })[p.id] + '</label>').join('');
+    $('cx-pq').innerHTML = RESULTADOS.map(r =>
+      '<label class="cx"><input type="checkbox" data-pq="' + r.id + '" checked> ' +
+      ({ clientes:'Clientes', equipe:'Equipe', conselho:'Conselho', consolidado:'Consolidado' })[r.id] + '</label>').join('');
     const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' })[c]);
     $('cx-un').innerHTML = '<label class="cx todas"><input type="checkbox" id="un-todas" checked> <b>Todas as unidades</b></label>' +
       UNS.map(u => '<label class="cx" data-busca="' + esc((u.codigo + ' ' + u.nome).toLowerCase()) + '">' +
@@ -427,11 +492,11 @@
     const cs = dados.contas;
     $('contagem').textContent = cs.length === 1 ? 'Uma pessoa cadastrada.' : cs.length + ' pessoas cadastradas.';
     $('pessoas').innerHTML = cs.map(c => {
-      const nomes = (c.pesquisas || []).map(i => ({ clientes:'Clientes', equipe:'Equipe', conselho:'Conselho' })[i]).filter(Boolean);
+      const nomes = (c.pesquisas || []).map(i => ({ clientes:'Clientes', equipe:'Equipe', conselho:'Conselho', consolidado:'Consolidado' })[i]).filter(Boolean);
       const selos = [
         '<span class="selo">' + NOME_PAPEL[c.papel] + '</span>',
         (c.papel === 'total' || c.papel === 'admin') ? '' :
-          '<span class="selo">' + (nomes.length === 3 ? 'Todas as pesquisas' : (nomes.join(' · ') || 'Nenhuma')) + '</span>' +
+          '<span class="selo">' + (nomes.length === 4 ? 'Tudo' : (nomes.join(' · ') || 'Nada')) + '</span>' +
           '<span class="selo">' + txtUn(c.unidades) + '</span>',
         c.bloqueado ? '<span class="selo no">Bloqueado</span>' : '<span class="selo ok">Ativo</span>',
         c.admin ? '<span class="selo adm">Administrador</span>' : ''
@@ -439,11 +504,13 @@
       const acoes = c.admin ? '<span class="selo">não pode ser removido</span>' : [
         '<button class="leve" type="button" data-b="' + c.id + '">' + (c.bloqueado ? 'Desbloquear' : 'Bloquear') + '</button>',
         '<button class="leve" type="button" data-s="' + c.id + '">Trocar senha</button>',
+        '<button class="leve" type="button" data-p="' + c.id + '">' + (editando === c.id ? 'Fechar perfil' : 'Mudar perfil') + '</button>',
         '<button class="perigo" type="button" data-r="' + c.id + '">Remover</button>'
       ].join('');
       return '<div class="pessoa' + (c.bloqueado ? ' bloqueada' : '') + '"><div class="faixa"></div>' +
         '<div class="quem2"><div class="n"></div><div class="e"></div><div class="selos">' + selos + '</div></div>' +
-        '<div class="acoes">' + acoes + '</div></div>';
+        '<div class="acoes">' + acoes + '</div>' +
+        (editando === c.id ? editorPerfil(c) : '') + '</div>';
     }).join('');
     Array.from($('pessoas').children).forEach((el, i) => {
       el.querySelector('.n').textContent = cs[i].nome;
@@ -479,7 +546,7 @@
     const falha = t => { err.textContent = t; err.hidden = false; };
     const nome = $('c-nome').value.trim(), email = norm($('c-email').value), senha = $('c-senha').value;
     const papel = document.querySelector('input[name=papel]:checked').value;
-    const pesquisas = papel === 'total' ? ['clientes','equipe','conselho'] : lePq();
+    const pesquisas = papel === 'total' ? ['clientes','equipe','conselho','consolidado'] : lePq();
     const unidades = papel === 'total' ? 'todas' : leUn();
     if (!nome) return falha('Escreva o nome da pessoa.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return falha('E-mail inválido.');
@@ -499,6 +566,13 @@
 
   // ───────── eventos ─────────
   document.addEventListener('input', ev => {
+    if (ev.target.id === 'e-busca') {
+      const q = ev.target.value.trim().toLowerCase();
+      Array.from(document.querySelectorAll('#e-cx-un [data-ebusca]')).forEach(el => {
+        el.style.display = (!q || el.dataset.ebusca.indexOf(q) >= 0) ? '' : 'none';
+      });
+      return;
+    }
     if (ev.target.id !== 'busca-un') return;
     const q = ev.target.value.trim().toLowerCase();
     Array.from($('cx-un').querySelectorAll('[data-busca]')).forEach(el => {
@@ -507,6 +581,15 @@
   });
 
   document.addEventListener('change', ev => {
+    if (ev.target.name === 'e-papel') {   /* so troca o papel: as marcacoes vem do que a pessoa ja tem */
+      editPapel = ev.target.value;
+      if (editPapel === 'total') { editPq = ['clientes','equipe','conselho','consolidado']; editUn = 'todas'; }
+      admin(); return; }
+    if (ev.target.dataset && (ev.target.dataset.epq || ev.target.dataset.eun || ev.target.id === 'e-un-todas')) {
+      if (ev.target.id === 'e-un-todas' && ev.target.checked) document.querySelectorAll('[data-eun]').forEach(i => { i.checked = false; });
+      if (ev.target.dataset.eun && ev.target.checked) { const t = document.getElementById('e-un-todas'); if (t) t.checked = false; }
+      const v = leEditor(); editPapel = v.papel; editPq = v.pesquisas; editUn = v.unidades; return;
+    }
     if (ev.target.name === 'papel') ajustaQuais();
     if (ev.target.id === 'un-todas' && ev.target.checked)
       document.querySelectorAll('[data-un]').forEach(i => { i.checked = false; });
@@ -522,6 +605,18 @@
     if (b.id === 'btn-cad') return cadastrar();
     if (b.dataset.ir) return ir(b.dataset.ir);
     const acha = id => dados.contas.find(c => c.id === id);
+    if (b.dataset.p) { const c = acha(b.dataset.p); if (!c) return;
+      if (editando === c.id) limpaEdicao(); else { limpaEdicao(); editando = c.id; }
+      return admin(); }
+    if (b.dataset.ecancelar) { limpaEdicao(); return admin(); }
+    if (b.dataset.esalvar) { const c = acha(b.dataset.esalvar); if (!c) return;
+      const v = leEditor(); const err = document.getElementById('e-erro');
+      const falha = t => { if (err) { err.textContent = t; err.hidden = false; } };
+      if (!v.pesquisas.length) return falha('Marque pelo menos uma pesquisa.');
+      if (v.unidades !== 'todas' && !v.unidades.length) return falha('Marque “Todas as unidades” ou pelo menos uma unidade.');
+      c.papel = v.papel; c.pesquisas = v.pesquisas; c.unidades = v.unidades;
+      limpaEdicao(); admin();
+      return grava('Perfil de ' + c.nome.split(' ')[0] + ' atualizado.'); }
     if (b.dataset.b) { const c = acha(b.dataset.b); if (!c) return;
       c.bloqueado = !c.bloqueado; admin();
       return grava(c.nome.split(' ')[0] + (c.bloqueado ? ' bloqueado.' : ' liberado.')); }
