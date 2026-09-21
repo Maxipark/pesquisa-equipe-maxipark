@@ -280,13 +280,13 @@
   ];
   const URL_PAINEL = 'painel/';
   const RESULTADOS = [
-    { id: 'clientes',    nome: 'Resultados \u00b7 CLIENTES', tag: 'Cliente final', icone: '\ud83d\ude97',
+    { id: 'clientes',    nome: 'Resultados \u00b7 CLIENTES', curto: 'CLIENTES', tag: 'Cliente final', icone: '\ud83d\ude97',
       desc: 'Satisfa\u00e7\u00e3o, NPS, os sete pontos do servi\u00e7o e problemas \u2014 por unidade e por m\u00eas.' },
-    { id: 'equipe',      nome: 'Resultados \u00b7 EQUIPE', tag: 'Cliente interno', icone: '\ud83d\udc77',
+    { id: 'equipe',      nome: 'Resultados \u00b7 EQUIPE', curto: 'EQUIPE', tag: 'Cliente interno', icone: '\ud83d\udc77',
       desc: 'As quinze frases, % Sim ponderado e eNPS \u2014 por unidade e por m\u00eas.' },
-    { id: 'conselho',    nome: 'Resultados \u00b7 CONSELHO', tag: 'Governan\u00e7a', icone: '\ud83c\udfdb\ufe0f',
+    { id: 'conselho',    nome: 'Resultados \u00b7 CONSELHO', curto: 'CONSELHO', tag: 'Governan\u00e7a', icone: '\ud83c\udfdb\ufe0f',
       desc: '\u00cdndice da reuni\u00e3o, blocos por conselheiro e itens avaliados.' },
-    { id: 'consolidado', nome: 'Painel CONSOLIDADO', tag: 'Vis\u00e3o geral', icone: '\ud83d\udcca',
+    { id: 'consolidado', nome: 'Painel CONSOLIDADO', curto: 'CONSOLIDADO', tag: 'Vis\u00e3o geral', icone: '\ud83d\udcca',
       desc: 'As tr\u00eas pesquisas numa visão s\u00f3: indicadores lado a lado, unidades e tend\u00eancia.' }
   ];
   const UNIDADES_PADRAO = [['GAZETA','Bela Vista'],['FIESP','Jardins'],['FL.PARA','Bela Vista'],['BP','Bela Vista'],['HABITAT','Santa Cecília'],['LAV.ANGEL','Consolação'],['LAV.ANGEL II','Santa Cecília'],['ALTA.HIGIE','Higienópolis'],['NSB','Jardim América'],['ALTA.JARD','Jardins'],['GARDEN','Cerqueira César'],['INCOR','Cerqueira César'],['ACCAST','Aclimação'],['ACPRUDE','Liberdade'],['AC.PIRES','Liberdade'],['FL.JUND','Paraíso'],['SAL.PARAI','Paraíso'],['SAL.VMARIA','Vila Clementino'],['DEL.MAIO','Vila Clementino'],['DEL.RICAJAF','Vila Mariana'],['PAINEIRA','Vila da Saúde'],['LAV.LABAL','Ipiranga'],['A+MOOCA','Cambuci'],['DEL.MOOCA','Mooca'],['A+MOEMA','Indianópolis'],['LAV.MOE','Indianópolis'],['SAL.MOE','Moema'],['MONTREAL','Moema'],['FL.IBIRA','Ibirapuera'],['ALTA.IBIRA','Vila Mariana'],['VITA.REP','Moema'],['SAL.IBIRA','Planalto Paulista'],['ALTA.CBEL','Campo Belo'],['DEL.BROK','Santo Amaro'],['PET.CBEL','Campo Belo'],['GLOBO.SP','Vila Cordeiro'],['LAV.BORGAT','Santo Amaro'],['A+FLORA','Jd. Marajoara'],['DEL.WASLUIS','Jd. Marajoara'],['ALTA.PAN','Vila Andrade'],['DEL.JSUL','Vila Andrade'],['SAL.PORTAL','Vila Suzana'],['FL.ITAIM','Vila Olímpia'],['DEL.ITAIM','Itaim Bibi'],['AC.ITAIM','Jardim Paulista'],['QUITANDA','Pinheiros'],['DEL.PIN','Vila Madalena'],['ALTA.PIN','Vila Ida'],['FL.VILLA','Alto de Pinheiros'],['FL.SUMA','Perdizes'],['CARL','Perdizes / Sumaré'],['DEL.POM','Pompeia'],['CVLOP','Vila Romana'],['SAL.LAPA','Alto da Lapa'],['A+LAPA','Lapa'],['LAV.LAPA','Lapa'],['BR.LAPA','Lapa'],['DEL.LAPA','Lapa'],['DEL.OSASCO','Centro / Osasco'],['SAL.OSASCO','Vila Yara / Osasco'],['A+ALPHA','Alphaville / Barueri'],['RESERVA','Alphaville / Barueri'],['ARAGUAI','Alphaville / Barueri'],['DEL.ALPHA','Alphaville / Barueri'],['SAL.TATUA','Vila Gomes Cardim'],['DEL.TATU','Tatuapé'],['FL.AFRA','Vila Carrão'],['ALTA.AFRAN','Jd. Anália Franco'],['LAV.AMARBUE','Penha de França'],['LAV.DARZAN','Santana'],['SAL.SANTA','Jd. São Paulo'],['DEL.DUMVIL','Jd. São Paulo'],['LAV.TUCUR','Tucuruvi'],['DEL.GUARU','Macedo / Guarulhos'],['A+GUARU','Centro / Guarulhos'],['A+SAND','Santo André'],['DEL.SAND II','Santo André'],['DEL.SAND I','Centro / Santo André'],['DEL.SBC','Centro / S.B. Campo'],['FL.SBC','Centro / S.B. Campo']];
@@ -478,11 +478,20 @@
     if (podeAplicar) PESQUISAS.filter(p => (c.pesquisas || []).includes(p.id)).forEach(p =>
       cards.push({ cls:'opcao', icone:p.icone, tag:p.tag, h:p.nome, p:p.desc, vai:'Abrir pesquisa →', url:p.url }));
 
+    /* UM UNICO CARD de resultados. O que a pessoa pode ver vira aba dentro do painel. */
     const liberados = (c.papel === 'admin' || c.papel === 'total') ? RESULTADOS.map(r => r.id) : (c.pesquisas || []);
-    if (podePainel) RESULTADOS.filter(r => liberados.includes(r.id)).forEach(r =>
-      cards.push({ cls: r.id === 'consolidado' ? 'opcao destaque' : 'opcao', icone:r.icone, tag:r.tag, h:r.nome,
-        p: r.desc + (c.unidades && c.unidades !== 'todas' ? ' Filtrado para ' + txtUn(c.unidades).toLowerCase() + '.' : ''),
-        vai:'Ver resultados →', url: URL_PAINEL + '#a=' + passe(c) + '&aba=' + r.id }));
+    const vistos = RESULTADOS.filter(r => liberados.includes(r.id));
+    if (podePainel && vistos.length) {
+      const nomes = vistos.map(r => r.curto);
+      const lista = nomes.length === 1 ? nomes[0]
+                  : nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
+      cards.push({ cls:'opcao destaque', icone:'\ud83d\udcca', tag:'Resultados', h:'PAINEL DE RESULTADOS',
+        p: (vistos.length === 1
+             ? 'Respostas de ' + lista + ', com filtros por unidade e por m\u00eas.'
+             : 'Tudo num painel s\u00f3: ' + lista + '. Troque de aba l\u00e1 dentro e filtre por unidade e por m\u00eas.')
+           + (c.unidades && c.unidades !== 'todas' ? ' Filtrado para ' + txtUn(c.unidades).toLowerCase() + '.' : ''),
+        vai:'Ver resultados \u2192', url: URL_PAINEL + '#a=' + passe(c) });
+    }
 
     if (c.papel === 'admin') cards.push({ cls:'opcao', icone:'🔑', tag:'Administração', h:'AVALIADORES',
       p:'Cadastre quem pode entrar, defina o que cada um enxerga e bloqueie o acesso quando precisar.',
