@@ -383,9 +383,24 @@
   /* ---------- chave do servidor neste aparelho ---------- */
   const SERVIDOR = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';
   const GUARDA_CHAVE = 'maxipark_chave_sync', GUARDA_DEPOIS = 'maxipark_chave_depois';
-  const chaveDoAparelho = () => { try { return localStorage.getItem(GUARDA_CHAVE) || ''; } catch (e) { return ''; } };
+  /* Chaves antigas do tempo em que a chave vinha embutida no codigo: nunca mais valem. */
+  const chaveMorta = k => /^MAXIPARK-/i.test(String(k || '').trim());
+  const chaveDoAparelho = () => {
+    try { const v = localStorage.getItem(GUARDA_CHAVE) || '';
+          if (chaveMorta(v)) { localStorage.removeItem(GUARDA_CHAVE); return ''; }
+          return v; } catch (e) { return ''; }
+  };
   const adiado = () => { try { return localStorage.getItem(GUARDA_DEPOIS) === '1'; } catch (e) { return false; } };
+  /* limpeza na abertura: tira a chave morta do aparelho e dos quatro apps */
+  (function limpaChaveMorta() {
+    try { if (chaveMorta(localStorage.getItem(GUARDA_CHAVE))) localStorage.removeItem(GUARDA_CHAVE); } catch (e) {}
+    ['mpc_settings', 'mp_settings', 'mpco_settings', 'mpp_settings'].forEach(n => {
+      try { const o = JSON.parse(localStorage.getItem(n));
+            if (o && chaveMorta(o.chave)) { o.chave = ''; localStorage.setItem(n, JSON.stringify(o)); } } catch (e) {}
+    });
+  })();
   function guardaChave(k) {
+    if (chaveMorta(k)) return;
     try {
       localStorage.setItem(GUARDA_CHAVE, k);
       ['mpc_settings', 'mp_settings', 'mpco_settings', 'mpp_settings'].forEach(n => {
@@ -478,10 +493,18 @@
     if (podeAplicar) PESQUISAS.filter(p => (c.pesquisas || []).includes(p.id)).forEach(p =>
       cards.push({ cls:'opcao', icone:p.icone, tag:p.tag, h:p.nome, p:p.desc, vai:'Abrir pesquisa →', url:p.url }));
 
-    /* UM UNICO CARD de resultados. O que a pessoa pode ver vira aba dentro do painel. */
+    /* RESULTADOS.
+       - Somente visualiza\u00e7\u00e3o: um card para cada coisa liberada (as pesquisas e o consolidado).
+       - Demais perfis: um card s\u00f3, e as pesquisas viram abas dentro do painel. */
     const liberados = (c.papel === 'admin' || c.papel === 'total') ? RESULTADOS.map(r => r.id) : (c.pesquisas || []);
     const vistos = RESULTADOS.filter(r => liberados.includes(r.id));
-    if (podePainel && vistos.length) {
+    const soUn = c.unidades && c.unidades !== 'todas' ? ' Filtrado para ' + txtUn(c.unidades).toLowerCase() + '.' : '';
+    if (podePainel && vistos.length && c.papel === 'respostas') {
+      vistos.forEach(r => cards.push({
+        cls: r.id === 'consolidado' ? 'opcao destaque' : 'opcao', icone:r.icone, tag:r.tag, h:r.nome,
+        p: r.desc + soUn, vai:'Ver resultados \u2192',
+        url: URL_PAINEL + '#a=' + passe(c) + '&aba=' + r.id }));
+    } else if (podePainel && vistos.length) {
       const nomes = vistos.map(r => r.curto);
       const lista = nomes.length === 1 ? nomes[0]
                   : nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
@@ -489,7 +512,7 @@
         p: (vistos.length === 1
              ? 'Respostas de ' + lista + ', com filtros por unidade e por m\u00eas.'
              : 'Tudo num painel s\u00f3: ' + lista + '. Troque de aba l\u00e1 dentro e filtre por unidade e por m\u00eas.')
-           + (c.unidades && c.unidades !== 'todas' ? ' Filtrado para ' + txtUn(c.unidades).toLowerCase() + '.' : ''),
+           + soUn,
         vai:'Ver resultados \u2192', url: URL_PAINEL + '#a=' + passe(c) });
     }
 
