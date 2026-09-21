@@ -108,7 +108,7 @@
    Executivos e sócios avaliam, sem nome, a reunião do conselho e os conselheiros independentes, ao fim de cada reunião.
    Na tela inicial cada respondente escolhe quem avalia: um conselheiro, os dois (executivos e sócios) ou só a reunião;
    assim o conselheiro independente responde sobre a reunião e sobre o colega, nunca sobre si mesmo (coluna 'avaliados').
-   Mesma estrutura das outras pesquisas: respostas ficam no aparelho (ou vão para a nuvem), área do avaliador com PIN,
+   Mesma estrutura das outras pesquisas: respostas ficam no aparelho (ou vão para a nuvem), área do usuário com PIN,
    consolidado por reunião, Excel/PDF/CSV com o logo, perguntas/respostas/pesos editáveis. LEIA-ME, seção 12.
    ========================================================= */
 const VERSAO = '1.1.0';   // 1.1.0: tela inicial pergunta quem será avaliado (um conselheiro, os dois ou só a reunião); coluna 'avaliados'
@@ -241,7 +241,7 @@ function viewSetup(){
   const anteriores = [...new Set(allResponses().concat(histResponses()).map(r => r.unidade))].sort().reverse().slice(0, 6);
   return header('Preparar a avaliação') + `<div class="wrap"><div class="card">${logoHero()}
     <h1>Avaliação da reunião do conselho — preparar</h1>
-    <p class="muted">Informe a data da reunião (e um nome, se quiser) e toque em <b>Iniciar avaliação</b>. Passe o tablet para cada executivo, sócio e conselheiro independente ao fim da reunião; na tela inicial cada um escolhe quem avalia (um conselheiro, os dois ou só a reunião — o conselheiro independente avalia só o colega) e a tela volta sozinha ao início depois de cada resposta. Para ver resultados, <i>Área do avaliador</i> (PIN).</p>
+    <p class="muted">Informe a data da reunião (e um nome, se quiser) e toque em <b>Iniciar avaliação</b>. Passe o tablet para cada executivo, sócio e conselheiro independente ao fim da reunião; na tela inicial cada um escolhe quem avalia (um conselheiro, os dois ou só a reunião — o conselheiro independente avalia só o colega) e a tela volta sozinha ao início depois de cada resposta. Para ver resultados, <i>Área do usuário</i> (PIN).</p>
     <label>Data da reunião</label><input type="date" id="s-data" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(u) ? u : hojeISO())}">
     <label>Nome da reunião (opcional)</label><input type="text" id="s-nome" value="${esc(nome)}" placeholder="ex.: Reunião ordinária de setembro" maxlength="80">
     <label>Conselheiros independentes presentes nesta reunião</label>
@@ -249,7 +249,7 @@ function viewSetup(){
     ${anteriores.length ? `<p class="small muted" style="margin:8px 0 0">Reuniões já avaliadas neste aparelho: ${anteriores.map(c => `<button class="btn ghost" data-action="reabrir" data-cod="${esc(c)}" style="min-height:36px;font-size:14px;padding:6px 10px;margin:2px">${esc(dataLabel(c))}</button>`).join(' ')}</p>` : ''}
     ${settings.unidade && currentResponses().length ? `<div class="bom">Esta reunião já tem <b>${currentResponses().length}</b> resposta(s) neste aparelho${settings.exported[settings.unidade] ? ' (exportadas)' : ' <b>(ainda não exportadas)</b>'}.</div>` : ''}
     <div class="linha"><button class="btn block" data-action="start">Iniciar avaliação</button></div>
-    <div class="linha"><button class="btn ghost" data-action="admin">Área do avaliador (resultados e exportar)</button><button class="btn ghost" data-action="config">Configurações</button></div>
+    <div class="linha"><button class="btn ghost" data-action="admin">Área do usuário (resultados e exportar)</button><button class="btn ghost" data-action="config">Configurações</button></div>
     <p class="legenda" style="margin-top:14px">Versão ${VERSAO} · funciona sem internet · anônima: não grava nome nem aparelho · com menos de ${N_IDENTIFICAVEL} respostas o resultado identifica quem respondeu (uso restrito).</p>
   </div></div>`;
 }
@@ -269,7 +269,7 @@ function viewWelcome(){
     <p>${esc(unidadeLabel(settings.unidade))}. Sua avaliação é <b>anônima</b> e leva <b>uns 3 minutos</b>: a reunião, ${pres.length ? 'quem você escolher abaixo' : 'a nota'} e o que manter ou mudar.</p>
     ${escolha}
   </div></div>
-  <div class="rodape-kiosk"><span>Maxipark · Governança</span><button data-action="pinadmin">Área do avaliador</button></div>`;
+  <div class="rodape-kiosk"><span>Maxipark · Governança</span><button data-action="pinadmin">Área do usuário</button></div>`;
 }
 function viewQ(){
   const vis = visiveis(); const q = vis[state.i]; if (!q) { return viewThanks(); }
@@ -296,13 +296,13 @@ function viewThanks(){
 }
 function viewSaveError(){
   return header('') + `<div class="wrap"><div class="card" style="max-width:640px;margin:0 auto">${logoHero()}<h1>Não foi possível gravar a avaliação</h1>
-    <div class="ruim">A memória deste aparelho está cheia ou bloqueada. A avaliação <b>não foi perdida ainda</b>: chame o avaliador para exportar e apagar respostas antigas e toque em <i>Tentar de novo</i>.</div>
-    <div class="linha"><button class="btn" data-action="retrysave">Tentar de novo</button><button class="btn ghost" data-action="pinadmin">Área do avaliador</button><button class="btn light" data-action="cancel">Descartar e voltar ao início</button></div></div></div>`;
+    <div class="ruim">A memória deste aparelho está cheia ou bloqueada. A avaliação <b>não foi perdida ainda</b>: chame o usuário para exportar e apagar respostas antigas e toque em <i>Tentar de novo</i>.</div>
+    <div class="linha"><button class="btn" data-action="retrysave">Tentar de novo</button><button class="btn ghost" data-action="pinadmin">Área do usuário</button><button class="btn light" data-action="cancel">Descartar e voltar ao início</button></div></div></div>`;
 }
 function viewPin(){
   const bloqueado = settings.lockUntil && Date.now() < settings.lockUntil;
-  return header('Área do avaliador') + `<div class="wrap"><div class="card" style="max-width:520px;margin:0 auto;text-align:center">${logoHero()}
-    <h2>Digite o PIN do avaliador</h2>
+  return header('Área do usuário') + `<div class="wrap"><div class="card" style="max-width:520px;margin:0 auto;text-align:center">${logoHero()}
+    <h2>Digite o PIN do usuário</h2>
     ${bloqueado ? `<div class="ruim">Muitas tentativas. Aguarde ${Math.ceil((settings.lockUntil - Date.now()) / 1000)} s.</div>` : ''}
     <input class="pininput" id="pin-input" type="text" inputmode="numeric" autocomplete="off" value="${esc(state.pin)}" ${bloqueado ? 'disabled' : ''} aria-label="PIN">
     <div class="pinpad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button data-action="pinkey" data-k="${k}" ${bloqueado ? 'disabled' : ''}>${k}</button>`).join('')}<button data-action="pinkey" data-k="del">⌫</button><button data-action="pinkey" data-k="0" ${bloqueado ? 'disabled' : ''}>0</button><button data-action="pinok" ${bloqueado ? 'disabled' : ''} style="background:var(--roxo);color:#fff">OK</button></div>
@@ -347,7 +347,7 @@ function calcConsolidado(cf){
 }
 function fmtPct(v){ return v == null ? '—' : v + '%'; }
 
-/* ---------------- área do avaliador ---------------- */
+/* ---------------- área do usuário ---------------- */
 function legendaEscala(g){ return `Positivo = ${ESC === 3 ? 'a melhor resposta ("Sim")' : 'as duas melhores respostas (4 e 5)'}; negativo = ${ESC === 3 ? 'a pior ("Não")' : 'as duas piores (1 e 2)'}. O índice de cada bloco é o % positivo ponderado pelo peso de cada item (1 a 3; Configurações → Editar perguntas).${g && g.escMista ? ` Há respostas gravadas com outra escala (${Object.keys(g.escs).join(' e ')} opções; a atual tem ${ESC}): os percentuais valem para todas; médias e distribuição só saem quando tudo está na escala atual.` : ''}`; }
 function avisoN(g){ if (!g.n) return ''; let h = '';
   if (g.identTotal) h += `<div class="ruim"><b>${g.n} resposta${g.n === 1 ? '' : 's'}: o resultado identifica quem respondeu.</b> Uso restrito da governança — não mostre nem discuta individualmente.</div>`;
@@ -373,7 +373,7 @@ function blocosHtml(g){
   return `<h3>A reunião</h3>${tabelaFatores(g, 'reuniao')}` + CONSELHEIROS.map(cs => `<h3>${esc(cs.titulo)} · ${esc(cs.nome)} <span class="small muted">índice ${fmtPct(g.blocos[cs.c])}${g.nBloco[cs.c] !== g.n ? ` · ${g.nBloco[cs.c]} avaliação(ões)` : ''}</span>${g.identBloco[cs.c] ? ' <span class="tag pend">identificável: não discutir</span>' : ''}</h3>${tabelaFatores(g, cs.c)}`).join('');
 }
 function viewAdmin(){
-  return (typeof header === 'function' ? header('Área do avaliador') : '') +
+  return (typeof header === 'function' ? header('Área do usuário') : '') +
     '<div class="wrap"><div class="card" style="max-width:560px;margin:0 auto;text-align:center">' +
     (typeof logoHero === 'function' ? logoHero() : '') +
     '<h2>Os resultados abrem pela página inicial</h2>' +
@@ -388,7 +388,7 @@ function viewAdmin(){
 function viewAdminAntigo(){
   const list = currentResponses(); const g = agregar(list); const u = settings.unidade;
   const exported = !!settings.exported[u]; const unsent = allResponses().filter(r => !r.sent).length; const outras = allResponses().filter(r => r.unidade !== u).length;
-  return header('Área do avaliador') + `<div class="wrap"><div class="card">
+  return header('Área do usuário') + `<div class="wrap"><div class="card">
     <div class="espaco"><h1 style="margin:0">Resultados — ${esc(unidadeLabel(u) || 'sem reunião')}</h1><button class="btn" data-action="welcome">Voltar à avaliação</button></div>
     <p class="small muted">Respostas desta reunião guardadas <b>neste aparelho</b>. O histórico de todas as reuniões (e dos outros aparelhos) fica em <i>Consolidado</i>.</p>
     ${avisoN(g)}
@@ -414,7 +414,7 @@ function viewConfig(){
     <input type="text" id="s-chave" value="${esc(settings.chave || '')}" placeholder="letras e números, sem espaços" autocomplete="off">
     <div class="linha" style="margin-top:8px"><button class="btn light" data-action="testarservidor">Testar ligação</button>${settings.ultimaSync ? `<span class="small muted" style="align-self:center">Última atualização da nuvem: ${esc(dataLabel(settings.ultimaSync.slice(0, 10)))} ${esc(settings.ultimaSync.slice(11, 16))}</span>` : ''}</div>
     <p class="legenda">Com URL e chave, cada avaliação é enviada assim que termina e o <i>Consolidado</i> baixa as avaliações dos outros aparelhos. É o mesmo servidor das outras pesquisas (aba "Conselho" na planilha).</p>
-    <label>Trocar PIN do avaliador (4 a 8 dígitos; vazio = manter)</label>
+    <label>Trocar PIN do usuário (4 a 8 dígitos; vazio = manter)</label>
     <input type="text" id="s-pin" inputmode="numeric" autocomplete="off" placeholder="novo PIN" style="-webkit-text-security:disc">
     <label class="check" style="margin-top:16px"><input type="checkbox" id="s-auto" ${settings.autoAvanca !== false ? 'checked' : ''}> Avançar sozinho ao tocar na resposta. Desmarque para exigir o toque em <i>Próxima</i>.</label>
     <label>Perguntas, respostas, pesos e nomes dos conselheiros</label>
@@ -476,7 +476,7 @@ function viewConsolidado(){
   const C = calcConsolidado(state.cf); const { cf, geral, reunioesT, meses, unidadesOpt, filtroTxt } = C;
   const opt = (arr, sel, fmt) => arr.map(v => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(fmt ? fmt(v) : v)}</option>`).join('');
   return header('Consolidado') + `<div class="wrap"><div class="card" style="max-width:1100px">
-    <div class="espaco"><h1 style="margin:0">Consolidado — reuniões do conselho</h1><button class="btn" data-action="admin">← Voltar (Área do avaliador)</button></div>
+    <div class="espaco"><h1 style="margin:0">Consolidado — reuniões do conselho</h1><button class="btn" data-action="admin">← Voltar (Área do usuário)</button></div>
     <div class="linha" style="margin-top:4px">${syncOk() ? `<button class="btn" data-action="sync">Atualizar da nuvem</button><span class="small muted" style="align-self:center">${settings.ultimaSync ? 'Última atualização: ' + esc(dataLabel(settings.ultimaSync.slice(0, 10))) + ' ' + esc(settings.ultimaSync.slice(11, 16)) + ' · ' : 'Ainda não atualizado · '}<button class="btn ghost" data-action="syncfull" style="min-height:36px;font-size:14px;padding:6px 10px">baixar tudo de novo</button></span>` : '<span class="small muted">Sincronização online desligada — configure o servidor em Configurações (LEIA-ME, seção 11) para ver as avaliações de todos os aparelhos aqui.</span>'}</div>
     <p class="small muted">Junta as avaliações deste aparelho com as da <b>nuvem</b> e com CSVs importados à mão.${C.importadas ? ` ${C.importadas} resposta(s) de outros aparelhos.` : ' <b>Ainda não há respostas de outros aparelhos.</b>'}</p>
     <h3>Filtros</h3>
@@ -494,7 +494,7 @@ function viewConsolidado(){
     <h3>Exportar e juntar aparelhos</h3>
     <div class="linha"><button class="btn" data-action="xlsx" data-modo="tudo" ${geral.n ? '' : 'disabled'}>Baixar Excel (tudo, filtro atual)</button><button class="btn" data-action="pdf" data-modo="tudo" ${geral.n ? '' : 'disabled'}>Baixar PDF (relatório, filtro atual)</button><button class="btn light" data-action="csvtudo" ${geral.n ? '' : 'disabled'}>Baixar CSV (tudo, filtro atual)</button></div>
     <div class="linha"><label class="btn light" style="cursor:pointer">Importar CSV de outro aparelho (sem nuvem)<input type="file" id="file-hist" accept=".csv,.txt" style="display:none"></label>${C.importadas ? `<button class="btn ghost" data-action="wipehist">Apagar as ${C.importadas} de outros aparelhos</button>` : ''}</div>
-    <div class="linha"><button class="btn" data-action="admin">← Voltar (Área do avaliador)</button></div>
+    <div class="linha"><button class="btn" data-action="admin">← Voltar (Área do usuário)</button></div>
   </div></div>`;
 }
 
