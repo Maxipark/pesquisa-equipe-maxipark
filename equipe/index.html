@@ -1694,5 +1694,62 @@ render();
   window.__atualiza = { verificar, ociosoMs: ms => { ocioso = ms; }, parado: () => Date.now() - ultimo };
 })();
 </script>
+
+<script>
+/* ---- aviso de servidor ligado/desligado ---------------------------------
+   Dentro de Configuracoes, logo abaixo do campo da chave, aparece em tempo real
+   se o servidor respondeu, se a chave nao confere ou se esta sem conexao.     */
+(() => {
+  if (!/^https?:/.test(location.protocol)) return;
+  const ID = 'estado-servidor';
+  let ultimo = '', pedido = 0, tempo = null;
+  const cores = { ok: ['#1B7A52', '#E4F4EC'], ruim: ['#A8323F', '#FBE9EB'], neutro: ['#5E5670', '#EFEDF4'] };
+  function pinta(tipo, texto) {
+    const el = document.getElementById(ID); if (!el) return;
+    const c = cores[tipo] || cores.neutro;
+    el.style.cssText = 'margin:8px 0 2px;padding:9px 12px;border-radius:10px;font-size:14.5px;font-weight:600;color:' + c[0] + ';background:' + c[1];
+    el.textContent = texto;
+  }
+  function valores() {
+    const cx = document.getElementById('s-chave'), cu = document.getElementById('s-webhook');
+    const u = (cu && cu.value.trim()) || (typeof settings !== 'undefined' ? (settings.webhook || '') : '');
+    const k = (cx && cx.value.trim()) || '';
+    return [u, k];
+  }
+  async function conferir() {
+    const [u, k] = valores();
+    const meu = ++pedido;
+    if (!u) return pinta('neutro', 'Sem endere\u00e7o de servidor: as respostas ficam s\u00f3 neste aparelho.');
+    if (!k) return pinta('neutro', 'Falta a chave: cole a chave de sincroniza\u00e7\u00e3o para ligar o servidor.');
+    if (!navigator.onLine) return pinta('ruim', 'Sem internet agora — vou tentar de novo quando a rede voltar.');
+    pinta('neutro', 'Falando com o servidor\u2026');
+    try {
+      const r = await fetch(u + (u.indexOf('?') >= 0 ? '&' : '?') + 'op=ping&chave=' + encodeURIComponent(k));
+      const j = await r.json();
+      if (meu !== pedido) return;
+      if (j && j.ok) pinta('ok', '\u2713 Servidor ligado — as respostas deste aparelho v\u00e3o para a planilha.');
+      else if (j && j.erro === 'chave') pinta('ruim', '\u2717 Chave diferente da do servidor: confira se copiou certo.');
+      else if (j && j.erro === 'configurar-chave') pinta('ruim', '\u2717 O servidor ainda est\u00e1 com a chave de exemplo.');
+      else pinta('ruim', '\u2717 O servidor respondeu algo inesperado.');
+    } catch (e) { if (meu === pedido) pinta('ruim', '\u2717 N\u00e3o consegui falar com o servidor (internet ou endere\u00e7o errado).'); }
+  }
+  function agenda(ms) { clearTimeout(tempo); tempo = setTimeout(conferir, ms); }
+  function montar() {
+    const cx = document.getElementById('s-chave');
+    if (!cx) { ultimo = ''; return; }
+    if (!document.getElementById(ID)) {
+      const el = document.createElement('div');
+      el.id = ID;
+      cx.insertAdjacentElement('afterend', el);
+      ultimo = '';
+    }
+    const agora = valores().join('|');
+    if (agora !== ultimo) { ultimo = agora; agenda(500); }
+  }
+  setInterval(montar, 700);
+  document.addEventListener('input', e => { if (e.target && (e.target.id === 's-chave' || e.target.id === 's-webhook')) montar(); });
+  window.addEventListener('online', () => { ultimo = ''; montar(); });
+})();
+</script>
 </body>
 </html>
