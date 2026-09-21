@@ -1713,7 +1713,8 @@ render();
   function valores() {
     const cx = document.getElementById('s-chave'), cu = document.getElementById('s-webhook');
     const u = (cu && cu.value.trim()) || (typeof settings !== 'undefined' ? (settings.webhook || '') : '');
-    const k = (cx && cx.value.trim()) || '';
+    const salva = (typeof settings !== 'undefined' && settings) ? (settings.chave || '') : '';
+    const k = (cx && cx.value.trim()) || salva;   /* sem campo na tela, vale a chave salva */
     return [u, k];
   }
   async function conferir() {
@@ -1764,14 +1765,15 @@ render();
     el.textContent = txt;
   }
   function escondeChave(cx) {
-    /* chave ja salva nao fica a mostra; quando a pessoa digita uma nova, aparece */
+    /* A chave salva fica escondida, mas NAO e apagada ao tocar no campo: tocar so
+       seleciona tudo, entao digitar substitui e sair sem digitar nao perde nada. */
     if (cx.dataset.mostrando === '1') return;
     const cheia = !!(cx.value || '').trim();
     cx.style.webkitTextSecurity = cheia ? 'disc' : 'none';
     if (!cx.dataset.ligado) {
       cx.dataset.ligado = '1';
       const abre = () => { cx.dataset.mostrando = '1'; cx.style.webkitTextSecurity = 'none'; };
-      cx.addEventListener('focus', () => { cx.value = ''; abre(); });
+      cx.addEventListener('focus', () => { try { cx.select(); } catch (e) {} });
       cx.addEventListener('input', abre);
     }
   }
@@ -1860,6 +1862,74 @@ render();
   sincroniza();
   setInterval(sincroniza, 3000);
   window.addEventListener('storage', sincroniza);
+})();
+</script>
+<script>
+/* ---- Diagnostico: diz em portugues por que o servidor nao liga, e conserta ---- */
+(() => {
+  const ID = 'mp-diag';
+  const GUARDA = 'maxipark_chave_sync';
+  const linha = (rot, val) => '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #eee">' +
+    '<b style="min-width:160px">' + rot + '</b><span>' + val + '</span></div>';
+  const oculta = k => !k ? '\u2014' : (k.length <= 4 ? '\u2022\u2022\u2022\u2022' : k.slice(0,2) + '\u2022'.repeat(Math.max(3, k.length-4)) + k.slice(-2)) + ' (' + k.length + ' caracteres)';
+
+  async function levantar() {
+    const s = (typeof settings === 'object' && settings) ? settings : {};
+    const doApp = (s.chave || '').trim();
+    let doAparelho = ''; try { doAparelho = localStorage.getItem(GUARDA) || ''; } catch (e) {}
+    const url = (s.webhook || '').trim();
+    let versao = '?'; try { const t = await (await fetch('../sw.js?x=' + Date.now(), {cache:'reload'})).text();
+                            versao = (t.match(/VERSAO = '([^']+)'/) || [])[1] || '?'; } catch (e) { versao = 'sem internet'; }
+    let sw = 'nao instalado'; try { sw = (await navigator.serviceWorker.getRegistrations()).length ? 'instalado' : 'nao instalado'; } catch (e) {}
+    let caixas = []; try { caixas = await caches.keys(); } catch (e) {}
+    let resposta = 'nao testei';
+    if (url && doApp) {
+      try { const r = await fetch(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'op=ping&chave=' + encodeURIComponent(doApp));
+            const j = await r.json();
+            resposta = (j && j.ok) ? 'LIGADO \u2014 o servidor aceitou esta chave'
+                    : (j && j.erro === 'chave') ? 'a chave deste aparelho NAO confere com a do servidor'
+                    : (j && j.erro === 'configurar-chave') ? 'o servidor ainda esta com a chave de exemplo'
+                    : 'o servidor recusou (' + JSON.stringify(j).slice(0,80) + ')'; }
+      catch (e) { resposta = 'nao consegui falar com o servidor (internet ou endereco)'; }
+    } else if (!url) resposta = 'falta o endereco do servidor';
+    else resposta = 'falta a chave neste aparelho';
+
+    let veredito, cor;
+    if (/^LIGADO/.test(resposta)) { veredito = 'Est\u00e1 tudo certo: este aparelho fala com o servidor.'; cor = '#0a7d3c'; }
+    else if (!doApp) { veredito = 'Falta digitar a chave neste aparelho. Digite no campo acima e toque em Salvar.'; cor = '#b00020'; }
+    else if (/NAO confere/.test(resposta)) { veredito = 'A chave deste aparelho esta errada. Apague o campo acima, digite a chave certa e toque em Salvar.'; cor = '#b00020'; }
+    else { veredito = 'O aparelho nao conseguiu falar com o servidor. Confira a internet.'; cor = '#b00020'; }
+
+    return '<div style="font-size:14.5px;line-height:1.5">' +
+      '<div style="padding:10px 12px;border-radius:10px;background:' + cor + '11;color:' + cor + ';font-weight:700;margin-bottom:10px">' + veredito + '</div>' +
+      linha('Versao no aparelho', (typeof VERSAO_TELA !== 'undefined' ? VERSAO_TELA : 'tela') ) +
+      linha('Versao publicada', versao) +
+      linha('Chave deste app', oculta(doApp)) +
+      linha('Chave do aparelho', oculta(doAparelho)) +
+      linha('As duas batem?', (doApp && doApp === doAparelho) ? 'sim' : (doApp || doAparelho ? 'NAO' : '\u2014')) +
+      linha('Endereco do servidor', url ? url.slice(0, 52) + '\u2026' : '\u2014') +
+      linha('Resposta do servidor', resposta) +
+      linha('App instalado', sw + (caixas.length ? ' \u00b7 ' + caixas.join(', ') : '')) +
+      '</div>';
+  }
+
+  function monta() {
+    const cx = document.getElementById('s-chave');
+    if (!cx || document.getElementById(ID + '-bt')) return;
+    const bt = document.createElement('button');
+    bt.type = 'button'; bt.id = ID + '-bt'; bt.textContent = 'Diagn\u00f3stico do servidor';
+    bt.style.cssText = 'margin:10px 0 2px;padding:10px 16px;border:2px solid #6B4A98;border-radius:10px;background:#fff;color:#6B4A98;font-weight:700;font-size:14.5px;cursor:pointer';
+    const cx2 = document.createElement('div'); cx2.id = ID; cx2.style.cssText = 'margin:8px 0';
+    bt.addEventListener('click', async () => {
+      bt.disabled = true; cx2.innerHTML = '<span style="color:#666">Conferindo\u2026</span>';
+      try { cx2.innerHTML = await levantar(); } catch (e) { cx2.textContent = 'Nao consegui conferir: ' + e.message; }
+      bt.disabled = false;
+    });
+    const pai = document.getElementById('mp-estado-linha') || cx.parentNode;
+    pai.parentNode.insertBefore(bt, pai.nextSibling);
+    bt.parentNode.insertBefore(cx2, bt.nextSibling);
+  }
+  setInterval(monta, 800);
 })();
 </script>
 </body>
