@@ -15,35 +15,45 @@
   :root{
     --roxo:#6B4A98; --roxo-escuro:#4E3572; --roxo-claro:#EEE8F5; --acento:#9935F4; --bg:#F5F3F9; --card:#FFFFFF;
     --texto:#221C2E; --cinza:#5E5670; --linha:#DED8EA; --perigo:#B23A3A; --ok:#2E7D32; --raio:18px;
+    /* cores que antes estavam escritas à mão: viraram variáveis para o modo escuro */
+    --branco:#FFFFFF; --suave:#FAFBFB; --sobre-roxo:#FFFFFF; --sobre-ok:#FFFFFF;
+    --sombra:0 2px 10px rgba(34,28,46,.06);
+    --aviso-bg:#FFF4D6; --aviso-br:#E0B400; --aviso-tx:#3D3000;
+    --ruim-bg:#FBE3E3; --ruim-tx:#7A1F1F;
+    --bom-bg:#E6F4EA; --bom-br:#9CCFA9; --bom-tx:#1B3D26;
+    --tag-ok-bg:#E6F4EA; --tag-ok-tx:#1B5E20; --tag-pend-bg:#FFF4D6; --tag-pend-tx:#7A5A00;
+    --toast-bg:#221C2E; --toast-tx:#FFFFFF;
+    --ok-tx:#1B7A52; --ok-bg:#E4F4EC; --neutro-bg:#EFEDF4;
+    --grade:#DED8EA; --serie-c:#9935F4; --serie-e:#6B4A98; --serie-n:#2E7D32;
     color-scheme: light;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;min-height:100%;background:var(--bg);color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:17px;line-height:1.35}
   button{font-family:inherit;color:var(--texto)}
-  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:#fff;border-bottom:3px solid var(--roxo)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:var(--card);border-bottom:3px solid var(--roxo)}
   .top .marca{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--roxo-escuro);font-size:17px}
   .top .marca img{height:40px;width:auto}
   .top .passo{font-size:15px;color:var(--roxo-escuro);font-weight:600;text-align:right}
   .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 60px}
-  .card{background:var(--card);border-radius:var(--raio);padding:20px 22px;box-shadow:0 2px 10px rgba(34,28,46,.06);margin-bottom:16px}
+  .card{background:var(--card);border-radius:var(--raio);padding:20px 22px;box-shadow:var(--sombra);margin-bottom:16px}
   h1{font-size:26px;line-height:1.2;margin:0 0 10px;color:var(--roxo-escuro)}
   h2{font-size:21px;line-height:1.25;margin:0 0 10px;color:var(--roxo-escuro)}
   h3{font-size:18px;margin:16px 0 8px;color:var(--roxo-escuro)}
   p{margin:0 0 12px}
   .small{font-size:14px} .muted{color:var(--cinza)} .legenda{font-size:13px;color:var(--cinza);margin:6px 0 0}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:10px 20px;border:0;border-radius:14px;background:var(--roxo);color:#fff;font-size:18px;font-weight:700;cursor:pointer}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:10px 20px;border:0;border-radius:14px;background:var(--roxo);color:var(--sobre-roxo);font-size:18px;font-weight:700;cursor:pointer}
   .btn:disabled{opacity:.4;cursor:default}
-  .btn.ghost{background:var(--roxo-claro);color:var(--roxo-escuro)} .btn.light{background:#fff;border:2px solid var(--roxo);color:var(--roxo-escuro)}
+  .btn.ghost{background:var(--roxo-claro);color:var(--roxo-escuro)} .btn.light{background:var(--branco);border:2px solid var(--roxo);color:var(--roxo-escuro)}
   .btn.perigo{background:var(--perigo)} .btn.block{width:100%} .btn.mini{min-height:38px;font-size:14px;padding:6px 12px;white-space:nowrap;flex:none}
   .linha{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;align-items:center} .espaco{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-  textarea,input,select{width:100%;font:inherit;font-size:17px;padding:10px 12px;border:2px solid var(--linha);border-radius:12px;background:#fff;color:var(--texto)}
+  textarea,input,select{width:100%;font:inherit;font-size:17px;padding:10px 12px;border:2px solid var(--linha);border-radius:12px;background:var(--branco);color:var(--texto)}
   label{display:block;font-weight:600;margin:14px 0 6px}
   .check{display:flex;gap:12px;align-items:flex-start;font-weight:500;margin:12px 0 4px;font-size:16px} .check input{width:26px;height:26px;margin-top:2px;flex:none}
   .logo-hero{display:flex;justify-content:center;margin:2px 0 14px} .logo-hero img{height:64px;width:auto;max-width:80%}
   a.home{display:inline-flex;align-items:center;border-radius:8px} a.home:active{opacity:.7}
   a.link{color:var(--roxo-escuro);font-weight:600}
   .grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:16px}
-  .bloco{border:1px solid var(--linha);border-radius:16px;padding:14px 16px;background:#fff}
+  .bloco{border:1px solid var(--linha);border-radius:16px;padding:14px 16px;background:var(--branco)}
   .bloco .cab{display:flex;align-items:center;gap:10px;margin-bottom:8px} .bloco .cab .ic{width:40px;height:40px;border-radius:12px;background:var(--roxo-claro);display:flex;align-items:center;justify-content:center;font-size:22px}
   .bloco h2{margin:0;font-size:19px} .bloco .sub{font-size:13px;color:var(--cinza)}
   .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:8px 0}
@@ -51,24 +61,118 @@
   table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0} th,td{padding:7px 8px;border-bottom:1px solid var(--linha);text-align:center;vertical-align:middle} th{background:var(--roxo-claro);color:var(--roxo-escuro);font-size:13px} td.l,th.l{text-align:left}
   .abas{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
   .aba{padding:11px 18px;border-radius:999px;border:2px solid var(--linha);background:var(--card);color:var(--cinza);font-weight:700;font-size:15.5px;cursor:pointer}
-  .aba.on{border-color:var(--roxo);background:var(--roxo);color:#fff}
+  .aba.on{border-color:var(--roxo);background:var(--roxo);color:var(--sobre-roxo)}
   .tabela-wrap{overflow-x:auto}
   .mini{height:10px;background:var(--roxo-claro);border-radius:6px;overflow:hidden;min-width:70px;display:inline-block;vertical-align:middle;width:90px} .mini i{display:block;height:100%;background:var(--roxo)} .mini.acento i{background:var(--acento)}
-  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700} .tag.ok{background:#E6F4EA;color:#1B5E20} .tag.pend{background:#FFF4D6;color:#7A5A00} .tag.ruim{background:#FBE3E3;color:#7A1F1F}
-  .aviso{background:#FFF4D6;border-left:5px solid #E0B400;padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
-  .ruim{background:#FBE3E3;border-left:5px solid var(--perigo);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
-  .bom{background:#E6F4EA;border:1px solid #9CCFA9;border-radius:12px;padding:12px 14px;margin:10px 0 14px;font-size:16px;color:#1B3D26}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700} .tag.ok{background:var(--tag-ok-bg);color:var(--tag-ok-tx)} .tag.pend{background:var(--tag-pend-bg);color:var(--tag-pend-tx)} .tag.ruim{background:var(--ruim-bg);color:var(--ruim-tx)}
+  .aviso{background:var(--aviso-bg);border-left:5px solid var(--aviso-br);color:var(--aviso-tx);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  .ruim{background:var(--ruim-bg);border-left:5px solid var(--perigo);color:var(--ruim-tx);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  .bom{background:var(--bom-bg);border:1px solid var(--bom-br);border-radius:12px;padding:12px 14px;margin:10px 0 14px;font-size:16px;color:var(--bom-tx)}
   .filtros{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:8px 0} .filtros label{margin:0 0 4px;font-size:13px;color:var(--cinza)} .filtros select{font-size:16px;padding:8px 10px}
   .grafico{width:100%;min-width:600px;height:auto;display:block;margin:6px 0} .rot{font-size:11px;fill:var(--cinza)}
+  .grafico .grade{stroke:var(--grade)}
   .legenda-graf{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--cinza)} .legitem i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
-  .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:12px auto} .pinpad button{min-height:64px;font-size:26px;border-radius:14px;border:2px solid var(--linha);background:#fff}
+  .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:12px auto} .pinpad button{min-height:64px;font-size:26px;border-radius:14px;border:2px solid var(--linha);background:var(--branco)}
   .pininput{display:block;max-width:320px;margin:8px auto 6px;text-align:center;font-size:30px;letter-spacing:12px;min-height:60px;-webkit-text-security:disc}
   details{margin:8px 0 14px} details summary{color:var(--roxo-escuro);cursor:pointer;font-weight:600}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#221C2E;color:#fff;padding:12px 18px;border-radius:12px;font-size:16px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:9}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-tx);padding:12px 18px;border-radius:12px;font-size:16px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:9}
   .toast.show{opacity:1}
   @media (max-width:640px){ .wrap{padding:12px 12px 60px} .card{padding:16px} h1{font-size:22px} .kpi b{font-size:22px} }
   @media print{ .top,.btn,.filtros,.rodape-acoes{display:none !important} .card{box-shadow:none;border:1px solid var(--linha)} }
+
+  /* ═══════════ MODO ESCURO ═══════════
+     Só troca as cores: o desenho das telas continua igual.
+     Entra com o botão 🌙, ou sozinho quando o aparelho está no escuro
+     e ninguém escolheu nada ainda. */
+  :root[data-theme="dark"]{
+    --roxo:#B18BE0; --roxo-escuro:#D3BCEF; --roxo-claro:#2E2340; --acento:#C08BFF;
+    --bg:#17111E; --card:#211A2B; --texto:#F2EDF8; --cinza:#B3A8C2; --linha:#382C48;
+    --perigo:#F0A0A8; --ok:#3F8F63;
+    --branco:#2A2136; --suave:#241D30; --sobre-roxo:#1B1226; --sobre-ok:#F2EDF8;
+    --sombra:0 2px 10px rgba(0,0,0,.45);
+    --aviso-bg:#3A3117; --aviso-br:#8A6D1F; --aviso-tx:#F0E2BC;
+    --ruim-bg:#3C2027; --ruim-tx:#F6C9CE;
+    --bom-bg:#1C3A2C; --bom-br:#2F6B4C; --bom-tx:#CFEEDD;
+    --tag-ok-bg:#1C3A2C; --tag-ok-tx:#8FE0B6; --tag-pend-bg:#3A3117; --tag-pend-tx:#EBD08A;
+    --toast-bg:#E9E2F3; --toast-tx:#1B1226;
+    --ok-tx:#6FD3A4; --ok-bg:#1C3A2C; --neutro-bg:#2A2136;
+    --grade:#3E3152; --serie-c:#C08BFF; --serie-e:#B18BE0; --serie-n:#6FD3A4;
+    color-scheme: dark;
+  }
+  /* o logo é roxo sobre fundo transparente: no escuro ele é clareado */
+  :root[data-theme="dark"] .top img,
+  :root[data-theme="dark"] .logo-hero img,
+  :root[data-theme="dark"] .entrada img{filter:brightness(1.6)}
+
+  /* ---- botão claro/escuro: canto de baixo à direita, nas cinco telas ---- */
+  .botao-tema{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom,0px));
+    width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;
+    border:1px solid var(--linha);background:var(--card);color:var(--texto);
+    font-size:21px;line-height:1;cursor:pointer;z-index:30;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);-webkit-appearance:none;appearance:none}
+  /* o botao nao herda a cor dos outros botoes: no escuro ficaria invisivel */
+  :root[data-theme="dark"] .botao-tema,
+  :root[data-theme="light"] .botao-tema{background:var(--card);color:var(--texto)}
+  .botao-tema:active{transform:scale(.94)}
+  .botao-tema:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+  @media print{ .botao-tema{display:none!important} }
 </style>
+<script>
+/* ═════════ BOTÃO CLARO / ESCURO  (🌙 escurece · ☀ clareia) ═════════════════
+   Fica no canto de baixo à direita de todas as telas.
+   A escolha é guardada NO APARELHO e vale para as CINCO telas de uma vez,
+   porque todas moram no mesmo endereço de site.
+   Enquanto ninguém escolher, o app segue o modo claro/escuro do aparelho.
+   Roda antes de a tela ser desenhada: no escuro, não pisca branco.          */
+(function () {
+  'use strict';
+  var GUARDA = 'maxipark_tema', raiz = document.documentElement;
+  function escolhido() { try { return localStorage.getItem(GUARDA); } catch (e) { return null; } }
+  function doAparelho() {
+    try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro'; }
+    catch (e) { return 'claro'; }
+  }
+  function agora() { var e = escolhido(); return (e === 'escuro' || e === 'claro') ? e : doAparelho(); }
+  function aplica(t) {
+    raiz.setAttribute('data-theme', t === 'escuro' ? 'dark' : 'light');
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', t === 'escuro' ? '#17111E' : '#6B4A98');
+    var b = document.getElementById('btn-tema');
+    if (b) {
+      b.textContent = t === 'escuro' ? '\u2600' : '\uD83C\uDF19';
+      var r = t === 'escuro' ? 'Clarear a tela' : 'Escurecer a tela';
+      b.setAttribute('aria-label', r); b.title = r;
+    }
+  }
+  aplica(agora());
+  function troca() {
+    var novo = agora() === 'escuro' ? 'claro' : 'escuro';
+    try { localStorage.setItem(GUARDA, novo); } catch (e) {}
+    aplica(novo);
+  }
+  /* ninguém escolheu ainda: acompanha o aparelho quando ele troca de modo */
+  try {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var ouve = function () { if (!escolhido()) aplica(doAparelho()); };
+    if (mq.addEventListener) mq.addEventListener('change', ouve);
+    else if (mq.addListener) mq.addListener(ouve);
+  } catch (e) {}
+  /* trocou numa tela com outra aberta ao lado: a outra acompanha na hora */
+  try { window.addEventListener('storage', function (ev) { if (ev.key === GUARDA) aplica(agora()); }); } catch (e) {}
+  function poeBotao() {
+    if (document.getElementById('btn-tema')) return;
+    var b = document.createElement('button');
+    b.id = 'btn-tema'; b.type = 'button'; b.className = 'botao-tema';
+    b.addEventListener('click', troca);
+    document.body.appendChild(b);
+    aplica(agora());
+  }
+  if (document.body) poeBotao();
+  else document.addEventListener('DOMContentLoaded', poeBotao);
+})();
+</script>
+
 </head>
 <body>
 <div id="app"></div>
@@ -360,7 +464,7 @@ function viewPin(){
       '<h2>Entre pela página inicial</h2>' +
       '<p class="small muted">' + msg + '</p>' +
       '<p style="margin-top:20px"><a href="../" ' +
-      'style="display:inline-block;padding:14px 24px;border-radius:12px;background:#6B4A98;color:#fff;' +
+      'style="display:inline-block;padding:14px 24px;border-radius:12px;background:var(--roxo);color:var(--sobre-roxo);' +
       'font-weight:700;font-size:17px;text-decoration:none">Ir para a página inicial &rarr;</a></p>' +
       '</div></div>';
   }
@@ -382,10 +486,10 @@ function graficoLinhas(labels, series){
   const W = 760, H = 236, L = 40, R = 40, T = 22, B = 34; const n = labels.length; if (!n) return '<p class="muted">Sem dados no filtro.</p>';
   const x = i => L + (n === 1 ? (W - L - R) / 2 : i * (W - L - R) / (n - 1)); const y = v => T + (100 - v) / 100 * (H - T - B);
   let s = `<div class="tabela-wrap"><svg class="grafico" viewBox="0 0 ${W} ${H}" role="img" aria-label="Tendência mensal">`;
-  [0, 25, 50, 75, 100].forEach(v => { s += `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#DED8EA" stroke-width="1"/><text x="${L - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" class="rot">${v}%</text>`; });
+  [0, 25, 50, 75, 100].forEach(v => { s += `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="grade" stroke-width="1"/><text x="${L - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" class="rot">${v}%</text>`; });
   const passo = Math.ceil(n / 12); labels.forEach((m, i) => { if ((n - 1 - i) % passo) return; const anc = n === 1 ? 'middle' : (i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle')); s += `<text x="${x(i).toFixed(1)}" y="${H - B + 18}" text-anchor="${anc}" class="rot">${esc(mesLabel(m))}</text>`; });
-  series.forEach((se, si) => { const dyL = [-9, -9, 17][si] || -9, dxL = [0, 22, 0][si] || 0; const pts = se.pts.map((v, i) => v == null ? null : [x(i), y(v)]); let d = ''; pts.forEach((p, i) => { if (!p) return; d += (i === 0 || !pts[i - 1] ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ' '; }); if (d) s += `<path d="${d.trim()}" fill="none" stroke="${se.cor}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
-    pts.forEach((p, i) => { if (!p) return; s += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" fill="${se.cor}"/><text x="${(p[0] + dxL).toFixed(1)}" y="${(p[1] + dyL).toFixed(1)}" text-anchor="middle" class="rot" style="fill:${se.cor};font-weight:700">${se.pts[i]}%</text>`; }); });
+  series.forEach((se, si) => { const dyL = [-9, -9, 17][si] || -9, dxL = [0, 22, 0][si] || 0; const pts = se.pts.map((v, i) => v == null ? null : [x(i), y(v)]); let d = ''; pts.forEach((p, i) => { if (!p) return; d += (i === 0 || !pts[i - 1] ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ' '; }); if (d) s += `<path d="${d.trim()}" fill="none" style="stroke:${se.cor}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+    pts.forEach((p, i) => { if (!p) return; s += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" style="fill:${se.cor}"/><text x="${(p[0] + dxL).toFixed(1)}" y="${(p[1] + dyL).toFixed(1)}" text-anchor="middle" class="rot" style="fill:${se.cor};font-weight:700">${se.pts[i]}%</text>`; }); });
   s += '</svg></div>'; return s + `<div class="legenda-graf">${series.map(se => `<span class="legitem"><i style="background:${se.cor}"></i>${esc(se.nome)}</span>`).join('')}</div>`;
 }
 function blocoEquipe(a, C){
@@ -458,11 +562,11 @@ function cardUnidadesEq(C){
 }
 function cardTendenciaUma(C, qual){
   const cfg = {
-    clientes: { titulo: 'Tendência mensal — clientes', serie: { nome: 'CSAT % positivo', cor: '#9935F4', pts: C.tendencia.map(t => t.cl.csat) },
+    clientes: { titulo: 'Tendência mensal — clientes', serie: { nome: 'CSAT % positivo', cor: 'var(--serie-c)', pts: C.tendencia.map(t => t.cl.csat) },
       cols: ['Respostas', 'CSAT %', 'NPS', '% c/ problema'], linha: t => [t.cl.n || '—', pct(t.cl.csat), t.cl.nps == null ? '—' : t.cl.nps, pct(t.cl.pctProblema)] },
-    equipe: { titulo: 'Tendência mensal — equipe', serie: { nome: '% Sim ponderado', cor: '#6B4A98', pts: C.tendencia.map(t => t.eq.pctSimPond) },
+    equipe: { titulo: 'Tendência mensal — equipe', serie: { nome: '% Sim ponderado', cor: 'var(--serie-e)', pts: C.tendencia.map(t => t.eq.pctSimPond) },
       cols: ['Respostas', '% Sim pond.', 'eNPS', 'Aviso'], linha: t => [t.eq.n || '—', pct(t.eq.pctSimPond), t.eq.enpsVal == null ? '—' : t.eq.enpsVal, avisoEq(t.eq)] },
-    conselho: { titulo: 'Tendência mensal — conselho', serie: { nome: 'Índice da reunião', cor: '#2E7D32', pts: C.tendencia.map(t => t.co.blocos.reuniao == null ? null : t.co.blocos.reuniao) },
+    conselho: { titulo: 'Tendência mensal — conselho', serie: { nome: 'Índice da reunião', cor: 'var(--serie-n)', pts: C.tendencia.map(t => t.co.blocos.reuniao == null ? null : t.co.blocos.reuniao) },
       cols: ['Respostas', 'Índice reunião'], linha: t => [t.co.n || '—', pct(t.co.blocos.reuniao)] }
   }[qual];
   return `<div class="card"><h2>${cfg.titulo}</h2>
@@ -508,7 +612,7 @@ function viewPainel(){
     <p class="legenda">Barra roxa = % Sim ponderado da equipe; barra violeta = CSAT (% positivo) dos clientes. "identificável" = menos de 3 respostas da equipe na unidade (uso restrito); "poucas" = menos de 5.</p>
   </div>
   <div class="card"><h2>Tendência mensal</h2>
-    ${graficoLinhas(C.tendencia.map(t => t.mes), [{ nome: 'Equipe · % Sim ponderado', cor: '#6B4A98', pts: C.tendencia.map(t => t.eq.pctSimPond) }, { nome: 'Clientes · CSAT % positivo', cor: '#9935F4', pts: C.tendencia.map(t => t.cl.csat) }, { nome: 'Conselho · índice da reunião', cor: '#2E7D32', pts: C.tendencia.map(t => t.co.blocos.reuniao == null ? null : t.co.blocos.reuniao) }])}
+    ${graficoLinhas(C.tendencia.map(t => t.mes), [{ nome: 'Equipe · % Sim ponderado', cor: 'var(--serie-e)', pts: C.tendencia.map(t => t.eq.pctSimPond) }, { nome: 'Clientes · CSAT % positivo', cor: 'var(--serie-c)', pts: C.tendencia.map(t => t.cl.csat) }, { nome: 'Conselho · índice da reunião', cor: 'var(--serie-n)', pts: C.tendencia.map(t => t.co.blocos.reuniao == null ? null : t.co.blocos.reuniao) }])}
     <div class="tabela-wrap"><table><tr><th class="l">Mês</th><th>Equipe resp.</th><th>% Sim pond.</th><th>eNPS</th><th>Clientes resp.</th><th>CSAT %</th><th>NPS</th><th>% c/ problema</th><th>Conselho resp.</th><th>Índice reunião</th><th>Aviso</th></tr>
     ${C.tendencia.map(t => `<tr><td class="l"><b>${esc(mesLabel(t.mes))}</b></td><td>${t.eq.n || '—'}</td><td>${pct(t.eq.pctSimPond)}</td><td>${t.eq.enpsVal == null ? '—' : t.eq.enpsVal}</td><td>${t.cl.n || '—'}</td><td>${pct(t.cl.csat)}</td><td>${t.cl.nps == null ? '—' : t.cl.nps}</td><td>${pct(t.cl.pctProblema)}</td><td>${t.co.n || '—'}</td><td>${pct(t.co.blocos.reuniao)}</td><td>${avisoEq(t.eq)}${t.co.identificavel ? ' <span class="tag ruim">conselho identificável</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="11" class="muted">Sem dados no filtro.</td></tr>'}</table></div>
   </div>
@@ -776,7 +880,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
   if (!/^https?:/.test(location.protocol)) return;
   const ID = 'estado-servidor';
   let ultimo = '', pedido = 0, tempo = null;
-  const cores = { ok: ['#1B7A52', '#E4F4EC'], ruim: ['#A8323F', '#FBE9EB'], neutro: ['#5E5670', '#EFEDF4'] };
+  const cores = { ok: ['var(--ok-tx)', 'var(--ok-bg)'], ruim: ['var(--ruim-tx)', 'var(--ruim-bg)'], neutro: ['var(--cinza)', 'var(--neutro-bg)'] };
   function pinta(tipo, texto) {
     const el = document.getElementById(ID); if (!el) return;
     const c = cores[tipo] || cores.neutro;
@@ -830,10 +934,10 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     let txt = partes.join(' \u00b7 ');
     if (publicada && aqui && publicada !== aqui) {
       txt += ' \u2014 h\u00e1 uma vers\u00e3o nova (' + publicada + '): toque em Atualizar app agora.';
-      el.style.color = '#A8323F'; el.style.fontWeight = '700';
+      el.style.color = 'var(--ruim-tx)'; el.style.fontWeight = '700';
     } else if (publicada && aqui && publicada === aqui) {
       txt += ' \u2014 est\u00e1 na vers\u00e3o mais nova.';
-      el.style.color = '#1B7A52'; el.style.fontWeight = '600';
+      el.style.color = 'var(--ok-tx)'; el.style.fontWeight = '600';
     }
     el.textContent = txt;
   }
@@ -861,7 +965,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
       el.id = ID;
       const bt = document.createElement('button');
       bt.type = 'button'; bt.id = 'btn-atualizar-app'; bt.textContent = 'Atualizar app agora';
-      bt.style.cssText = 'padding:10px 16px;border:2px solid #6B4A98;border-radius:10px;background:#fff;color:#6B4A98;font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap';
+      bt.style.cssText = 'padding:10px 16px;border:2px solid var(--roxo);border-radius:10px;background:var(--branco);color:var(--roxo-escuro);font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap';
       bt.addEventListener('click', async () => {
         bt.disabled = true; bt.textContent = 'Atualizando\u2026';
         try {
@@ -880,7 +984,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
       cx.insertAdjacentElement('afterend', linha);
       const ver = document.createElement('div');
       ver.id = 'versao-app';
-      ver.style.cssText = 'margin:2px 0 6px;font-size:13.5px;color:#5E5670';
+      ver.style.cssText = 'margin:2px 0 6px;font-size:13.5px;color:var(--cinza)';
       ver.textContent = 'Conferindo a vers\u00e3o deste aparelho\u2026';
       linha.insertAdjacentElement('afterend', ver);
       mostraVersao();
@@ -973,10 +1077,10 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     else resposta = 'falta a chave neste aparelho';
 
     let veredito, cor;
-    if (/^LIGADO/.test(resposta)) { veredito = 'Est\u00e1 tudo certo: este aparelho fala com o servidor.'; cor = '#0a7d3c'; }
-    else if (!doApp) { veredito = 'Falta digitar a chave neste aparelho. Digite no campo acima e toque em Salvar.'; cor = '#b00020'; }
-    else if (/NAO confere/.test(resposta)) { veredito = 'A chave deste aparelho esta errada. Apague o campo acima, digite a chave certa e toque em Salvar.'; cor = '#b00020'; }
-    else { veredito = 'O aparelho nao conseguiu falar com o servidor. Confira a internet.'; cor = '#b00020'; }
+    if (/^LIGADO/.test(resposta)) { veredito = 'Est\u00e1 tudo certo: este aparelho fala com o servidor.'; cor = 'var(--ok-tx)'; }
+    else if (!doApp) { veredito = 'Falta digitar a chave neste aparelho. Digite no campo acima e toque em Salvar.'; cor = 'var(--ruim-tx)'; }
+    else if (/NAO confere/.test(resposta)) { veredito = 'A chave deste aparelho esta errada. Apague o campo acima, digite a chave certa e toque em Salvar.'; cor = 'var(--ruim-tx)'; }
+    else { veredito = 'O aparelho nao conseguiu falar com o servidor. Confira a internet.'; cor = 'var(--ruim-tx)'; }
 
     return '<div style="font-size:14.5px;line-height:1.5">' +
       '<div style="padding:10px 12px;border-radius:10px;background:' + cor + '11;color:' + cor + ';font-weight:700;margin-bottom:10px">' + veredito + '</div>' +
@@ -996,10 +1100,10 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     if (!cx || document.getElementById(ID + '-bt')) return;
     const bt = document.createElement('button');
     bt.type = 'button'; bt.id = ID + '-bt'; bt.textContent = 'Diagn\u00f3stico do servidor';
-    bt.style.cssText = 'margin:10px 0 2px;padding:10px 16px;border:2px solid #6B4A98;border-radius:10px;background:#fff;color:#6B4A98;font-weight:700;font-size:14.5px;cursor:pointer';
+    bt.style.cssText = 'margin:10px 0 2px;padding:10px 16px;border:2px solid var(--roxo);border-radius:10px;background:var(--branco);color:var(--roxo-escuro);font-weight:700;font-size:14.5px;cursor:pointer';
     const cx2 = document.createElement('div'); cx2.id = ID; cx2.style.cssText = 'margin:8px 0';
     bt.addEventListener('click', async () => {
-      bt.disabled = true; cx2.innerHTML = '<span style="color:#666">Conferindo\u2026</span>';
+      bt.disabled = true; cx2.innerHTML = '<span style="color:var(--cinza)">Conferindo\u2026</span>';
       try { cx2.innerHTML = await levantar(); } catch (e) { cx2.textContent = 'Nao consegui conferir: ' + e.message; }
       bt.disabled = false;
     });
@@ -1070,7 +1174,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     if (!cx || document.getElementById(ID)) return;
     const bt = document.createElement('button');
     bt.type = 'button'; bt.id = ID; bt.textContent = 'Pronto \u2014 usar esta chave';
-    bt.style.cssText = 'margin:8px 0 2px;padding:12px 20px;border:0;border-radius:10px;background:#6B4A98;color:#fff;font-weight:700;font-size:15.5px;cursor:pointer';
+    bt.style.cssText = 'margin:8px 0 2px;padding:12px 20px;border:0;border-radius:10px;background:var(--roxo);color:var(--sobre-roxo);font-weight:700;font-size:15.5px;cursor:pointer';
     const av = document.createElement('div'); av.id = AVISO;
     bt.addEventListener('click', () => confirmar(bt));
     cx.parentNode.insertBefore(bt, cx.nextSibling);
