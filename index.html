@@ -214,8 +214,8 @@
       <span class="rot">O que pode fazer</span>
       <div class="papeis">
         <label class="papel"><input type="radio" name="papel" value="total" checked>
-          <span><span class="t">Avaliador — vê todas as respostas</span>
-          <span class="d">As três pesquisas e todas as unidades, sem exceção. Só leitura: não aplica pesquisa, não exclui, não edita, não zera.</span></span></label>
+          <span><span class="t">Avaliador — vê todas as respostas e aplica as pesquisas</span>
+          <span class="d">As três pesquisas e todas as unidades, sem exceção: vê todos os resultados e também abre as pesquisas para as pessoas responderem. Não exclui, não edita, não zera.</span></span></label>
         <label class="papel"><input type="radio" name="papel" value="respostas">
           <span><span class="t">Somente visualização — você escolhe o que ele vê</span>
           <span class="d">Vê apenas os ícones e as unidades marcados abaixo. Também não aplica pesquisa.</span></span></label>
@@ -298,10 +298,10 @@
   }
   const UNS = lerUnidades();
   const nomeU = c => { const u = UNS.find(x => x.codigo === c); return u && u.nome ? u.nome : ''; };
-  const NOME_PAPEL = { admin:'Administrador', total:'Avaliador · vê todas as respostas', respostas:'Somente visualização', aplicar:'Avaliador de campo · não vê respostas' };
+  const NOME_PAPEL = { admin:'Administrador', total:'Avaliador · vê tudo e aplica', respostas:'Somente visualização', aplicar:'Avaliador de campo · não vê respostas' };
   const FRASE = {
     admin: 'Você administra os acessos e enxerga tudo.',
-    total: 'Avaliador: você vê as respostas de todas as pesquisas e de todas as unidades. Só leitura — não aplica pesquisa nem altera nada.',
+    total: 'Avaliador: você vê as respostas de todas as pesquisas e de todas as unidades, e também pode aplicar as pesquisas.',
     respostas: 'Somente visualização: você vê apenas os resultados e as unidades liberados para o seu acesso.',
     aplicar: 'Avaliador de campo: você abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.'
   };
@@ -451,7 +451,7 @@
     $('resumo-acesso').textContent = FRASE[c.papel] || '';
     const cards = [];
     const podePainel = ['admin','total','respostas'].includes(c.papel);
-    const podeAplicar = ['admin','aplicar'].includes(c.papel);   /* 'visualizar tudo' so le resultados: nao abre pesquisa */
+    const podeAplicar = ['admin','total','aplicar'].includes(c.papel);   /* o avaliador tambem aplica as pesquisas */
 
     /* ORDEM FIXA DOS CARDS — nao alterar:
        1) Pesquisa com CLIENTES  2) Pesquisa com a EQUIPE  3) Avaliação do CONSELHO
@@ -491,7 +491,7 @@
     return '<div class="editor-perfil">' +
       '<span class="rot">O que ' + e(c.nome.split(' ')[0]) + ' pode fazer</span>' +
       '<div class="papeis">' +
-        rad('total', 'Avaliador — vê todas as respostas', 'As três pesquisas e todas as unidades, sem exceção. Só leitura.') +
+        rad('total', 'Avaliador — vê todas as respostas e aplica as pesquisas', 'As três pesquisas e todas as unidades, sem exceção: resultados e aplicação.') +
         rad('respostas', 'Somente visualização — você escolhe o que ele vê', 'Vê apenas os ícones e as unidades marcados abaixo.') +
         rad('aplicar', 'Avaliador de campo — aplica as pesquisas, não vê respostas', 'Abre as pesquisas no tablet. Não enxerga nenhum resultado.') +
       '</div>' +
