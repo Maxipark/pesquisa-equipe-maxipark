@@ -179,7 +179,13 @@ function negativo(v, e){ return num(v) && (e === 3 ? v === 1 : v <= 2); }
 /* ---------------- utilidades ---------------- */
 const LS = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } } };
 const DEFAULT_SETTINGS = { pin: '', unidade: '', presentes: {}, webhook: '', chave: '', ultimaSync: '', exported: {}, pinFails: 0, lockUntil: 0, autoAvanca: true };   // unidade = código da reunião (data AAAA-MM-DD); presentes = { g: true, m: false } por reunião (ausente = bloco pulado)
+const SERVIDOR_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';   /* servidor das respostas (Apps Script + Planilha) */
+const CHAVE_PADRAO = '';   /* a chave nao fica no codigo: digite uma vez em Configuracoes (PIN 2819) */
 let settings = Object.assign({}, DEFAULT_SETTINGS, LS.get('mpco_settings', {}));
+/* servidor ligado de fabrica: quem nunca configurou nada ja nasce sincronizado; quem digitou um endereco proprio nas Configuracoes continua com o dele */
+if (!settings.webhook) settings.webhook = SERVIDOR_PADRAO;
+if (!settings.chave) settings.chave = CHAVE_PADRAO;
+try { LS.set('mpco_settings', settings); } catch (e) {}
 function saveSettings(){ LS.set('mpco_settings', settings); }
 function allResponses(){ return LS.get('mpco_respostas', []); }
 function saveResponses(l){ return LS.set('mpco_respostas', l); }
