@@ -970,14 +970,26 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
    a mesma chave, sem precisar digitar de novo em cada um.                    */
 (() => {
   const GUARDA = 'maxipark_chave_sync';
-  const le = () => { try { return localStorage.getItem(GUARDA) || ''; } catch (e) { return ''; } };
-  const grava = v => { try { localStorage.setItem(GUARDA, v); } catch (e) {} };
+  /* Chaves antigas do tempo em que a chave vinha embutida no codigo: nunca mais valem.
+     Sem isto, uma aba velha esquecida aberta empurra a chave morta de volta. */
+  const chaveMorta = k => /^MAXIPARK-/i.test(String(k || '').trim());
+  const le = () => { try { const v = localStorage.getItem(GUARDA) || ''; return chaveMorta(v) ? '' : v; } catch (e) { return ''; } };
+  const grava = v => { try { if (chaveMorta(v)) return; localStorage.setItem(GUARDA, v); } catch (e) {} };
+  /* limpeza de uma vez: tira a chave morta deste app e do aparelho */
+  (function limpa() {
+    try { if (chaveMorta(localStorage.getItem(GUARDA))) localStorage.removeItem(GUARDA); } catch (e) {}
+    ['mpc_settings','mp_settings','mpco_settings','mpp_settings'].forEach(n => {
+      try { const o = JSON.parse(localStorage.getItem(n)); 
+            if (o && chaveMorta(o.chave)) { o.chave = ''; localStorage.setItem(n, JSON.stringify(o)); } } catch (e) {}
+    });
+  })();
   function salvar() {
     try { if (typeof saveSettings === 'function') saveSettings(); else if (typeof LS === 'object' && LS.set) LS.set('mpco_settings', settings); } catch (e) {}
   }
   let vista = null;
   function sincroniza() {
     if (typeof settings !== 'object' || !settings) return;
+    if (chaveMorta(settings.chave)) { settings.chave = ''; salvar(); }
     const guardada = le(), minha = (settings.chave || '').trim();
     if (vista === null) vista = minha;
     if (minha !== vista) {            /* a pessoa digitou/salvou aqui: essa passa a valer no aparelho */
