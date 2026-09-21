@@ -389,7 +389,8 @@
       localStorage.setItem(GUARDA_CHAVE, k);
       ['mpc_settings', 'mp_settings', 'mpco_settings', 'mpp_settings'].forEach(n => {
         let o = {}; try { o = JSON.parse(localStorage.getItem(n)) || {}; } catch (e) {}
-        o.chave = k; if (!o.webhook) o.webhook = SERVIDOR;
+        o.chave = k;                      /* apaga qualquer chave antiga que tenha sobrado neste app */
+        if (!o.webhook) o.webhook = SERVIDOR;
         localStorage.setItem(n, JSON.stringify(o));
       });
     } catch (e) {}
@@ -417,10 +418,14 @@
     toast('Aparelho ligado ao servidor.');
     ir('inicio');
   }
-  function pintaEstadoSync() {
+  async function pintaEstadoSync() {
     const el = $('estado-sync'); if (!el) return;
-    if (chaveDoAparelho()) { el.innerHTML = 'Servidor: <b>ligado</b> neste aparelho.'; }
-    else { el.innerHTML = 'Servidor: <b>não ligado</b> neste aparelho — as respostas ficam só aqui. <a href="#chave">Ligar agora</a>'; }
+    const k = chaveDoAparelho();
+    if (!k) { el.innerHTML = 'Servidor: <b>não ligado</b> neste aparelho — as respostas ficam só aqui. <a href="#chave">Ligar agora</a>'; return; }
+    el.textContent = 'Servidor: conferindo…';
+    const r = await testaChave(k);
+    if (r === 'ok') el.innerHTML = 'Servidor: <b>ligado</b> neste aparelho. <a href="#chave">trocar a chave</a>';
+    else el.innerHTML = 'Servidor: <b>' + (/confere/.test(r) ? 'chave recusada' : 'sem resposta') + '</b> — ' + r + ' <a href="#chave">Corrigir agora</a>';
   }
 
   // ───────── telas ─────────
@@ -440,7 +445,7 @@
       $('quem').querySelector('b').textContent = sessao.nome;
       $('quem').querySelector('span').textContent = NOME_PAPEL[sessao.papel] || '';
       if (tela === 'inicio') { inicio(); pintaEstadoSync(); }
-      if (tela === 'chave') { const k = $('k-chave'); if (k) setTimeout(() => k.focus(), 60); }
+      if (tela === 'chave') { const k = $('k-chave'); if (k) { if (!k.value) k.value = chaveDoAparelho(); setTimeout(() => { k.focus(); k.select(); }, 60); } }
       if (tela === 'admin') admin();
     }
   }
