@@ -49,6 +49,9 @@
   .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:8px 0}
   .kpi div{background:var(--roxo-claro);border-radius:12px;padding:10px 8px;text-align:center} .kpi b{display:block;font-size:26px;color:var(--roxo-escuro);line-height:1.1} .kpi span{font-size:12px;color:var(--cinza);display:block;margin-top:3px}
   table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0} th,td{padding:7px 8px;border-bottom:1px solid var(--linha);text-align:center;vertical-align:middle} th{background:var(--roxo-claro);color:var(--roxo-escuro);font-size:13px} td.l,th.l{text-align:left}
+  .abas{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+  .aba{padding:11px 18px;border-radius:999px;border:2px solid var(--linha);background:var(--card);color:var(--cinza);font-weight:700;font-size:15.5px;cursor:pointer}
+  .aba.on{border-color:var(--roxo);background:var(--roxo);color:#fff}
   .tabela-wrap{overflow-x:auto}
   .mini{height:10px;background:var(--roxo-claro);border-radius:6px;overflow:hidden;min-width:70px;display:inline-block;vertical-align:middle;width:90px} .mini i{display:block;height:100%;background:var(--roxo)} .mini.acento i{background:var(--acento)}
   .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700} .tag.ok{background:#E6F4EA;color:#1B5E20} .tag.pend{background:#FFF4D6;color:#7A5A00} .tag.ruim{background:#FBE3E3;color:#7A1F1F}
@@ -326,7 +329,7 @@ function calc(cf){ travaUnidade(cf);
 }
 
 /* ---------------- telas ---------------- */
-const state = { screen: (ESCOPO && ESCOPO.papel !== 'aplicar') ? 'painel' : 'pin', pin: '', cf: cfDefault() };
+const state = { screen: (ESCOPO && ESCOPO.papel !== 'aplicar') ? 'painel' : 'pin', pin: '', cf: cfDefault(), aba: 'clientes' };
 function header(passo){ return `<div class="top"><div class="marca"><a href="../" class="home" title="Página inicial: escolher a pesquisa" aria-label="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a><span>Painel de resultados</span></div><div class="passo">${esc(passo || '')}</div></div>`; }
 function logoHero(){ return `<div class="logo-hero"><a href="../" class="home" title="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a></div>`; }
 function viewPin(){
@@ -382,23 +385,101 @@ function blocoConselho(g){
     ${g.n ? `<div class="kpi"><div><b>${pct(g.blocos.reuniao)}</b><span>índice da reunião</span></div>${g.conselheiros.map(cs => `<div><b>${pct(g.blocos[cs.c])}</b><span>${esc(cs.nome)} (${g.nBloco[cs.c]} aval.)${g.identBloco[cs.c] ? ' <span class="tag ruim">identificável</span>' : ''}</span></div>`).join('')}<div><b>${g.nota == null ? '—' : g.nota}</b><span>nota "valeu o tempo" (${g.notaN})</span></div></div>
     ${g.identTotal ? '<div class="ruim">Menos de 3 respostas: identifica quem respondeu — uso restrito da governança.</div>' : (g.blocosIdent.length ? `<div class="ruim">Bloco com menos de 3 avaliações: ${esc(g.blocosIdent.join(', '))} — não discutir individualmente.</div>` : '')}` : '<p class="muted">Sem avaliações do conselho no filtro.</p>'}</div>`;
 }
-function viewPainel(){
-  const C = calc(state.cf); const { cf, gEq, gCl, gCo } = C; const opt = (arr, sel, fmt) => arr.map(v => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(fmt ? fmt(v) : v)}</option>`).join('');
-  const vazio = !gEq.n && !gCl.n && !gCo.n; const semNada = !C.totais.equipe && !C.totais.clientes && !C.totais.conselho;
-  const fontes = DEMO ? '<div class="aviso"><b>Dados de exemplo</b> (demonstração): números inventados só para mostrar o painel.</div>' : (C.origem ? `<p class="small muted">Fontes: ${['equipe', 'clientes', 'conselho'].map(k => `${k} ${C.origem[k].aparelho} deste aparelho + ${C.origem[k].nuvem} da nuvem`).join(' · ')}.</p>` : '');
-  return header('Painel consolidado') + `<div class="wrap">
-  <div class="card">
-    <div class="espaco"><h1 style="margin:0">Painel de resultados — todas as pesquisas</h1><div class="linha" style="margin:0"><button class="btn" data-action="xlsx" ${vazio ? 'disabled' : ''}>Baixar Excel único</button><button class="btn" data-action="pdf" ${vazio ? 'disabled' : ''}>Baixar PDF único</button><button class="btn ghost" data-action="config">Configurações</button></div></div>
-    <div class="linha" style="margin-top:8px">${syncOk() ? `<button class="btn light mini" data-action="sync">Atualizar da nuvem</button><span class="small muted">${settings.ultimaSync ? 'Última atualização: ' + esc(syncLabel(settings.ultimaSync)) : 'Ainda não atualizado da nuvem'} · <button class="btn ghost mini" data-action="syncfull">baixar tudo de novo</button></span>` : '<span class="small muted">Sincronização online desligada: mostrando só o que está neste aparelho. Configure a URL e a chave do servidor em <b>Configurações</b> para ver todos os tablets (LEIA-ME, seção 11).</span>'}</div>
-    ${fontes}
-    ${semNada && !DEMO ? '<div class="aviso">Ainda não há respostas neste aparelho nem baixadas da nuvem. Responda nas pesquisas ou configure o servidor e toque em <i>Atualizar da nuvem</i>.</div>' : ''}
-    <h3>Filtros</h3>
+function abasBarra(){
+  const abas = [['clientes', '🚗 Clientes'], ['equipe', '👷 Equipe'], ['conselho', '🏛️ Conselho'], ['consolidado', '📊 Consolidado']];
+  return '<div class="abas">' + abas.map(([k, t]) =>
+    `<button class="aba${state.aba === k ? ' on' : ''}" data-action="aba" data-aba="${k}">${t}</button>`).join('') + '</div>';
+}
+function filtrosCard(C, comUnidade){
+  const cf = C.cf; const opt = (arr, sel, fmt) => arr.map(v => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(fmt ? fmt(v) : v)}</option>`).join('');
+  return `<h3>Filtros</h3>
     <div class="filtros">
       <div><label>Ano</label><select data-cf="ano"><option value="">Todos</option>${opt(C.anos, cf.ano)}</select></div>
       <div><label>Mês</label><select data-cf="mes"><option value="">Todos</option>${opt(C.mesesOpt, cf.mes, m => mesLabel('0000-' + m).slice(0, 3))}</select></div>
-      <div><label>Unidade (equipe e clientes)</label><select data-cf="unidade"><option value="">Todas</option>${opt(C.unidadesOpt, cf.unidade, u => u + (nomeU(u) ? ' · ' + nomeU(u) : ''))}</select></div>
+      ${comUnidade ? `<div><label>Unidade</label><select data-cf="unidade"><option value="">Todas</option>${opt(C.unidadesOpt, cf.unidade, u => u + (nomeU(u) ? ' · ' + nomeU(u) : ''))}</select></div>` : ''}
     </div>
-    <p class="small muted">Mostrando: ${esc(C.filtroTxt)}. A avaliação do conselho não tem unidade: entra pelos filtros de ano e mês.</p>
+    <p class="small muted">Mostrando: ${esc(C.filtroTxt)}.${comUnidade ? '' : ' A avaliação do conselho não tem unidade: entra pelos filtros de ano e mês.'}</p>`;
+}
+function cabecalhoPainel(C, titulo, vazio){
+  const semNada = !C.totais.equipe && !C.totais.clientes && !C.totais.conselho;
+  const fontes = DEMO ? '<div class="aviso"><b>Dados de exemplo</b> (demonstração): números inventados só para mostrar o painel.</div>' : (C.origem ? `<p class="small muted">Fontes: ${['equipe', 'clientes', 'conselho'].map(k => `${k} ${C.origem[k].aparelho} deste aparelho + ${C.origem[k].nuvem} da nuvem`).join(' · ')}.</p>` : '');
+  return `<div class="espaco"><h1 style="margin:0">${esc(titulo)}</h1><div class="linha" style="margin:0"><button class="btn" data-action="xlsx" ${vazio ? 'disabled' : ''}>Baixar Excel único</button><button class="btn" data-action="pdf" ${vazio ? 'disabled' : ''}>Baixar PDF único</button><button class="btn ghost" data-action="config">Configurações</button></div></div>
+    <div class="linha" style="margin-top:8px">${syncOk() ? `<button class="btn light mini" data-action="sync">Atualizar da nuvem</button><span class="small muted">${settings.ultimaSync ? 'Última atualização: ' + esc(syncLabel(settings.ultimaSync)) : 'Ainda não atualizado da nuvem'} · <button class="btn ghost mini" data-action="syncfull">baixar tudo de novo</button></span>` : '<span class="small muted">Sincronização online desligada: mostrando só o que está neste aparelho. Ligue o servidor em <b>Configurações</b>.</span>'}</div>
+    ${fontes}
+    ${semNada && !DEMO ? '<div class="aviso">Ainda não há respostas neste aparelho nem baixadas da nuvem. Responda nas pesquisas ou toque em <i>Atualizar da nuvem</i>.</div>' : ''}`;
+}
+function rodapePainel(vazio){
+  return `<div class="linha rodape-acoes"><button class="btn" data-action="xlsx" ${vazio ? 'disabled' : ''}>Baixar Excel único</button><button class="btn" data-action="pdf" ${vazio ? 'disabled' : ''}>Baixar PDF único</button><a class="btn ghost" href="../">Página inicial</a></div>
+    <p class="legenda">Painel v${VERSAO} · uso restrito da área de Experiência do Cliente e da governança.</p>`;
+}
+function detalhesEquipe(gEq){
+  return `<details open><summary>Equipe — as 15 frases (${gEq.n} respostas)</summary><div class="tabela-wrap"><table><tr><th>#</th><th class="l">Dimensão</th><th class="l">Frase</th><th>Peso</th><th>Resp.</th><th>N/A</th><th>% Sim</th><th>% Não</th></tr>${gEq.itens.map((it, i) => `<tr><td>${i + 1}</td><td class="l">${esc(it.dim)}</td><td class="l">${esc(it.t)}</td><td>${it.p}</td><td>${it.n}</td><td>${it.na}</td><td class="l">${bar(it.pctSim)}</td><td>${pct(it.pctNao)}</td></tr>`).join('')}</table></div></details>`;
+}
+function detalhesClientes(gCl){
+  return `<details open><summary>Clientes — 7 fatores e problemas (${gCl.n} respostas)</summary><div class="tabela-wrap"><table><tr><th class="l">Fator</th><th>Peso</th><th>Resp.</th><th>N/A</th><th>% positivo</th><th>% negativo</th></tr>${gCl.fatores.map(f => `<tr><td class="l">${esc(f.f)}</td><td>${f.p}</td><td>${f.n}</td><td>${f.na}</td><td class="l">${bar(f.pct, 'acento')}</td><td>${pct(f.neg)}</td></tr>`).join('')}</table></div>
+      <div class="tabela-wrap"><table><tr><th class="l">Problema principal</th><th>Respostas</th><th>%</th></tr>${Object.keys(CL.problemas).map(k => `<tr><td class="l">${esc(CL.problemas[k])}</td><td>${gCl.problemas[k] || 0}</td><td>${gCl.n ? Math.round((gCl.problemas[k] || 0) / gCl.n * 100) + '%' : '—'}</td></tr>`).join('')}</table></div>
+      <div class="tabela-wrap"><table><tr><th class="l">Como foi resolvido (quem teve problema: ${gCl.comProblema})</th><th>Respostas</th></tr>${Object.keys(CL.resolv).map(k => `<tr><td class="l">${esc(CL.resolv[k])}</td><td>${gCl.resolv[k] || 0}</td></tr>`).join('')}</table></div>
+      <div class="tabela-wrap"><table><tr><th class="l">Tipo de cliente</th><th>Respostas</th><th>%</th></tr>${Object.keys(CL.tipos).map(k => `<tr><td class="l">${esc(CL.tipos[k])}</td><td>${gCl.tipos[k] || 0}</td><td>${gCl.n ? Math.round((gCl.tipos[k] || 0) / gCl.n * 100) + '%' : '—'}</td></tr>`).join('')}</table></div></details>`;
+}
+function detalhesConselho(gCo, C){
+  return `<details open><summary>Conselho — reuniões e itens (${gCo.n} respostas)</summary><div class="tabela-wrap"><table><tr><th class="l">Reunião</th><th>Resp.</th><th>Índice reunião</th>${gCo.conselheiros.map(cs => `<th>${esc(cs.nome)}</th>`).join('')}<th>Nota média</th><th>% 9-10</th></tr>${C.reunioes.map(u => `<tr><td class="l"><b>${esc(dataLabel(u.unidade))}</b> <span class="small muted">${esc(u.nome)}</span>${u.identificavel ? ' <span class="tag ruim">identificável</span>' : ''}</td><td>${u.n}</td><td>${pct(u.blocos.reuniao)}</td>${gCo.conselheiros.map(cs => `<td>${pct(u.blocos[cs.c])}${u.nBloco[cs.c] !== u.n ? ` <span class="small muted">(${u.nBloco[cs.c]})</span>` : ''}</td>`).join('')}<td>${u.nota == null ? '—' : u.nota}</td><td>${pct(u.nota9)}</td></tr>`).join('') || `<tr><td colspan="${5 + gCo.conselheiros.length}" class="muted">Sem reuniões no filtro.</td></tr>`}</table></div>
+      <div class="tabela-wrap"><table><tr><th>Código</th><th class="l">Bloco</th><th class="l">Item</th><th>Peso</th><th>Resp.</th><th>Não sei</th><th>% positivo</th><th>% negativo</th></tr>${gCo.itens.map(q => `<tr><td>${esc(q.c)}</td><td class="l">${esc(q.blocoNome)}</td><td class="l">${esc(q.f)}</td><td>${q.p}</td><td>${q.n}</td><td>${q.na}</td><td class="l">${bar(q.pct)}</td><td>${pct(q.neg)}</td></tr>`).join('')}</table></div></details>`;
+}
+function cardUnidadesCl(C){
+  return `<div class="card"><h2>Por unidade — clientes</h2>
+    <div class="tabela-wrap"><table><tr><th class="l">Unidade</th><th class="l">Local</th><th>Respostas</th><th>CSAT %</th><th>NPS</th><th>% c/ problema</th></tr>
+    ${C.porUnidade.filter(u => u.cl.n).map(u => `<tr><td class="l"><b>${esc(u.unidade)}</b></td><td class="l small muted">${esc(u.nome)}</td><td>${u.cl.n}</td><td class="l">${bar(u.cl.csat, 'acento')}</td><td>${u.cl.nps == null ? '—' : u.cl.nps}</td><td>${pct(u.cl.pctProblema)}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Sem respostas de clientes no filtro.</td></tr>'}</table></div></div>`;
+}
+function cardUnidadesEq(C){
+  return `<div class="card"><h2>Por unidade — equipe</h2>
+    <div class="tabela-wrap"><table><tr><th class="l">Unidade</th><th class="l">Local</th><th>Respostas</th><th>% Sim pond.</th><th>eNPS</th><th>Aviso</th></tr>
+    ${C.porUnidade.filter(u => u.eq.n).map(u => `<tr><td class="l"><b>${esc(u.unidade)}</b></td><td class="l small muted">${esc(u.nome)}</td><td>${u.eq.n}</td><td class="l">${bar(u.eq.pctSimPond)}</td><td>${u.eq.enpsVal == null ? '—' : u.eq.enpsVal}</td><td>${avisoEq(u.eq)}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Sem respostas de equipe no filtro.</td></tr>'}</table></div>
+    <p class="legenda">"identificável" = menos de 3 respostas da equipe na unidade (uso restrito); "poucas" = menos de 5.</p></div>`;
+}
+function cardTendenciaUma(C, qual){
+  const cfg = {
+    clientes: { titulo: 'Tendência mensal — clientes', serie: { nome: 'CSAT % positivo', cor: '#9935F4', pts: C.tendencia.map(t => t.cl.csat) },
+      cols: ['Respostas', 'CSAT %', 'NPS', '% c/ problema'], linha: t => [t.cl.n || '—', pct(t.cl.csat), t.cl.nps == null ? '—' : t.cl.nps, pct(t.cl.pctProblema)] },
+    equipe: { titulo: 'Tendência mensal — equipe', serie: { nome: '% Sim ponderado', cor: '#6B4A98', pts: C.tendencia.map(t => t.eq.pctSimPond) },
+      cols: ['Respostas', '% Sim pond.', 'eNPS', 'Aviso'], linha: t => [t.eq.n || '—', pct(t.eq.pctSimPond), t.eq.enpsVal == null ? '—' : t.eq.enpsVal, avisoEq(t.eq)] },
+    conselho: { titulo: 'Tendência mensal — conselho', serie: { nome: 'Índice da reunião', cor: '#2E7D32', pts: C.tendencia.map(t => t.co.blocos.reuniao == null ? null : t.co.blocos.reuniao) },
+      cols: ['Respostas', 'Índice reunião'], linha: t => [t.co.n || '—', pct(t.co.blocos.reuniao)] }
+  }[qual];
+  return `<div class="card"><h2>${cfg.titulo}</h2>
+    ${graficoLinhas(C.tendencia.map(t => t.mes), [cfg.serie])}
+    <div class="tabela-wrap"><table><tr><th class="l">Mês</th>${cfg.cols.map(c => `<th>${c}</th>`).join('')}</tr>
+    ${C.tendencia.map(t => `<tr><td class="l"><b>${esc(mesLabel(t.mes))}</b></td>${cfg.linha(t).map(v => `<td>${v}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${cfg.cols.length + 1}" class="muted">Sem dados no filtro.</td></tr>`}</table></div></div>`;
+}
+function viewPainel(){
+  const C = calc(state.cf); const { gEq, gCl, gCo } = C;
+  const vazio = !gEq.n && !gCl.n && !gCo.n;
+  const aba = state.aba || 'clientes';
+
+  if (aba === 'clientes') {
+    return header('Painel · clientes') + `<div class="wrap">${abasBarra()}
+      <div class="card">${cabecalhoPainel(C, 'Pesquisa com CLIENTES', vazio)}${filtrosCard(C, true)}
+        <div class="grade">${blocoClientes(gCl)}</div></div>
+      ${cardUnidadesCl(C)}
+      ${cardTendenciaUma(C, 'clientes')}
+      <div class="card"><h2>Detalhes</h2>${detalhesClientes(gCl)}${rodapePainel(vazio)}</div></div>`;
+  }
+  if (aba === 'equipe') {
+    return header('Painel · equipe') + `<div class="wrap">${abasBarra()}
+      <div class="card">${cabecalhoPainel(C, 'Pesquisa com a EQUIPE', vazio)}${filtrosCard(C, true)}
+        <div class="grade">${blocoEquipe(gEq, C)}</div></div>
+      ${cardUnidadesEq(C)}
+      ${cardTendenciaUma(C, 'equipe')}
+      <div class="card"><h2>Detalhes</h2>${detalhesEquipe(gEq)}${rodapePainel(vazio)}</div></div>`;
+  }
+  if (aba === 'conselho') {
+    return header('Painel · conselho') + `<div class="wrap">${abasBarra()}
+      <div class="card">${cabecalhoPainel(C, 'Avaliação do CONSELHO', vazio)}${filtrosCard(C, false)}
+        <div class="grade">${blocoConselho(gCo)}</div></div>
+      ${cardTendenciaUma(C, 'conselho')}
+      <div class="card"><h2>Detalhes</h2>${detalhesConselho(gCo, C)}${rodapePainel(vazio)}</div></div>`;
+  }
+  return header('Painel consolidado') + `<div class="wrap">${abasBarra()}
+  <div class="card">${cabecalhoPainel(C, 'Consolidado — as três pesquisas', vazio)}${filtrosCard(C, true)}
     <div class="grade">${blocoEquipe(gEq, C)}${blocoClientes(gCl)}${blocoConselho(gCo)}</div>
   </div>
   <div class="card"><h2>Por unidade — equipe × clientes</h2>
@@ -410,19 +491,10 @@ function viewPainel(){
     ${graficoLinhas(C.tendencia.map(t => t.mes), [{ nome: 'Equipe · % Sim ponderado', cor: '#6B4A98', pts: C.tendencia.map(t => t.eq.pctSimPond) }, { nome: 'Clientes · CSAT % positivo', cor: '#9935F4', pts: C.tendencia.map(t => t.cl.csat) }, { nome: 'Conselho · índice da reunião', cor: '#2E7D32', pts: C.tendencia.map(t => t.co.blocos.reuniao == null ? null : t.co.blocos.reuniao) }])}
     <div class="tabela-wrap"><table><tr><th class="l">Mês</th><th>Equipe resp.</th><th>% Sim pond.</th><th>eNPS</th><th>Clientes resp.</th><th>CSAT %</th><th>NPS</th><th>% c/ problema</th><th>Conselho resp.</th><th>Índice reunião</th><th>Aviso</th></tr>
     ${C.tendencia.map(t => `<tr><td class="l"><b>${esc(mesLabel(t.mes))}</b></td><td>${t.eq.n || '—'}</td><td>${pct(t.eq.pctSimPond)}</td><td>${t.eq.enpsVal == null ? '—' : t.eq.enpsVal}</td><td>${t.cl.n || '—'}</td><td>${pct(t.cl.csat)}</td><td>${t.cl.nps == null ? '—' : t.cl.nps}</td><td>${pct(t.cl.pctProblema)}</td><td>${t.co.n || '—'}</td><td>${pct(t.co.blocos.reuniao)}</td><td>${avisoEq(t.eq)}${t.co.identificavel ? ' <span class="tag ruim">conselho identificável</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="11" class="muted">Sem dados no filtro.</td></tr>'}</table></div>
-    <p class="legenda">"identificável" = menos de 3 respostas da equipe no mês, ou menos de 3 avaliações numa reunião ou num bloco de conselheiro: uso restrito, não discutir individualmente.</p>
   </div>
   <div class="card"><h2>Detalhes por pesquisa</h2>
-    <details><summary>Equipe — as 15 frases (${gEq.n} respostas)</summary><div class="tabela-wrap"><table><tr><th>#</th><th class="l">Dimensão</th><th class="l">Frase</th><th>Peso</th><th>Resp.</th><th>N/A</th><th>% Sim</th><th>% Não</th></tr>${gEq.itens.map((it, i) => `<tr><td>${i + 1}</td><td class="l">${esc(it.dim)}</td><td class="l">${esc(it.t)}</td><td>${it.p}</td><td>${it.n}</td><td>${it.na}</td><td class="l">${bar(it.pctSim)}</td><td>${pct(it.pctNao)}</td></tr>`).join('')}</table></div></details>
-    <details><summary>Clientes — 7 fatores e problemas (${gCl.n} respostas)</summary><div class="tabela-wrap"><table><tr><th class="l">Fator</th><th>Peso</th><th>Resp.</th><th>N/A</th><th>% positivo</th><th>% negativo</th></tr>${gCl.fatores.map(f => `<tr><td class="l">${esc(f.f)}</td><td>${f.p}</td><td>${f.n}</td><td>${f.na}</td><td class="l">${bar(f.pct, 'acento')}</td><td>${pct(f.neg)}</td></tr>`).join('')}</table></div>
-      <div class="tabela-wrap"><table><tr><th class="l">Problema principal</th><th>Respostas</th><th>%</th></tr>${Object.keys(CL.problemas).map(k => `<tr><td class="l">${esc(CL.problemas[k])}</td><td>${gCl.problemas[k] || 0}</td><td>${gCl.n ? Math.round((gCl.problemas[k] || 0) / gCl.n * 100) + '%' : '—'}</td></tr>`).join('')}</table></div>
-      <div class="tabela-wrap"><table><tr><th class="l">Como foi resolvido (quem teve problema: ${gCl.comProblema})</th><th>Respostas</th></tr>${Object.keys(CL.resolv).map(k => `<tr><td class="l">${esc(CL.resolv[k])}</td><td>${gCl.resolv[k] || 0}</td></tr>`).join('')}</table></div>
-      <div class="tabela-wrap"><table><tr><th class="l">Tipo de cliente</th><th>Respostas</th><th>%</th></tr>${Object.keys(CL.tipos).map(k => `<tr><td class="l">${esc(CL.tipos[k])}</td><td>${gCl.tipos[k] || 0}</td><td>${gCl.n ? Math.round((gCl.tipos[k] || 0) / gCl.n * 100) + '%' : '—'}</td></tr>`).join('')}</table></div></details>
-    <details><summary>Conselho — reuniões e itens (${gCo.n} respostas)</summary><div class="tabela-wrap"><table><tr><th class="l">Reunião</th><th>Resp.</th><th>Índice reunião</th>${gCo.conselheiros.map(cs => `<th>${esc(cs.nome)}</th>`).join('')}<th>Nota média</th><th>% 9-10</th></tr>${C.reunioes.map(u => `<tr><td class="l"><b>${esc(dataLabel(u.unidade))}</b> <span class="small muted">${esc(u.nome)}</span>${u.identificavel ? ' <span class="tag ruim">identificável</span>' : ''}</td><td>${u.n}</td><td>${pct(u.blocos.reuniao)}</td>${gCo.conselheiros.map(cs => `<td>${pct(u.blocos[cs.c])}${u.nBloco[cs.c] !== u.n ? ` <span class="small muted">(${u.nBloco[cs.c]})</span>` : ''}</td>`).join('')}<td>${u.nota == null ? '—' : u.nota}</td><td>${pct(u.nota9)}</td></tr>`).join('') || `<tr><td colspan="${5 + gCo.conselheiros.length}" class="muted">Sem reuniões no filtro.</td></tr>`}</table></div>
-      <div class="tabela-wrap"><table><tr><th>Código</th><th class="l">Bloco</th><th class="l">Item</th><th>Peso</th><th>Resp.</th><th>Não sei</th><th>% positivo</th><th>% negativo</th></tr>${gCo.itens.map(q => `<tr><td>${esc(q.c)}</td><td class="l">${esc(q.blocoNome)}</td><td class="l">${esc(q.f)}</td><td>${q.p}</td><td>${q.n}</td><td>${q.na}</td><td class="l">${bar(q.pct)}</td><td>${pct(q.neg)}</td></tr>`).join('')}</table></div></details>
-    <p class="legenda">Contas iguais às de cada app: positivo = melhor resposta com escala de 3 (as duas melhores com escala de 5); índices ponderados pelos pesos em uso neste aparelho. Comentários e contatos não aparecem nas telas nem no PDF do painel; no Excel único, as abas Resp. trazem só as respostas abertas (aberta1/aberta2, coment, mais/mudar), sem comentários por frase da equipe e sem contato — esses ficam em cada pesquisa.</p>
-    <div class="linha rodape-acoes"><button class="btn" data-action="xlsx" ${vazio ? 'disabled' : ''}>Baixar Excel único</button><button class="btn" data-action="pdf" ${vazio ? 'disabled' : ''}>Baixar PDF único</button><a class="btn ghost" href="../">Página inicial</a></div>
-    <p class="legenda">Painel v${VERSAO} · uso restrito da área de Experiência do Cliente e da governança.</p>
+    ${detalhesEquipe(gEq)}${detalhesClientes(gCl)}${detalhesConselho(gCo, C)}
+    ${rodapePainel(vazio)}
   </div></div>`;
 }
 function viewConfig(){
@@ -611,6 +683,7 @@ document.addEventListener('click', e => {
     case 'pinkey': { if (el.dataset.k === 'del') state.pin = state.pin.slice(0, -1); else if (state.pin.length < 8) state.pin += el.dataset.k; render(); break; }
     case 'pinok': pinTentativa(); break;
     case 'painel': go('painel'); break;
+    case 'aba': { state.aba = el.dataset.aba || 'clientes'; render(); window.scrollTo(0, 0); break; }
     case 'config': go('config'); break;
     case 'sync': sincronizar(false); break;
     case 'syncfull': sincronizar(false, true); break;
