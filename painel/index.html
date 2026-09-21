@@ -80,7 +80,47 @@
    As contas repetem as de cada app (mesmos pesos, mesma regra de positivo). Área protegida por PIN. LEIA-ME, seção 13.
    ========================================================= */
 const VERSAO = '1.0.0';
-const PIN_PADRAO = '2819';   // PIN de fábrica das pesquisas. Se alguma pesquisa deste aparelho tiver o PIN trocado, o painel usa esse PIN (pinAtual); troca também em Configurações. Atenção: este código é público.
+const PIN_PADRAO = '2819';
+
+/* ---------- acesso vindo da pagina inicial (#a=...) ---------- */
+const ESCOPO = (() => {
+  try {
+    const m = /[#&]a=([A-Za-z0-9\-_]+)/.exec(location.hash || '');
+    if (!m) return null;
+    let b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (b.length % 4) b += '=';
+    const j = JSON.parse(decodeURIComponent(escape(atob(b))));
+    if (!j || !j.e) return null;
+    return {
+      nome: j.n || j.e, email: j.e, papel: j.p || 'total',
+      pesquisas: Array.isArray(j.q) ? j.q : ['clientes', 'equipe', 'conselho'],
+      unidades: (!j.u || j.u === 'todas') ? null : (Array.isArray(j.u) ? j.u : [j.u])
+    };
+  } catch (e) { return null; }
+})();
+function escNormU(x){ return String(x == null ? '' : x).toLowerCase().replace(/[^0-9a-zà-ú]+/g, ''); }
+function unidadesPermitidas(opts){
+  if (!ESCOPO || !ESCOPO.unidades) return opts;
+  const alvo = ESCOPO.unidades.map(escNormU);
+  const alvoN = alvo.map(a => a.replace(/\D/g, '')).filter(Boolean);
+  return (opts || []).filter(o => {
+    const n = escNormU(o), d = n.replace(/\D/g, '');
+    return alvo.indexOf(n) >= 0 || (d && alvoN.indexOf(d) >= 0);
+  });
+}
+function unidadesDoPool(){
+  try {
+    const P = pool();
+    return [...new Set((P.equipe || []).map(r => r.unidade).concat((P.clientes || []).map(r => r.unidade)))].filter(Boolean).sort();
+  } catch (e) { return []; }
+}
+function travaUnidade(cf){
+  if (!ESCOPO || !ESCOPO.unidades) return;
+  const perm = unidadesPermitidas(unidadesDoPool());
+  if (!perm.length) { cf.unidade = '\u0000sem-unidade'; return; }
+  if (perm.indexOf(cf.unidade) < 0) cf.unidade = perm[0];
+}
+   // PIN de fábrica das pesquisas. Se alguma pesquisa deste aparelho tiver o PIN trocado, o painel usa esse PIN (pinAtual); troca também em Configurações. Atenção: este código é público.
 const PIN_MAX_FALHAS = 5, PIN_BLOQUEIO_MS = 60000;
 const N_IDENT = 3, N_POUCAS = 5;   // regras de divulgação iguais às dos apps
 const DEMO = /[?&]demo=1/.test(location.search);   // dados de exemplo (demonstração online)
@@ -180,6 +220,15 @@ function locais(){ return { equipe: (LS.get('mp_respostas', []) || []).concat(LS
 function nuvem(){ const n = LS.get('mpp_nuvem', {}) || {}; return { equipe: n.equipe || [], clientes: n.clientes || [], conselho: n.conselho || [] }; }
 let poolCache = null;
 function pool(){
+  const P = poolBruto();
+  if (!ESCOPO || ESCOPO.papel === 'total' || ESCOPO.papel === 'admin') return P;
+  const ok = k => (ESCOPO.pesquisas || []).indexOf(k) >= 0;
+  return { origem: P.origem,
+    equipe:   ok('equipe')   ? P.equipe   : [],
+    clientes: ok('clientes') ? P.clientes : [],
+    conselho: ok('conselho') ? P.conselho : [] };
+}
+function poolBruto(){
   if (poolCache) return poolCache;
   if (DEMO) { poolCache = demoPool(); return poolCache; }
   const loc = locais(), nv = nuvem(); const out = { origem: {} };
@@ -250,7 +299,7 @@ function agConselho(list){
 function mesDe(k, r){ if (k === 'equipe') return (r.mes || '') || (r.data || '').slice(0, 7); if (k === 'clientes') return (r.data || '').slice(0, 7); return (r.unidade || '').slice(0, 7); }
 function filtrar(k, list, cf){ return list.filter(r => { const m = mesDe(k, r); if (cf.ano && m.slice(0, 4) !== cf.ano) return false; if (cf.mes && m.slice(5, 7) !== cf.mes) return false; if (k !== 'conselho' && cf.unidade && r.unidade !== cf.unidade) return false; return true; }); }
 function cfDefault(){ return { ano: '', mes: '', unidade: '' }; }
-function calc(cf){
+function calc(cf){ travaUnidade(cf);
   const P = pool(); const eqTodas = P.equipe.filter(r => r.escala === EQ.escala); const legado = P.equipe.length - eqTodas.length;
   const todosMeses = [...new Set(eqTodas.map(r => mesDe('equipe', r)).concat(P.clientes.map(r => mesDe('clientes', r)), P.conselho.map(r => mesDe('conselho', r))))].filter(m => m && m.length >= 7);
   const anos = [...new Set(todosMeses.map(m => m.slice(0, 4)))].sort().reverse();
@@ -267,14 +316,30 @@ function calc(cf){
   const tendencia = meses.map(m => ({ mes: m, eq: agEquipe(eq.filter(r => mesDe('equipe', r) === m)), cl: agClientes(cl.filter(r => mesDe('clientes', r) === m)), co: agConselho(co.filter(r => mesDe('conselho', r) === m)) }));
   const reunioes = gCo.reunioes.slice().reverse().map(u => Object.assign({ unidade: u, nome: nomeReuniao(u) }, agConselho(co.filter(r => r.unidade === u))));
   const filtroTxt = [cf.ano || 'todos os anos', cf.mes ? mesLabel((cf.ano || '0000') + '-' + cf.mes).slice(0, 3) : 'todos os meses', cf.unidade ? 'unidade ' + cf.unidade : 'todas as unidades'].join(' · ');
-  return { cf, gEq, gCl, gCo, porUnidade, tendencia, reunioes, legado, anos, mesesOpt, unidadesOpt, filtroTxt, origem: P.origem || null, totais: { equipe: eqTodas.length, clientes: P.clientes.length, conselho: P.conselho.length } };
+  return { cf, gEq, gCl, gCo, porUnidade, tendencia, reunioes, legado, anos, mesesOpt, unidadesOpt: unidadesPermitidas(unidadesOpt), filtroTxt, origem: P.origem || null, totais: { equipe: eqTodas.length, clientes: P.clientes.length, conselho: P.conselho.length } };
 }
 
 /* ---------------- telas ---------------- */
-const state = { screen: 'pin', pin: '', cf: cfDefault() };
+const state = { screen: (ESCOPO && ESCOPO.papel !== 'aplicar') ? 'painel' : 'pin', pin: '', cf: cfDefault() };
 function header(passo){ return `<div class="top"><div class="marca"><a href="../" class="home" title="Página inicial: escolher a pesquisa" aria-label="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a><span>Painel de resultados</span></div><div class="passo">${esc(passo || '')}</div></div>`; }
 function logoHero(){ return `<div class="logo-hero"><a href="../" class="home" title="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a></div>`; }
 function viewPin(){
+  if (!ESCOPO || ESCOPO.papel === 'aplicar') {
+    const msg = ESCOPO
+      ? 'Seu acesso é de aplicar pesquisas: o painel de resultados não está liberado para você.'
+      : 'O painel de resultados abre pelo seu login. Entre na página inicial, faça login com seu e-mail e senha e escolha “Painel de RESULTADOS”.';
+    return header('Área do avaliador') +
+      '<div class="wrap"><div class="card" style="max-width:560px;margin:0 auto;text-align:center">' + logoHero() +
+      '<h2>Entre pela página inicial</h2>' +
+      '<p class="small muted">' + msg + '</p>' +
+      '<p style="margin-top:20px"><a href="../" ' +
+      'style="display:inline-block;padding:14px 24px;border-radius:12px;background:#6B4A98;color:#fff;' +
+      'font-weight:700;font-size:17px;text-decoration:none">Ir para a página inicial &rarr;</a></p>' +
+      '</div></div>';
+  }
+  return viewPinAntigo();
+}
+function viewPinAntigo(){
   const bloqueado = settings.lockUntil && Date.now() < settings.lockUntil;
   return header('Área do avaliador') + `<div class="wrap"><div class="card" style="max-width:520px;margin:0 auto;text-align:center">${logoHero()}
     <h2>Painel de resultados — digite o PIN</h2><p class="small muted">Junta as três pesquisas (equipe, clientes e conselho) deste aparelho e da nuvem.</p>
