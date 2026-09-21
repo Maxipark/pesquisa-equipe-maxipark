@@ -214,14 +214,14 @@
       <span class="rot">O que pode fazer</span>
       <div class="papeis">
         <label class="papel"><input type="radio" name="papel" value="total" checked>
-          <span><span class="t">Visualizar tudo — todas as pesquisas e todas as unidades</span>
-          <span class="d">Vê o painel e as respostas das três pesquisas, sem exceção. Não abre pesquisa para responder, não exclui, não edita, não zera.</span></span></label>
+          <span><span class="t">Avaliador — vê todas as respostas</span>
+          <span class="d">As três pesquisas e todas as unidades, sem exceção. Só leitura: não aplica pesquisa, não exclui, não edita, não zera.</span></span></label>
         <label class="papel"><input type="radio" name="papel" value="respostas">
-          <span><span class="t">Somente ver as respostas</span>
-          <span class="d">Abre o painel com as pesquisas e unidades marcadas abaixo.</span></span></label>
+          <span><span class="t">Somente visualização — você escolhe o que ele vê</span>
+          <span class="d">Vê apenas os ícones e as unidades marcados abaixo. Também não aplica pesquisa.</span></span></label>
         <label class="papel"><input type="radio" name="papel" value="aplicar">
-          <span><span class="t">Somente aplicar as pesquisas</span>
-          <span class="d">Abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.</span></span></label>
+          <span><span class="t">Avaliador de campo — aplica as pesquisas, não vê respostas</span>
+          <span class="d">Abre as pesquisas no tablet para as pessoas responderem. Não enxerga nenhum resultado.</span></span></label>
       </div>
 
       <div id="quais">
@@ -298,12 +298,12 @@
   }
   const UNS = lerUnidades();
   const nomeU = c => { const u = UNS.find(x => x.codigo === c); return u && u.nome ? u.nome : ''; };
-  const NOME_PAPEL = { admin:'Administrador', total:'Visualiza tudo', respostas:'Vê as respostas', aplicar:'Aplica as pesquisas' };
+  const NOME_PAPEL = { admin:'Administrador', total:'Avaliador · vê todas as respostas', respostas:'Somente visualização', aplicar:'Avaliador de campo · não vê respostas' };
   const FRASE = {
     admin: 'Você administra os acessos e enxerga tudo.',
-    total: 'Você vê os resultados de todas as pesquisas e de todas as unidades. Só leitura: não aplica pesquisa nem altera nada.',
-    respostas: 'Você vê as respostas das pesquisas e unidades liberadas para você.',
-    aplicar: 'Você abre as pesquisas para as pessoas responderem.'
+    total: 'Avaliador: você vê as respostas de todas as pesquisas e de todas as unidades. Só leitura — não aplica pesquisa nem altera nada.',
+    respostas: 'Somente visualização: você vê apenas os resultados e as unidades liberados para o seu acesso.',
+    aplicar: 'Avaliador de campo: você abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.'
   };
   const norm = e => (e || '').trim().toLowerCase();
   const hoje = () => new Date().toISOString().slice(0, 10);
@@ -491,17 +491,17 @@
     return '<div class="editor-perfil">' +
       '<span class="rot">O que ' + e(c.nome.split(' ')[0]) + ' pode fazer</span>' +
       '<div class="papeis">' +
-        rad('total', 'Visualizar tudo — todas as pesquisas e todas as unidades', 'Vê o painel e as respostas das três pesquisas. Não abre pesquisa para responder.') +
-        rad('respostas', 'Somente ver as respostas', 'Abre o painel com as pesquisas e unidades marcadas abaixo.') +
-        rad('aplicar', 'Somente aplicar as pesquisas', 'Abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.') +
+        rad('total', 'Avaliador — vê todas as respostas', 'As três pesquisas e todas as unidades, sem exceção. Só leitura.') +
+        rad('respostas', 'Somente visualização — você escolhe o que ele vê', 'Vê apenas os ícones e as unidades marcados abaixo.') +
+        rad('aplicar', 'Avaliador de campo — aplica as pesquisas, não vê respostas', 'Abre as pesquisas no tablet. Não enxerga nenhum resultado.') +
       '</div>' +
       (papel === 'total' ? '' :
-        '<span class="rot">Quais ícones aparecem na página inicial</span>' +
+        '<span class="rot">' + (papel === 'aplicar' ? 'Quais pesquisas ele pode aplicar' : 'Quais ícones aparecem na página inicial') + '</span>' +
         '<div class="caixas">' +
           '<label class="cx"><input type="checkbox" data-epq="clientes"' + marcado('clientes') + '> \ud83d\ude97 Clientes</label>' +
           '<label class="cx"><input type="checkbox" data-epq="equipe"' + marcado('equipe') + '> \ud83d\udc77 Equipe</label>' +
           '<label class="cx"><input type="checkbox" data-epq="conselho"' + marcado('conselho') + '> \ud83c\udfdb\ufe0f Conselho</label>' +
-          '<label class="cx"><input type="checkbox" data-epq="consolidado"' + marcado('consolidado') + '> \ud83d\udcca Consolidado</label>' +
+          (papel === 'aplicar' ? '' : '<label class="cx"><input type="checkbox" data-epq="consolidado"' + marcado('consolidado') + '> \ud83d\udcca Consolidado</label>') +
         '</div>' +
         '<span class="rot">Quais unidades</span>' +
         '<input id="e-busca" type="search" placeholder="Procurar unidade (código ou bairro)" style="margin-bottom:10px">' +
@@ -547,6 +547,11 @@
   function ajustaQuais() {
     const p = document.querySelector('input[name=papel]:checked').value;
     $('quais').hidden = (p === 'total');
+    /* quem so aplica pesquisa nao tem "consolidado": isso e coisa de resultado */
+    const cons = document.querySelector('#cx-pq [data-pq="consolidado"]');
+    if (cons) { const cx = cons.closest('label'); cx.hidden = (p === 'aplicar'); if (p === 'aplicar') cons.checked = false; }
+    const rot = document.querySelector('#quais .rot');
+    if (rot) rot.textContent = (p === 'aplicar') ? 'Quais pesquisas ele pode aplicar' : 'Quais ícones aparecem na página inicial';
   }
 
   function admin() {
