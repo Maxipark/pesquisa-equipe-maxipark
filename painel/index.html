@@ -687,7 +687,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
   function pinta(tipo, texto) {
     const el = document.getElementById(ID); if (!el) return;
     const c = cores[tipo] || cores.neutro;
-    el.style.cssText = 'margin:8px 0 2px;padding:9px 12px;border-radius:10px;font-size:14.5px;font-weight:600;color:' + c[0] + ';background:' + c[1];
+    el.style.cssText = 'flex:1 1 180px;min-width:0;padding:9px 12px;border-radius:10px;font-size:14.5px;font-weight:600;color:' + c[0] + ';background:' + c[1];
     el.textContent = texto;
   }
   function valores() {
@@ -718,9 +718,29 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     const cx = document.getElementById('s-chave');
     if (!cx) { ultimo = ''; return; }
     if (!document.getElementById(ID)) {
+      const linha = document.createElement('div');
+      linha.style.cssText = 'display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0 2px';
       const el = document.createElement('div');
       el.id = ID;
-      cx.insertAdjacentElement('afterend', el);
+      const bt = document.createElement('button');
+      bt.type = 'button'; bt.id = 'btn-atualizar-app'; bt.textContent = 'Atualizar app agora';
+      bt.style.cssText = 'padding:10px 16px;border:2px solid #6B4A98;border-radius:10px;background:#fff;color:#6B4A98;font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap';
+      bt.addEventListener('click', async () => {
+        bt.disabled = true; bt.textContent = 'Atualizando\u2026';
+        try {
+          if (navigator.serviceWorker) {
+            const rs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(rs.map(r => r.update().catch(() => {})));
+          }
+          if (window.caches) {
+            const ks = await caches.keys();
+            await Promise.all(ks.map(k => caches.delete(k)));
+          }
+        } catch (e) {}
+        location.reload();
+      });
+      linha.appendChild(el); linha.appendChild(bt);
+      cx.insertAdjacentElement('afterend', linha);
       ultimo = '';
     }
     const agora = valores().join('|');
