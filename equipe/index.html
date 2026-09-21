@@ -618,6 +618,19 @@ function csvText(list){
 }
 
 function viewAdmin(){
+  return (typeof header === 'function' ? header('Área do avaliador') : '') +
+    '<div class="wrap"><div class="card" style="max-width:560px;margin:0 auto;text-align:center">' +
+    (typeof logoHero === 'function' ? logoHero() : '') +
+    '<h2>Os resultados abrem pela página inicial</h2>' +
+    '<p class="small muted">Esta área não mostra mais as respostas. Entre na página inicial com seu ' +
+    'e-mail e senha: lá aparecem só as pesquisas e os resultados liberados para o seu acesso.</p>' +
+    '<p style="margin-top:20px"><a href="../" ' +
+    'style="display:inline-block;padding:14px 24px;border-radius:12px;background:#6B4A98;color:#fff;' +
+    'font-weight:700;font-size:17px;text-decoration:none">Ir para a página inicial &rarr;</a></p>' +
+    '<p style="margin-top:16px"><button class="btn" data-action="tocollect">Voltar ao atendimento</button></p>' +
+    '</div></div>';
+}
+function viewAdminAntigo(){
   const list = currentResponses();
   const t = tally(list);
   const unsent = allResponses().filter(r => !r.sent).length;
