@@ -1157,11 +1157,27 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
   /* a pagina inicial nao tem cracha na URL: ela avisa quem entrou por aqui */
   function defineQuem(q) { if (q && q.email) guardaQuem({ nome: q.nome || q.email, email: q.email }); }
   function esqueceQuem() { try { localStorage.removeItem(QUEM); } catch (e) {} }
+  /* Ao fechar a pagina, um fetch normal e cancelado pelo navegador no meio do caminho.
+     sendBeacon foi feito para isso: entrega mesmo com a pagina fechando. Como ele nao
+     devolve resposta, a fila nao e limpa aqui — o servidor ignora id repetido e o
+     proximo envio normal limpa o que ja chegou. */
+  function enviaAoFechar() {
+    try {
+      const f = leFila(); if (!f.length) return;
+      const k = chave(); if (!k) return;
+      if (!navigator.sendBeacon) { envia(); return; }
+      const corpo = new Blob([JSON.stringify({ op: 'historico-add', chave: k, itens: f.slice(0, 80) })],
+                             { type: 'text/plain;charset=UTF-8' });
+      navigator.sendBeacon(servidor(), corpo);
+    } catch (e) {}
+  }
+
   window.__historico = { registra: registra, envia: envia, quem: quem, fila: leFila,
-                         defineQuem: defineQuem, esqueceQuem: esqueceQuem };
+                         defineQuem: defineQuem, esqueceQuem: esqueceQuem, enviaAoFechar: enviaAoFechar };
   setInterval(envia, 45000);
   window.addEventListener('online', envia);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) envia(); });
+  window.addEventListener('pagehide', enviaAoFechar);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) enviaAoFechar(); });
 })();
 </script>
 <script>
@@ -1177,7 +1193,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
       if (!a || a === ultima) return;
       ultima = a;
       reg('viu os resultados', { pesquisa: NOMES[a] || a });
-      if (window.__historico) window.__historico.envia();
+      /* sobe no relogio de 45s ou pelo sendBeacon ao fechar a aba */
     } catch (e) {}
   }
   setInterval(olha, 1500);
