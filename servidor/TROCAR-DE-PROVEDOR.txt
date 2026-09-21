@@ -2,7 +2,7 @@
 MAXIPARK - PESQUISAS
 COMO TROCAR A SENHA DO SERVIDOR, TROCAR DE PROVEDOR E MUDAR O SITE DE LUGAR
 (este arquivo e so um bilhete: nao roda nada, e so leitura)
-Atualizado em 21/09/2026 (v1.32.0)
+Atualizado em 21/09/2026 (v1.34.0)
 ---------------------------------------------------------------------------
 
 ONDE ESTA CADA COISA
@@ -40,6 +40,17 @@ ONDE ESTA CADA COISA
     NAO registra quando o administrador apaga ou reescreve o historico.
     So o administrador ve: pagina inicial > USUARIOS > Abrir o historico.
     A coluna 'quando' e TEXTO de proposito: se virar data, a planilha muda o fuso.
+
+
+  Botao claro/escuro (lua e sol):
+    Fica no canto de baixo a direita das cinco telas. A lua escurece, o sol
+    clareia. A escolha fica guardada NO APARELHO (nao no servidor e nao na
+    planilha) e vale para as cinco telas de uma vez, porque todas moram no
+    mesmo endereco de site. Enquanto ninguem escolher, o app segue o modo
+    claro/escuro do proprio aparelho.
+    Se o site mudar de endereco (item 4), cada aparelho volta a seguir o
+    modo do aparelho ate alguem tocar no botao de novo: e o mesmo motivo do
+    item 4.3 - cada endereco guarda as coisas separadamente.
 
 
 ===========================================================================
