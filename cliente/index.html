@@ -1191,5 +1191,118 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
   setInterval(monta, 800);
 })();
 </script>
+<script>
+/* ---- HISTORICO DE USO -----------------------------------------------------
+   Guarda quem fez o que: entrou, abriu uma pesquisa, aplicou uma sessao de
+   pesquisa, consultou resultados, mexeu no cadastro.
+   NAO guarda o horario de cada resposta: as pesquisas de equipe e de conselho
+   sao anonimas, e horario por resposta permitiria descobrir quem respondeu.
+   A fila fica neste aparelho e sobe para o servidor sozinha.                  */
+(() => {
+  const FILA = 'maxipark_hist_fila', QUEM = 'maxipark_hist_quem';
+  const GUARDA_CHAVE = 'maxipark_chave_sync', GUARDA_SRV = 'maxipark_servidor';
+  const SRV_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';
+
+  const chave = () => { try { return (localStorage.getItem(GUARDA_CHAVE) || '').trim(); } catch (e) { return ''; } };
+  const servidor = () => { try { return (localStorage.getItem(GUARDA_SRV) || '').trim() || SRV_PADRAO; } catch (e) { return SRV_PADRAO; } };
+  const leFila = () => { try { return JSON.parse(localStorage.getItem(FILA)) || []; } catch (e) { return []; } };
+  const gravaFila = f => { try { localStorage.setItem(FILA, JSON.stringify(f.slice(-400))); } catch (e) {} };
+
+  /* quem esta usando: vem do cracha na URL (#a=...) e fica guardado no aparelho */
+  function leCracha() {
+    try {
+      const m = /[#&]a=([A-Za-z0-9\-_]+)/.exec(location.hash || '');
+      if (!m) return null;
+      let b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      const j = JSON.parse(decodeURIComponent(escape(atob(b))));
+      if (!j || !j.e) return null;
+      return { nome: j.n || j.e, email: j.e };
+    } catch (e) { return null; }
+  }
+  function guardaQuem(q) { try { localStorage.setItem(QUEM, JSON.stringify(q)); } catch (e) {} }
+  function quem() {
+    const c = leCracha();
+    if (c) { guardaQuem(c); return c; }
+    try { const t = localStorage.getItem(QUEM); if (t) return JSON.parse(t); } catch (e) {}
+    return { nome: '(sem login)', email: '' };
+  }
+
+  const id = () => 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const agora = () => {
+    const d = new Date(), z = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
+  };
+
+  function registra(evento, extra) {
+    const q = quem(), e = extra || {};
+    const f = leFila();
+    f.push({ id: id(), quando: agora(), quem_nome: q.nome, quem_email: q.email,
+             evento: String(evento || ''), pesquisa: String(e.pesquisa || ''),
+             unidade: String(e.unidade || ''), detalhe: String(e.detalhe || '') });
+    gravaFila(f);
+  }
+
+  let enviando = false;
+  async function envia() {
+    if (enviando) return 'ocupado';
+    const f = leFila(); if (!f.length) return 'vazio';
+    const k = chave(); if (!k) return 'sem-chave';
+    if (!navigator.onLine) return 'sem-rede';
+    enviando = true;
+    try {
+      const lote = f.slice(0, 80);
+      const r = await fetch(servidor(), {
+        method: 'POST', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ op: 'historico-add', chave: k, itens: lote })
+      });
+      const j = await r.json();
+      if (j && j.ok) { gravaFila(leFila().slice(lote.length)); return 'ok'; }
+      return 'recusado';
+    } catch (e) { return 'falhou'; }
+    finally { enviando = false; }
+  }
+
+  /* a pagina inicial nao tem cracha na URL: ela avisa quem entrou por aqui */
+  function defineQuem(q) { if (q && q.email) guardaQuem({ nome: q.nome || q.email, email: q.email }); }
+  function esqueceQuem() { try { localStorage.removeItem(QUEM); } catch (e) {} }
+  window.__historico = { registra: registra, envia: envia, quem: quem, fila: leFila,
+                         defineQuem: defineQuem, esqueceQuem: esqueceQuem };
+  setInterval(envia, 45000);
+  window.addEventListener('online', envia);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) envia(); });
+})();
+</script>
+<script>
+/* ---- sessao de aplicacao da pesquisa ------------------------------------
+   Registra QUEM abriu a pesquisa, em qual unidade, a que horas comecou e
+   terminou, e QUANTAS respostas foram coletadas. NAO registra o horario de
+   cada resposta: as pesquisas sao anonimas e isso permitiria identificar
+   quem respondeu o que.                                                     */
+(() => {
+  const NOME = 'Clientes';
+  const conta = () => { try { return (typeof allResponses === 'function' ? allResponses() : []).length; } catch (e) { return 0; } };
+  const unid = () => { try { return (typeof settings === 'object' && settings && settings.unidade) || ''; } catch (e) { return ''; } };
+  const reg = (ev, ex) => { try { if (window.__historico) window.__historico.registra(ev, ex); } catch (e) {} };
+
+  let inicio = new Date(), base = conta(), fechou = false;
+  reg('abriu a pesquisa', { pesquisa: NOME, unidade: unid() });
+  try { if (window.__historico) window.__historico.envia(); } catch (e) {}
+
+  function fecha() {
+    if (fechou) return; fechou = true;
+    const n = conta() - base;
+    const hh = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    reg('aplicou a pesquisa', { pesquisa: NOME, unidade: unid(),
+      detalhe: n + (n === 1 ? ' resposta' : ' respostas') + ' \u00b7 das ' + hh(inicio) + ' \u00e0s ' + hh(new Date()) });
+    try { if (window.__historico) window.__historico.envia(); } catch (e) {}
+  }
+  addEventListener('pagehide', fecha);
+  addEventListener('beforeunload', fecha);
+  /* se o tablet ficar aberto o dia todo, fecha a sessao a cada 4 horas */
+  setInterval(() => { if (conta() > base) { fecha(); fechou = false; inicio = new Date(); base = conta(); } }, 4 * 60 * 60 * 1000);
+})();
+</script>
 </body>
 </html>
