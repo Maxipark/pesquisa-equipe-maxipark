@@ -112,6 +112,9 @@
   .papel .t{font-weight:700;font-size:16.5px}
   .papel .d{color:var(--cinza);font-size:14.5px;margin-top:2px}
   .caixas{display:flex;gap:9px;flex-wrap:wrap}
+  #cx-un{max-height:250px;overflow:auto;align-content:flex-start;padding:4px;border:1px solid var(--linha);border-radius:14px}
+  #cx-un .todas{flex:1 0 100%}
+  .muted-un{color:var(--cinza);font-size:13.5px}
   .cx{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--linha);border-radius:999px;
     padding:9px 15px;font-size:15px;cursor:pointer;background:var(--superficie);user-select:none}
   .cx:has(input:checked){border-color:var(--roxo);background:var(--roxo-claro);font-weight:600}
@@ -206,6 +209,7 @@
         <span class="rot">Quais pesquisas</span>
         <div class="caixas" id="cx-pq"></div>
         <span class="rot">Quais unidades</span>
+        <input id="busca-un" type="search" placeholder="Procurar unidade (código ou bairro)" style="margin-bottom:10px">
         <div class="caixas" id="cx-un"></div>
       </div>
 
@@ -255,7 +259,16 @@
       url: 'conselho/' }
   ];
   const URL_PAINEL = 'painel/';
-  const UNS = ['1','2','3','4','5','6','7'];
+  const UNIDADES_PADRAO = [['GAZETA','Bela Vista'],['FIESP','Jardins'],['FL.PARA','Bela Vista'],['BP','Bela Vista'],['HABITAT','Santa Cecília'],['LAV.ANGEL','Consolação'],['LAV.ANGEL II','Santa Cecília'],['ALTA.HIGIE','Higienópolis'],['NSB','Jardim América'],['ALTA.JARD','Jardins'],['GARDEN','Cerqueira César'],['INCOR','Cerqueira César'],['ACCAST','Aclimação'],['ACPRUDE','Liberdade'],['AC.PIRES','Liberdade'],['FL.JUND','Paraíso'],['SAL.PARAI','Paraíso'],['SAL.VMARIA','Vila Clementino'],['DEL.MAIO','Vila Clementino'],['DEL.RICAJAF','Vila Mariana'],['PAINEIRA','Vila da Saúde'],['LAV.LABAL','Ipiranga'],['A+MOOCA','Cambuci'],['DEL.MOOCA','Mooca'],['A+MOEMA','Indianópolis'],['LAV.MOE','Indianópolis'],['SAL.MOE','Moema'],['MONTREAL','Moema'],['FL.IBIRA','Ibirapuera'],['ALTA.IBIRA','Vila Mariana'],['VITA.REP','Moema'],['SAL.IBIRA','Planalto Paulista'],['ALTA.CBEL','Campo Belo'],['DEL.BROK','Santo Amaro'],['PET.CBEL','Campo Belo'],['GLOBO.SP','Vila Cordeiro'],['LAV.BORGAT','Santo Amaro'],['A+FLORA','Jd. Marajoara'],['DEL.WASLUIS','Jd. Marajoara'],['ALTA.PAN','Vila Andrade'],['DEL.JSUL','Vila Andrade'],['SAL.PORTAL','Vila Suzana'],['FL.ITAIM','Vila Olímpia'],['DEL.ITAIM','Itaim Bibi'],['AC.ITAIM','Jardim Paulista'],['QUITANDA','Pinheiros'],['DEL.PIN','Vila Madalena'],['ALTA.PIN','Vila Ida'],['FL.VILLA','Alto de Pinheiros'],['FL.SUMA','Perdizes'],['CARL','Perdizes / Sumaré'],['DEL.POM','Pompeia'],['CVLOP','Vila Romana'],['SAL.LAPA','Alto da Lapa'],['A+LAPA','Lapa'],['LAV.LAPA','Lapa'],['BR.LAPA','Lapa'],['DEL.LAPA','Lapa'],['DEL.OSASCO','Centro / Osasco'],['SAL.OSASCO','Vila Yara / Osasco'],['A+ALPHA','Alphaville / Barueri'],['RESERVA','Alphaville / Barueri'],['ARAGUAI','Alphaville / Barueri'],['DEL.ALPHA','Alphaville / Barueri'],['SAL.TATUA','Vila Gomes Cardim'],['DEL.TATU','Tatuapé'],['FL.AFRA','Vila Carrão'],['ALTA.AFRAN','Jd. Anália Franco'],['LAV.AMARBUE','Penha de França'],['LAV.DARZAN','Santana'],['SAL.SANTA','Jd. São Paulo'],['DEL.DUMVIL','Jd. São Paulo'],['LAV.TUCUR','Tucuruvi'],['DEL.GUARU','Macedo / Guarulhos'],['A+GUARU','Centro / Guarulhos'],['A+SAND','Santo André'],['DEL.SAND II','Santo André'],['DEL.SAND I','Centro / Santo André'],['DEL.SBC','Centro / S.B. Campo'],['FL.SBC','Centro / S.B. Campo']];
+  function lerUnidades(){
+    const pega = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+    const a = pega('mp_unidades'), b = pega('mpc_unidades');
+    let l = (a && Array.isArray(a.lista) && a.lista.length) ? a.lista : (Array.isArray(b) && b.length ? b : null);
+    if (!l) l = UNIDADES_PADRAO.map(u => ({ codigo: u[0], nome: u[1] }));
+    return l.filter(u => u && u.codigo).map(u => ({ codigo: String(u.codigo), nome: u.nome || '' }));
+  }
+  const UNS = lerUnidades();
+  const nomeU = c => { const u = UNS.find(x => x.codigo === c); return u && u.nome ? u.nome : ''; };
   const NOME_PAPEL = { admin:'Administrador', total:'Visualiza tudo', respostas:'Vê as respostas', aplicar:'Aplica as pesquisas' };
   const FRASE = {
     admin: 'Você administra os acessos e enxerga tudo.',
@@ -266,7 +279,8 @@
   const norm = e => (e || '').trim().toLowerCase();
   const hoje = () => new Date().toISOString().slice(0, 10);
   const txtUn = u => u === 'todas' ? 'Todas as unidades'
-    : (!u || !u.length) ? 'Nenhuma unidade' : (u.length === 1 ? 'Unidade ' + u[0] : 'Unidades ' + u.join(', '));
+    : (!u || !u.length) ? 'Nenhuma unidade'
+    : (u.length === 1 ? 'Unidade ' + u[0] : (u.length <= 3 ? 'Unidades ' + u.join(', ') : u.length + ' unidades'));
 
   const CHAVE = 'maxipark_conta_v1';
   const guarda = e => { try { localStorage.setItem(CHAVE, e); } catch (x) {} };
@@ -395,8 +409,11 @@
     $('cx-pq').innerHTML = PESQUISAS.map(p =>
       '<label class="cx"><input type="checkbox" data-pq="' + p.id + '" checked> ' +
       ({ clientes:'Clientes', equipe:'Equipe', conselho:'Conselho' })[p.id] + '</label>').join('');
-    $('cx-un').innerHTML = '<label class="cx"><input type="checkbox" id="un-todas" checked> Todas</label>' +
-      UNS.map(u => '<label class="cx"><input type="checkbox" data-un="' + u + '"> Unidade ' + u + '</label>').join('');
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' })[c]);
+    $('cx-un').innerHTML = '<label class="cx todas"><input type="checkbox" id="un-todas" checked> <b>Todas as unidades</b></label>' +
+      UNS.map(u => '<label class="cx" data-busca="' + esc((u.codigo + ' ' + u.nome).toLowerCase()) + '">' +
+        '<input type="checkbox" data-un="' + esc(u.codigo) + '"> ' + esc(u.codigo) +
+        (u.nome ? ' <span class="muted-un">· ' + esc(u.nome) + '</span>' : '') + '</label>').join('');
   }
   const lePq = () => Array.from(document.querySelectorAll('[data-pq]')).filter(i => i.checked).map(i => i.dataset.pq);
   const leUn = () => $('un-todas').checked ? 'todas'
@@ -481,6 +498,14 @@
   }
 
   // ───────── eventos ─────────
+  document.addEventListener('input', ev => {
+    if (ev.target.id !== 'busca-un') return;
+    const q = ev.target.value.trim().toLowerCase();
+    Array.from($('cx-un').querySelectorAll('[data-busca]')).forEach(el => {
+      el.style.display = (!q || el.dataset.busca.indexOf(q) >= 0) ? '' : 'none';
+    });
+  });
+
   document.addEventListener('change', ev => {
     if (ev.target.name === 'papel') ajustaQuais();
     if (ev.target.id === 'un-todas' && ev.target.checked)
