@@ -189,7 +189,13 @@ const DEFAULT_SETTINGS = { pin: '', unidade: '', ponto: '', webhook: '', chave: 
 const PONTOS = [{ c: '', t: '(não informado)' }, { c: 'caixa', t: 'Caixa / pagamento' }, { c: 'saida', t: 'Saída' }, { c: 'totem', t: 'Totem / balcão' }, { c: 'outro', t: 'Outro lugar' }];
 function abandonos(){ return LS.get('mpc_abandonos', {}); }
 function registrarAbandono(){ if (state.r && state.r.csat !== undefined) { const a = abandonos(); a[settings.unidade] = (a[settings.unidade] || 0) + 1; LS.set('mpc_abandonos', a); } }
+const SERVIDOR_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';   /* servidor das respostas (Apps Script + Planilha) */
+const CHAVE_PADRAO = '';   /* a chave nao fica no codigo: digite uma vez em Configuracoes (PIN 2819) */
 let settings = Object.assign({}, DEFAULT_SETTINGS, LS.get('mpc_settings', {}));
+/* servidor ligado de fabrica: quem nunca configurou nada ja nasce sincronizado; quem digitou um endereco proprio nas Configuracoes continua com o dele */
+if (!settings.webhook) settings.webhook = SERVIDOR_PADRAO;
+if (!settings.chave) settings.chave = CHAVE_PADRAO;
+try { LS.set('mpc_settings', settings); } catch (e) {}
 function saveSettings(){ LS.set('mpc_settings', settings); }
 function allResponses(){ return LS.get('mpc_respostas', []); }
 function saveResponses(l){ return LS.set('mpc_respostas', l); }
