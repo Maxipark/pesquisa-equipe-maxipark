@@ -202,8 +202,35 @@
   </section>
 
   <!-- USUÁRIOS -->
+  <section id="tela-hist" hidden>
+    <div class="voltar"><button class="leve" type="button" data-ir="admin">← Voltar aos usuários</button></div>
+    <div class="cartao">
+      <h2>Histórico de uso</h2>
+      <p class="dica">Quem entrou, quem aplicou cada pesquisa e em qual unidade, e quem consultou resultados.
+        Por causa do anonimato das pesquisas, o histórico guarda a sessão inteira — nunca o horário de cada resposta.</p>
+      <div class="grade">
+        <label for="h-quem"><span class="nm">Pessoa</span><input id="h-quem" type="text" placeholder="nome ou e-mail"></label>
+        <label for="h-evento"><span class="nm">O que aconteceu</span><select id="h-evento"><option value="">Tudo</option></select></label>
+        <label for="h-de"><span class="nm">De</span><input id="h-de" type="date"></label>
+        <label for="h-ate"><span class="nm">Até</span><input id="h-ate" type="date"></label>
+      </div>
+      <div class="linha-editor" style="margin-top:12px">
+        <button id="h-atualizar" type="button">Atualizar</button>
+        <button class="leve" id="h-excel" type="button">Baixar em Excel</button>
+        <button class="leve" id="h-apagar-periodo" type="button">Apagar o período filtrado</button>
+      </div>
+      <div id="h-aviso" class="dica" style="margin-top:10px"></div>
+      <div id="h-lista" style="margin-top:14px"></div>
+    </div>
+  </section>
+
   <section id="tela-admin" hidden>
     <div class="voltar"><button class="leve" type="button" data-ir="inicio">← Voltar ao início</button></div>
+    <div class="cartao" id="cx-hist-atalho" hidden>
+      <h2>Histórico de uso</h2>
+      <p class="dica">Tudo o que cada pessoa fez no app: entradas, pesquisas aplicadas e consultas a resultados.</p>
+      <div class="linha-editor"><button type="button" data-ir="hist">Abrir o histórico</button></div>
+    </div>
 
     <div class="cartao">
       <h2>Cadastrar usuário</h2>
@@ -355,6 +382,7 @@
     const s = b64(crypto.getRandomValues(new Uint8Array(16)).buffer);
     return { iter: 150000, salt: s, hash: await derivar(senha, s, 150000) };
   }
+  const reg = (ev, ex) => { try { if (window.__historico) window.__historico.registra(ev, ex); } catch (e) {} };
   const passe = c => btoa(unescape(encodeURIComponent(JSON.stringify(
     { n: c.nome, e: c.email, p: c.papel, q: c.pesquisas, u: c.unidades }))))
     .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -372,9 +400,14 @@
     if (!ok) { err.textContent = 'E-mail ou senha não conferem.'; err.hidden = false; return; }
     if (c.bloqueado) { err.textContent = 'Este acesso está bloqueado. Fale com o administrador.'; err.hidden = false; return; }
     sessao = c; guarda(c.email); $('i-senha').value = '';
+    try { if (window.__historico) window.__historico.defineQuem({ nome: c.nome, email: c.email }); } catch (e) {}
+    reg('entrou', { detalhe: NOME_PAPEL[c.papel] || c.papel });
+    try { if (window.__historico) window.__historico.envia(); } catch (e) {}
     ir((!chaveDoAparelho() && !adiado()) ? 'chave' : 'inicio');
   }
   function sairDaConta() {
+    reg('saiu');
+    try { if (window.__historico) { window.__historico.envia(); window.__historico.esqueceQuem(); } } catch (e) {}
     apaga(); sessao = null;
     $('i-email').value = ''; $('i-senha').value = ''; $('erro-entrada').hidden = true;
     ir('entrada'); $('i-email').focus();
@@ -390,6 +423,7 @@
       err.hidden = false; return;
     }
     sessao = c;
+    try { if (window.__historico) window.__historico.defineQuem({ nome: c.nome, email: c.email }); } catch (e) {}
   }
 
   /* ---------- chave do servidor neste aparelho ---------- */
@@ -448,6 +482,7 @@
     if (r !== 'ok') { err.textContent = r; err.hidden = false; return; }
     guardaServidor(u);
     guardaChave(k);
+    reg('ligou o aparelho ao servidor');
     sincronizaUsuarios();
     try { localStorage.removeItem(GUARDA_DEPOIS); } catch (e) {}
     el.value = '';
@@ -474,6 +509,7 @@
     $('tela-inicio').hidden = !(dentro && tela === 'inicio');
     $('tela-chave').hidden = !(dentro && tela === 'chave');
     $('tela-admin').hidden = !(dentro && tela === 'admin');
+    $('tela-hist').hidden = !(dentro && tela === 'hist' && sessao && sessao.admin);   /* so o administrador */
     $('btn-sair').hidden = !dentro;
     $('quem').hidden = !dentro;
     if (dentro) {
@@ -481,6 +517,7 @@
       $('quem').querySelector('b').textContent = sessao.nome;
       $('quem').querySelector('span').textContent = NOME_PAPEL[sessao.papel] || '';
       if (tela === 'inicio') { inicio(); pintaEstadoSync(); }
+      if (tela === 'hist') { if (!sessao.admin) return ir('inicio'); historico(); }
       if (tela === 'chave') {
         const k = $('k-chave'), aviso = $('aviso-chave'), eAdmin = !!(sessao && sessao.admin), jaTem = !!chaveDoAparelho();
         if (k) {
@@ -516,7 +553,8 @@
        1) Pesquisa com CLIENTES  2) Pesquisa com a EQUIPE  3) Avaliação do CONSELHO
        4) Painel de RESULTADOS (usuário)  5) Cadastro de USUÁRIOS */
     if (podeAplicar) PESQUISAS.filter(p => (c.pesquisas || []).includes(p.id)).forEach(p =>
-      cards.push({ cls:'opcao', icone:p.icone, tag:p.tag, h:p.nome, p:p.desc, vai:'Abrir pesquisa →', url:p.url }));
+      cards.push({ cls:'opcao', icone:p.icone, tag:p.tag, h:p.nome, p:p.desc, vai:'Abrir pesquisa →',
+        url: p.url + '#a=' + passe(c) }));   /* o cracha diz ao app quem abriu, para o historico */
 
     /* RESULTADOS.
        - Somente visualiza\u00e7\u00e3o: um card para cada coisa liberada (as pesquisas e o consolidado).
@@ -553,6 +591,128 @@
     Array.from($('cards').querySelectorAll('a.opcao p')).forEach((el, i) => { el.textContent = cards[i].p; });
   }
 
+
+
+  /* ═════════ HISTÓRICO DE USO (só o administrador) ═════════ */
+  let HIST = [], histCarregado = false, histEditando = null;
+
+  async function pedeHistorico() {
+    const k = chaveDoAparelho(); if (!k) return { erro: 'Ligue este aparelho ao servidor para ver o histórico.' };
+    const u = servidorDoAparelho();
+    try {
+      const r = await fetch(u + (u.indexOf('?') >= 0 ? '&' : '?') + 'op=historico&chave=' + encodeURIComponent(k));
+      const j = await r.json();
+      if (!j || !j.ok) return { erro: 'O servidor recusou o pedido (confira a chave).' };
+      return { itens: Array.isArray(j.itens) ? j.itens : [] };
+    } catch (e) { return { erro: 'Não consegui falar com o servidor agora.' }; }
+  }
+  async function mandaHistorico(op, corpo) {
+    const k = chaveDoAparelho(); if (!k) return false;
+    try {
+      const r = await fetch(servidorDoAparelho(), {
+        method: 'POST', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(Object.assign({ op: op, chave: k }, corpo))
+      });
+      const j = await r.json(); return !!(j && j.ok);
+    } catch (e) { return false; }
+  }
+
+  function horaBonita(q) {   /* registros antigos podem ter vindo em ISO da planilha */
+    const t = String(q || '');
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(t)) return t;
+    const d = new Date(t); if (isNaN(d.getTime())) return t;
+    const z = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
+  }
+  function filtraHist() {
+    const q = ($('h-quem').value || '').trim().toLowerCase();
+    const ev = $('h-evento').value || '';
+    const de = $('h-de').value || '', ate = $('h-ate').value || '';
+    return HIST.filter(h => {
+      const dia = horaBonita(h.quando).slice(0, 10);
+      if (q && !((h.quem_nome || '') + ' ' + (h.quem_email || '')).toLowerCase().includes(q)) return false;
+      if (ev && h.evento !== ev) return false;
+      if (de && dia < de) return false;
+      if (ate && dia > ate) return false;
+      return true;
+    }).sort((a, b) => String(b.quando).localeCompare(String(a.quando)));
+  }
+
+  function historico(recarrega) {
+    const aviso = $('h-aviso'), lista = $('h-lista');
+    if (!histCarregado || recarrega) {
+      aviso.textContent = 'Buscando no servidor…'; lista.innerHTML = '';
+      pedeHistorico().then(r => {
+        if (r.erro) { aviso.textContent = r.erro; return; }
+        HIST = r.itens; histCarregado = true;
+        const evs = [...new Set(HIST.map(h => h.evento).filter(Boolean))].sort();
+        const sel = $('h-evento'), atual = sel.value;
+        sel.innerHTML = '<option value="">Tudo</option>' + evs.map(e => '<option></option>').join('');
+        Array.from(sel.querySelectorAll('option')).forEach((o, i) => { if (i > 0) { o.value = evs[i - 1]; o.textContent = evs[i - 1]; } });
+        sel.value = atual;
+        pintaHist();
+      });
+      return;
+    }
+    pintaHist();
+  }
+
+  function pintaHist() {
+    const aviso = $('h-aviso'), lista = $('h-lista');
+    const f = filtraHist();
+    aviso.textContent = f.length + (f.length === 1 ? ' registro' : ' registros') +
+      (HIST.length !== f.length ? ' (de ' + HIST.length + ' no total)' : '');
+    if (!f.length) { lista.innerHTML = '<div class="vazio">Nada por aqui ainda.</div>'; return; }
+    lista.innerHTML = f.slice(0, 400).map(() =>
+      '<div class="pessoa"><div class="hq"></div><div class="hd"></div>' +
+      '<button class="leve" data-hed="">Editar</button><button class="leve" data-hap="">Apagar</button></div>').join('');
+    Array.from(lista.querySelectorAll('.pessoa')).forEach((el, i) => {
+      const h = f[i];
+      el.querySelector('.hq').innerHTML = '<b></b> · <span></span>';
+      el.querySelector('.hq b').textContent = h.quem_nome || '(sem nome)';
+      el.querySelector('.hq span').textContent = horaBonita(h.quando);
+      const partes = [h.evento];
+      if (h.pesquisa) partes.push('pesquisa: ' + h.pesquisa);
+      if (h.unidade) partes.push('unidade: ' + h.unidade);
+      if (h.detalhe) partes.push(h.detalhe);
+      el.querySelector('.hd').textContent = partes.join(' · ');
+      el.querySelector('[data-hed]').dataset.hed = h.id;
+      el.querySelector('[data-hap]').dataset.hap = h.id;
+    });
+    if (f.length > 400) lista.insertAdjacentHTML('beforeend', '<div class="dica">Mostrando os 400 mais recentes. Use os filtros para ver o resto.</div>');
+  }
+
+  function editorHist(h) {
+    const el = document.querySelector('[data-hed="' + h.id + '"]');
+    if (!el) return;
+    const cx = document.createElement('div');
+    cx.className = 'editor-perfil';
+    cx.style.cssText = 'margin:10px 0;padding:12px;border:2px solid var(--roxo-claro);border-radius:12px';
+    const campo = (k, rot) => '<label><span class="nm">' + rot + '</span><input data-hc="' + k + '" type="text"></label>';
+    cx.innerHTML = '<div class="grade">' + campo('quando', 'Quando') + campo('quem_nome', 'Pessoa') +
+      campo('quem_email', 'E-mail') + campo('evento', 'O que aconteceu') + campo('pesquisa', 'Pesquisa') +
+      campo('unidade', 'Unidade') + campo('detalhe', 'Detalhe') + '</div>' +
+      '<div class="linha-editor" style="margin-top:12px"><button type="button" data-hsalvar="' + h.id + '">Salvar</button>' +
+      '<button class="leve" type="button" data-hcancelar="1">Cancelar</button></div>';
+    el.parentNode.insertAdjacentElement('afterend', cx);
+    Array.from(cx.querySelectorAll('[data-hc]')).forEach(i => { i.value = h[i.dataset.hc] || ''; });
+    histEditando = h.id;
+  }
+  function fechaEditorHist() { const e = document.querySelector('.editor-perfil'); if (e) e.remove(); histEditando = null; }
+
+  function excelHist() {
+    const f = filtraHist();
+    const cols = ['quando', 'quem_nome', 'quem_email', 'evento', 'pesquisa', 'unidade', 'detalhe'];
+    const cel = v => { const t = String(v === undefined || v === null ? '' : v).replace(/\r?\n/g, ' ');
+                       return /[";]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const txt = '﻿' + cols.join(';') + '\n' + f.map(h => cols.map(c => cel(h[c])).join(';')).join('\n') + '\n';
+    const b = new Blob([txt], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = 'historico-maxipark.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  }
 
   /* ---- editor de perfil de um usuário (botao "Mudar perfil") ---- */
   function editorPerfil(c) {
@@ -632,6 +792,7 @@
 
   function admin() {
     semEdicao();
+    const atalho = $('cx-hist-atalho'); if (atalho) atalho.hidden = !(sessao && sessao.admin);
     const cs = dados.contas;
     $('contagem').textContent = cs.length === 1 ? 'Uma pessoa cadastrada.' : cs.length + ' pessoas cadastradas.';
     $('pessoas').innerHTML = cs.map(c => {
@@ -702,6 +863,7 @@
   }
 
   async function grava(msg) {
+    try { if (window.__historico) window.__historico.envia(); } catch (e) {}   /* o evento do cadastro sobe junto */
     if (salvando) return;
     salvando = true;
     try {
@@ -772,6 +934,13 @@
     if (ev.target.dataset && ev.target.dataset.un && ev.target.checked) $('un-todas').checked = false;
   });
 
+  document.addEventListener('input', ev => {
+    const t = ev.target; if (!t || !t.id) return;
+    if (['h-quem', 'h-de', 'h-ate'].includes(t.id)) pintaHist();
+  });
+  document.addEventListener('change', ev => {
+    if (ev.target && ev.target.id === 'h-evento') pintaHist();
+  });
   document.addEventListener('click', async ev => {
     const a = ev.target.closest('a[href="#admin"]');
     if (a) { ev.preventDefault(); return ir('admin'); }
@@ -784,6 +953,53 @@
     if (b.id === 'btn-chave-ok') return ligarServidor();
     if (b.id === 'btn-chave-depois') { try { localStorage.setItem(GUARDA_DEPOIS, '1'); } catch (e) {} return ir('inicio'); }
     if (b.dataset.ir) return ir(b.dataset.ir);
+
+    /* ----- histórico (só o administrador) ----- */
+    if (!sessao || !sessao.admin) { /* nada de histórico para quem não é admin */ }
+    else {
+      if (b.id === 'h-atualizar') { fechaEditorHist(); return historico(true); }
+      if (b.id === 'h-excel') return excelHist();
+      if (b.id === 'h-apagar-periodo') {
+        const f = filtraHist();
+        if (!f.length) return toast('Não há nada no filtro para apagar.');
+        if (!confirm('Apagar ' + f.length + ' registro(s) do histórico? Isso não tem volta.')) return;
+        b.disabled = true;
+        const ok = await mandaHistorico('historico-apagar', { ids: f.map(h => h.id) });
+        b.disabled = false;
+        if (!ok) return toast('Não consegui apagar: o servidor não respondeu.');
+        reg('apagou registros do histórico', { detalhe: f.length + ' registro(s)' });
+        await window.__historico.envia();
+        toast(f.length + ' registro(s) apagados.');
+        return historico(true);
+      }
+      if (b.dataset.hap) {
+        const h = HIST.find(x => x.id === b.dataset.hap); if (!h) return;
+        if (!confirm('Apagar este registro do histórico?')) return;
+        const ok = await mandaHistorico('historico-apagar', { ids: [h.id] });
+        if (!ok) return toast('Não consegui apagar: o servidor não respondeu.');
+        reg('apagou registro do histórico', { detalhe: h.evento + ' de ' + (h.quem_nome || '') });
+        await window.__historico.envia();
+        return historico(true);
+      }
+      if (b.dataset.hed) {
+        const h = HIST.find(x => x.id === b.dataset.hed); if (!h) return;
+        fechaEditorHist(); return editorHist(h);
+      }
+      if (b.dataset.hcancelar) return fechaEditorHist();
+      if (b.dataset.hsalvar) {
+        const h = HIST.find(x => x.id === b.dataset.hsalvar); if (!h) return;
+        const novo = { id: h.id };
+        Array.from(document.querySelectorAll('[data-hc]')).forEach(i => { novo[i.dataset.hc] = i.value.trim(); });
+        b.disabled = true;
+        const ok = await mandaHistorico('historico-editar', { itens: [novo] });
+        b.disabled = false;
+        if (!ok) return toast('Não consegui salvar: o servidor não respondeu.');
+        reg('reescreveu registro do histórico', { detalhe: 'era: ' + h.evento + ' de ' + (h.quem_nome || '') });
+        await window.__historico.envia();
+        fechaEditorHist(); toast('Registro alterado.');
+        return historico(true);
+      }
+    }
     const acha = id => dados.contas.find(c => c.id === id);
     if (b.dataset.p) { const c = acha(b.dataset.p); if (!c) return;
       if (editando === c.id) limpaEdicao(); else { limpaEdicao(); editando = c.id; }
@@ -796,19 +1012,23 @@
       if (v.unidades !== 'todas' && !v.unidades.length) return falha('Marque “Todas as unidades” ou pelo menos uma unidade.');
       c.papel = v.papel; c.pesquisas = v.pesquisas; c.unidades = v.unidades;
       limpaEdicao(); admin();
+      reg('mudou perfil', { detalhe: c.nome + ' (' + c.email + ') agora e ' + (NOME_PAPEL[c.papel] || c.papel) });
       return grava('Perfil de ' + c.nome.split(' ')[0] + ' atualizado.'); }
     if (b.dataset.b) { const c = acha(b.dataset.b); if (!c) return;
       c.bloqueado = !c.bloqueado; admin();
+      reg(c.bloqueado ? 'bloqueou usuario' : 'liberou usuario', { detalhe: c.nome + ' (' + c.email + ')' });
       return grava(c.nome.split(' ')[0] + (c.bloqueado ? ' bloqueado.' : ' liberado.')); }
     if (b.dataset.r) { const c = acha(b.dataset.r); if (!c) return;
       if (!confirm('Remover ' + c.nome + ' do cadastro?')) return;
       dados.contas = dados.contas.filter(x => x.id !== c.id); admin();
+      reg('removeu usuario', { detalhe: c.nome + ' (' + c.email + ')' });
       return grava(c.nome.split(' ')[0] + ' removido.'); }
     if (b.dataset.s) { const c = acha(b.dataset.s); if (!c) return;
       const nova = prompt('Nova senha para ' + c.nome + ':');
       if (nova === null) return;
       if (nova.length < 4) return toast('A senha precisa de pelo menos 4 caracteres.');
       Object.assign(c, await segredo(nova));
+      reg('trocou senha', { detalhe: c.nome + ' (' + c.email + ')' });
       return grava('Senha de ' + c.nome.split(' ')[0] + ' trocada.'); }
   });
 
@@ -872,6 +1092,89 @@
   impressao().then(x => { base = x; }).catch(() => {});
   setInterval(() => { if (Date.now() - ultimo >= ocioso) verificar(); }, 60 * 1000);
   window.__atualiza = { verificar, ociosoMs: ms => { ocioso = ms; }, parado: () => Date.now() - ultimo };
+})();
+</script>
+<script>
+/* ---- HISTORICO DE USO -----------------------------------------------------
+   Guarda quem fez o que: entrou, abriu uma pesquisa, aplicou uma sessao de
+   pesquisa, consultou resultados, mexeu no cadastro.
+   NAO guarda o horario de cada resposta: as pesquisas de equipe e de conselho
+   sao anonimas, e horario por resposta permitiria descobrir quem respondeu.
+   A fila fica neste aparelho e sobe para o servidor sozinha.                  */
+(() => {
+  const FILA = 'maxipark_hist_fila', QUEM = 'maxipark_hist_quem';
+  const GUARDA_CHAVE = 'maxipark_chave_sync', GUARDA_SRV = 'maxipark_servidor';
+  const SRV_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';
+
+  const chave = () => { try { return (localStorage.getItem(GUARDA_CHAVE) || '').trim(); } catch (e) { return ''; } };
+  const servidor = () => { try { return (localStorage.getItem(GUARDA_SRV) || '').trim() || SRV_PADRAO; } catch (e) { return SRV_PADRAO; } };
+  const leFila = () => { try { return JSON.parse(localStorage.getItem(FILA)) || []; } catch (e) { return []; } };
+  const gravaFila = f => { try { localStorage.setItem(FILA, JSON.stringify(f.slice(-400))); } catch (e) {} };
+
+  /* quem esta usando: vem do cracha na URL (#a=...) e fica guardado no aparelho */
+  function leCracha() {
+    try {
+      const m = /[#&]a=([A-Za-z0-9\-_]+)/.exec(location.hash || '');
+      if (!m) return null;
+      let b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      const j = JSON.parse(decodeURIComponent(escape(atob(b))));
+      if (!j || !j.e) return null;
+      return { nome: j.n || j.e, email: j.e };
+    } catch (e) { return null; }
+  }
+  function guardaQuem(q) { try { localStorage.setItem(QUEM, JSON.stringify(q)); } catch (e) {} }
+  function quem() {
+    const c = leCracha();
+    if (c) { guardaQuem(c); return c; }
+    try { const t = localStorage.getItem(QUEM); if (t) return JSON.parse(t); } catch (e) {}
+    return { nome: '(sem login)', email: '' };
+  }
+
+  const id = () => 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const agora = () => {
+    const d = new Date(), z = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
+  };
+
+  function registra(evento, extra) {
+    const q = quem(), e = extra || {};
+    const f = leFila();
+    f.push({ id: id(), quando: agora(), quem_nome: q.nome, quem_email: q.email,
+             evento: String(evento || ''), pesquisa: String(e.pesquisa || ''),
+             unidade: String(e.unidade || ''), detalhe: String(e.detalhe || '') });
+    gravaFila(f);
+  }
+
+  let enviando = false;
+  async function envia() {
+    if (enviando) return 'ocupado';
+    const f = leFila(); if (!f.length) return 'vazio';
+    const k = chave(); if (!k) return 'sem-chave';
+    if (!navigator.onLine) return 'sem-rede';
+    enviando = true;
+    try {
+      const lote = f.slice(0, 80);
+      const r = await fetch(servidor(), {
+        method: 'POST', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ op: 'historico-add', chave: k, itens: lote })
+      });
+      const j = await r.json();
+      if (j && j.ok) { gravaFila(leFila().slice(lote.length)); return 'ok'; }
+      return 'recusado';
+    } catch (e) { return 'falhou'; }
+    finally { enviando = false; }
+  }
+
+  /* a pagina inicial nao tem cracha na URL: ela avisa quem entrou por aqui */
+  function defineQuem(q) { if (q && q.email) guardaQuem({ nome: q.nome || q.email, email: q.email }); }
+  function esqueceQuem() { try { localStorage.removeItem(QUEM); } catch (e) {} }
+  window.__historico = { registra: registra, envia: envia, quem: quem, fila: leFila,
+                         defineQuem: defineQuem, esqueceQuem: esqueceQuem };
+  setInterval(envia, 45000);
+  window.addEventListener('online', envia);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) envia(); });
 })();
 </script>
 </body>
