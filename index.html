@@ -201,12 +201,12 @@
     <p style="font-size:14px">Pergunto isso uma vez por aparelho. Depois dá para ligar pelo aviso no rodapé da página inicial.</p>
   </section>
 
-  <!-- AVALIADORES -->
+  <!-- USUÁRIOS -->
   <section id="tela-admin" hidden>
     <div class="voltar"><button class="leve" type="button" data-ir="inicio">← Voltar ao início</button></div>
 
     <div class="cartao">
-      <h2>Cadastrar avaliador</h2>
+      <h2>Cadastrar usuário</h2>
       <p class="dica">Defina o e-mail, a senha, o que a pessoa pode fazer e sobre o que.</p>
       <div class="grade">
         <label for="c-nome"><span class="nm">Nome</span><input id="c-nome" type="text" placeholder="Ana Ribeiro"></label>
@@ -217,13 +217,13 @@
       <span class="rot">O que pode fazer</span>
       <div class="papeis">
         <label class="papel"><input type="radio" name="papel" value="total" checked>
-          <span><span class="t">Avaliador — vê todas as respostas e aplica as pesquisas</span>
+          <span><span class="t">Usuário — vê todas as respostas e aplica as pesquisas</span>
           <span class="d">As três pesquisas e todas as unidades, sem exceção: vê todos os resultados e também abre as pesquisas para as pessoas responderem. Não exclui, não edita, não zera.</span></span></label>
         <label class="papel"><input type="radio" name="papel" value="respostas">
           <span><span class="t">Somente visualização — você escolhe o que ele vê</span>
           <span class="d">Vê apenas os ícones e as unidades marcados abaixo. Também não aplica pesquisa.</span></span></label>
         <label class="papel"><input type="radio" name="papel" value="aplicar">
-          <span><span class="t">Avaliador de campo — aplica as pesquisas, não vê respostas</span>
+          <span><span class="t">Usuário de campo — aplica as pesquisas, não vê respostas</span>
           <span class="d">Abre as pesquisas no tablet para as pessoas responderem. Não enxerga nenhum resultado.</span></span></label>
       </div>
 
@@ -236,7 +236,7 @@
       </div>
 
       <div id="erro-cad" class="erro" hidden style="margin-top:16px"></div>
-      <div style="margin-top:20px"><button id="btn-cad" type="button">Cadastrar avaliador</button></div>
+      <div style="margin-top:20px"><button id="btn-cad" type="button">Cadastrar usuário</button></div>
     </div>
 
     <div class="cartao">
@@ -264,9 +264,21 @@
   const A = '/*DADOS_' + 'INICIO*/', B = '/*DADOS_' + 'FIM*/';
   const caixa = document.getElementById('dados-acesso');
   const cru = (caixa && caixa.textContent) || '';
+  const GUARDA_USUARIOS = 'maxipark_usuarios';
   let dados;
   try { dados = JSON.parse(cru.slice(cru.indexOf(A) + A.length, cru.lastIndexOf(B))); }
   catch (e) { dados = { versao: 1, contas: [] }; }
+  /* O cadastro de verdade fica no servidor. Aqui guardamos uma copia neste aparelho para
+     a pessoa conseguir entrar mesmo sem internet. O bloco embutido acima e so o ponto de partida. */
+  function guardaUsuarios(d) { try { localStorage.setItem(GUARDA_USUARIOS, JSON.stringify(d)); } catch (e) {} }
+  function usuariosGuardados() {
+    try { const t = localStorage.getItem(GUARDA_USUARIOS); if (!t) return null;
+          const d = JSON.parse(t); return (d && Array.isArray(d.contas) && d.contas.length) ? d : null; } catch (e) { return null; }
+  }
+  (function usaCopiaLocal() {
+    const c = usuariosGuardados();
+    if (c && (c.versao || 0) >= (dados.versao || 0)) dados = c;
+  })();
 
   const $ = id => document.getElementById(id);
   const PESQUISAS = [
@@ -301,12 +313,12 @@
   }
   const UNS = lerUnidades();
   const nomeU = c => { const u = UNS.find(x => x.codigo === c); return u && u.nome ? u.nome : ''; };
-  const NOME_PAPEL = { admin:'Administrador', total:'Avaliador · vê tudo e aplica', respostas:'Somente visualização', aplicar:'Avaliador de campo · não vê respostas' };
+  const NOME_PAPEL = { admin:'Administrador', total:'Usuário · vê tudo e aplica', respostas:'Somente visualização', aplicar:'Usuário de campo · não vê respostas' };
   const FRASE = {
     admin: 'Você administra os acessos e enxerga tudo.',
-    total: 'Avaliador: você vê as respostas de todas as pesquisas e de todas as unidades, e também pode aplicar as pesquisas.',
+    total: 'Usuário: você vê as respostas de todas as pesquisas e de todas as unidades, e também pode aplicar as pesquisas.',
     respostas: 'Somente visualização: você vê apenas os resultados e as unidades liberados para o seu acesso.',
-    aplicar: 'Avaliador de campo: você abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.'
+    aplicar: 'Usuário de campo: você abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.'
   };
   const norm = e => (e || '').trim().toLowerCase();
   const hoje = () => new Date().toISOString().slice(0, 10);
@@ -319,15 +331,13 @@
   const guardado = () => { try { return localStorage.getItem(CHAVE); } catch (x) { return null; } };
   const apaga = () => { try { localStorage.removeItem(CHAVE); } catch (x) {} };
 
-  let sessao = null, artefato = null, salvando = false, editando = null;
-  if (window.claude && window.claude.use) {
-    window.claude.use('artifact').then(a => { artefato = a; if (!a) semEdicao(); }).catch(() => semEdicao());
-  } else { semEdicao(); }
+  let sessao = null, salvando = false, editando = null;
   function semEdicao() {
     const el = $('nota-salvar'); if (!el) return;
-    el.innerHTML = '<b>Como isso é guardado.</b> Ao cadastrar, bloquear ou trocar uma senha, a página gera um ' +
-      '<b>index.html</b> atualizado e baixa para o seu computador. Envie esse arquivo para o site (GitHub) ' +
-      'para que todo mundo passe a ver a lista nova.';
+    el.innerHTML = '<b>Como isso é guardado.</b> Cadastrar, bloquear, mudar perfil ou trocar uma senha ' +
+      'é salvo <b>direto no servidor</b>, na hora. Todos os aparelhos ligados ao servidor passam a ver a ' +
+      'lista nova sozinhos — você não precisa enviar arquivo nenhum. Sem internet, fica guardado neste ' +
+      'aparelho e sobe assim que a rede voltar.';
   }
   function toast(m) {
     const t = document.createElement('div');
@@ -438,6 +448,7 @@
     if (r !== 'ok') { err.textContent = r; err.hidden = false; return; }
     guardaServidor(u);
     guardaChave(k);
+    sincronizaUsuarios();
     try { localStorage.removeItem(GUARDA_DEPOIS); } catch (e) {}
     el.value = '';
     toast('Aparelho ligado ao servidor.');
@@ -499,11 +510,11 @@
     $('resumo-acesso').textContent = FRASE[c.papel] || '';
     const cards = [];
     const podePainel = ['admin','total','respostas'].includes(c.papel);
-    const podeAplicar = ['admin','total','aplicar'].includes(c.papel);   /* o avaliador tambem aplica as pesquisas */
+    const podeAplicar = ['admin','total','aplicar'].includes(c.papel);   /* o usuário tambem aplica as pesquisas */
 
     /* ORDEM FIXA DOS CARDS — nao alterar:
        1) Pesquisa com CLIENTES  2) Pesquisa com a EQUIPE  3) Avaliação do CONSELHO
-       4) Painel de RESULTADOS (avaliador)  5) Cadastro de AVALIADORES */
+       4) Painel de RESULTADOS (usuário)  5) Cadastro de USUÁRIOS */
     if (podeAplicar) PESQUISAS.filter(p => (c.pesquisas || []).includes(p.id)).forEach(p =>
       cards.push({ cls:'opcao', icone:p.icone, tag:p.tag, h:p.nome, p:p.desc, vai:'Abrir pesquisa →', url:p.url }));
 
@@ -530,7 +541,7 @@
         vai:'Ver resultados \u2192', url: URL_PAINEL + '#a=' + passe(c) });
     }
 
-    if (c.papel === 'admin') cards.push({ cls:'opcao', icone:'🔑', tag:'Administração', h:'AVALIADORES',
+    if (c.papel === 'admin') cards.push({ cls:'opcao', icone:'🔑', tag:'Administração', h:'USUÁRIOS',
       p:'Cadastre quem pode entrar, defina o que cada um enxerga e bloqueie o acesso quando precisar.',
       vai:'Abrir cadastro →', url:'#admin' });
 
@@ -543,7 +554,7 @@
   }
 
 
-  /* ---- editor de perfil de um avaliador (botao "Mudar perfil") ---- */
+  /* ---- editor de perfil de um usuário (botao "Mudar perfil") ---- */
   function editorPerfil(c) {
     const e = t => String(t == null ? '' : t).replace(/[&<>"]/g, x => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' })[x]);
     const papel = editPapel || c.papel;
@@ -556,9 +567,9 @@
     return '<div class="editor-perfil">' +
       '<span class="rot">O que ' + e(c.nome.split(' ')[0]) + ' pode fazer</span>' +
       '<div class="papeis">' +
-        rad('total', 'Avaliador — vê todas as respostas e aplica as pesquisas', 'As três pesquisas e todas as unidades, sem exceção: resultados e aplicação.') +
+        rad('total', 'Usuário — vê todas as respostas e aplica as pesquisas', 'As três pesquisas e todas as unidades, sem exceção: resultados e aplicação.') +
         rad('respostas', 'Somente visualização — você escolhe o que ele vê', 'Vê apenas os ícones e as unidades marcados abaixo.') +
-        rad('aplicar', 'Avaliador de campo — aplica as pesquisas, não vê respostas', 'Abre as pesquisas no tablet. Não enxerga nenhum resultado.') +
+        rad('aplicar', 'Usuário de campo — aplica as pesquisas, não vê respostas', 'Abre as pesquisas no tablet. Não enxerga nenhum resultado.') +
       '</div>' +
       (papel === 'total' ? '' :
         '<span class="rot">' + (papel === 'aplicar' ? 'Quais pesquisas ele pode aplicar' : 'Quais ícones aparecem na página inicial') + '</span>' +
@@ -620,6 +631,7 @@
   }
 
   function admin() {
+    semEdicao();
     const cs = dados.contas;
     $('contagem').textContent = cs.length === 1 ? 'Uma pessoa cadastrada.' : cs.length + ' pessoas cadastradas.';
     $('pessoas').innerHTML = cs.map(c => {
@@ -649,27 +661,60 @@
     });
   }
 
-  function baixaArquivo(txt) {
-    const b = new Blob([txt], { type: 'text/html' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b); a.download = 'index.html';
-    document.body.appendChild(a); a.click();
-    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
-    setTimeout(() => toast('Baixe o index.html e substitua o arquivo no site.'), 1200);
+  /* ---- cadastro de usuarios: vai direto para o servidor, sem baixar arquivo nenhum ---- */
+  async function mandaUsuariosAoServidor() {
+    const k = chaveDoAparelho(); if (!k) return 'sem-chave';
+    const r = await fetch(servidorDoAparelho(), {
+      method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },   /* text/plain evita o pedido OPTIONS, que o Apps Script nao responde */
+      body: JSON.stringify({ op: 'usuarios-salvar', chave: k, dados: dados })
+    });
+    const j = await r.json();
+    if (j && j.ok) return 'ok';
+    if (j && j.erro === 'chave') return 'chave';
+    return 'servidor';
   }
+  async function buscaUsuariosDoServidor() {
+    const k = chaveDoAparelho(); if (!k) return null;
+    const u = servidorDoAparelho();
+    const r = await fetch(u + (u.indexOf('?') >= 0 ? '&' : '?') + 'op=usuarios&chave=' + encodeURIComponent(k));
+    const j = await r.json();
+    if (!j || !j.ok) return null;                       /* nao falei com o servidor */
+    if (!j.dados || !Array.isArray(j.dados.contas) || !j.dados.contas.length) return 'vazio';
+    return j.dados;
+  }
+  async function sincronizaUsuarios() {
+    try {
+      const d = await buscaUsuariosDoServidor();
+      if (d === 'vazio') {                              /* primeira vez: sobe o cadastro que ja existe aqui */
+        if (dados.contas && dados.contas.length) await mandaUsuariosAoServidor();
+        return;
+      }
+      if (!d) return;
+      if ((d.versao || 0) >= (dados.versao || 0)) {   /* o servidor manda: e ele que todo mundo enxerga */
+        dados = d; guardaUsuarios(d);
+        if (sessao) { const a = dados.contas.find(c => c.id === sessao.id); if (!a || a.bloqueado) sair(); }
+        if ($('tela-admin') && !$('tela-admin').hidden) admin();
+      } else {
+        await mandaUsuariosAoServidor();            /* este aparelho tem algo mais novo: sobe */
+      }
+    } catch (e) { /* sem internet: segue com a copia deste aparelho */ }
+  }
+
   async function grava(msg) {
     if (salvando) return;
     salvando = true;
     try {
-      const fonte = await (await fetch(location.href, { cache: 'no-store' })).text();
-      const i = fonte.indexOf(A), j = fonte.lastIndexOf(B);
-      if (i < 0 || j < 0) throw new Error('bloco de dados não encontrado');
       dados.versao = (dados.versao || 1) + 1; dados.atualizadoEm = hoje();
-      const novo = fonte.slice(0, i) + A + JSON.stringify(dados) + B + fonte.slice(j + B.length);
-      toast(msg);
-      if (artefato) await artefato.publish(novo); else baixaArquivo(novo);
-    } catch (e) { toast('Não consegui salvar: ' + (e && e.message ? e.message : 'erro')); }
-    finally { salvando = false; }
+      guardaUsuarios(dados);
+      const r = await mandaUsuariosAoServidor();
+      if (r === 'ok') { toast(msg + ' Já vale em todos os aparelhos.'); return; }
+      if (r === 'sem-chave') { toast(msg + ' Guardado só neste aparelho: ligue o servidor para valer em todos.'); return; }
+      if (r === 'chave') { toast('Guardado só aqui: a chave deste aparelho não confere com a do servidor.'); return; }
+      toast('Guardado só neste aparelho: não consegui falar com o servidor agora. Tento de novo sozinho.');
+    } catch (e) {
+      toast('Guardado só neste aparelho: não consegui falar com o servidor agora.');
+    } finally { salvando = false; }
   }
 
   async function cadastrar() {
@@ -689,7 +734,7 @@
     const seg = await segredo(senha);
     dados.contas.push({ id:'av-' + Date.now().toString(36), nome, email, papel, pesquisas, unidades,
       admin:false, bloqueado:false, criadoEm:hoje(), ...seg });
-    b.disabled = false; b.textContent = 'Cadastrar avaliador';
+    b.disabled = false; b.textContent = 'Cadastrar usuário';
     $('c-nome').value = ''; $('c-email').value = ''; $('c-senha').value = '';
     admin();
     await grava(nome.split(' ')[0] + ' cadastrado.');
@@ -778,6 +823,12 @@
   caixasForm(); ajustaQuais(); retomar();
   tela = sessao ? 'inicio' : 'entrada';
   pinta();
+
+  /* o cadastro vem do servidor: ao abrir, de 2 em 2 minutos, e ao voltar para a aba */
+  sincronizaUsuarios();
+  setInterval(sincronizaUsuarios, 120000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizaUsuarios(); });
+  window.addEventListener('online', sincronizaUsuarios);
 })();
 </script>
 
