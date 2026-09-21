@@ -918,10 +918,15 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
   function salvar() {
     try { if (typeof saveSettings === 'function') saveSettings(); else if (typeof LS === 'object' && LS.set) LS.set('mpp_settings', settings); } catch (e) {}
   }
+  /* o endereco do servidor tambem vale para o aparelho todo (trocar de provedor) */
+  const GUARDA_SRV = 'maxipark_servidor';
+  const servidorDoAparelho = () => { try { return (localStorage.getItem(GUARDA_SRV) || '').trim(); } catch (e) { return ''; } };
   let vista = null;
   function sincroniza() {
     if (typeof settings !== 'object' || !settings) return;
     if (chaveMorta(settings.chave)) { settings.chave = ''; salvar(); }
+    const srv = servidorDoAparelho();
+    if (srv && srv !== (settings.webhook || '').trim()) { settings.webhook = srv; salvar(); }
     const guardada = le(), minha = (settings.chave || '').trim();
     if (vista === null) vista = minha;
     if (minha !== vista) {            /* a pessoa digitou/salvou aqui: essa passa a valer no aparelho */
@@ -1001,6 +1006,77 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
     const pai = document.getElementById('mp-estado-linha') || cx.parentNode;
     pai.parentNode.insertBefore(bt, pai.nextSibling);
     bt.parentNode.insertBefore(cx2, bt.nextSibling);
+  }
+  setInterval(monta, 800);
+})();
+</script>
+<script>
+/* ---- Botao "Pronto" ao lado da chave: salva, liga o aparelho e diz o resultado ---- */
+(() => {
+  const ID = 'mp-ok-chave', AVISO = 'mp-ok-aviso';
+  const GUARDA = 'maxipark_chave_sync';
+  const CAIXAS = ['mpc_settings', 'mp_settings', 'mpco_settings', 'mpp_settings'];
+  const morta = k => /^MAXIPARK-/i.test(String(k || '').trim());
+
+  function fala(tipo, texto) {
+    const el = document.getElementById(AVISO); if (!el) return;
+    const c = tipo === 'ok' ? ['#0a7d3c', '#e8f5ec'] : tipo === 'ruim' ? ['#b00020', '#fdecef'] : ['#4a4a4a', '#f0f0f3'];
+    el.style.cssText = 'margin:8px 0 2px;padding:9px 12px;border-radius:10px;font-size:14.5px;font-weight:600;color:' + c[0] + ';background:' + c[1];
+    el.textContent = texto;
+  }
+
+  function guardaNoAparelho(k) {
+    try { localStorage.setItem(GUARDA, k); } catch (e) {}
+    CAIXAS.forEach(n => {
+      try { const o = JSON.parse(localStorage.getItem(n)) || {}; o.chave = k; localStorage.setItem(n, JSON.stringify(o)); } catch (e) {}
+    });
+  }
+
+  async function confirmar(bt) {
+    const cx = document.getElementById('s-chave'), cu = document.getElementById('s-webhook');
+    if (!cx) return;
+    const k = (cx.value || '').trim();
+    const u = ((cu && cu.value) || (typeof settings !== 'undefined' && settings ? settings.webhook : '') || '').trim();
+    if (!k) return fala('ruim', 'Digite a chave do servidor antes de tocar em Pronto.');
+    if (morta(k)) return fala('ruim', 'Essa e a chave antiga, que nao vale mais. Digite a chave nova.');
+    if (!u) return fala('ruim', 'Falta o endereco do servidor no campo acima.');
+
+    bt.disabled = true; fala('neutro', 'Conferindo a chave com o servidor\u2026');
+    let j = null;
+    try {
+      const r = await fetch(u + (u.indexOf('?') >= 0 ? '&' : '?') + 'op=ping&chave=' + encodeURIComponent(k));
+      j = await r.json();
+    } catch (e) {
+      bt.disabled = false;
+      return fala('ruim', 'Nao consegui falar com o servidor. Confira a internet e tente de novo.');
+    }
+    bt.disabled = false;
+
+    if (!(j && j.ok)) {
+      if (j && j.erro === 'chave') return fala('ruim', '\u2717 Essa chave nao confere com a do servidor. Voce digitou: "' + k + '" (' + k.length + ' caracteres). Confira letra por letra \u2014 letras trocadas de lugar sao o erro mais comum.');
+      if (j && j.erro === 'configurar-chave') return fala('ruim', '\u2717 O servidor ainda esta com a chave de exemplo.');
+      return fala('ruim', '\u2717 O servidor recusou a chave.');
+    }
+    /* chave certa: grava neste app e nos outros tres do aparelho */
+    try { if (typeof settings === 'object' && settings) { settings.chave = k; settings.webhook = u;
+          if (typeof saveSettings === 'function') saveSettings(); } } catch (e) {}
+    guardaNoAparelho(k);
+    try { cx.style.webkitTextSecurity = 'disc'; cx.dataset.mostrando = ''; cx.blur(); } catch (e) {}
+    fala('ok', '\u2713 Pronto! Chave salva e servidor ligado neste aparelho \u2014 vale para as quatro telas.');
+  }
+
+  function monta() {
+    const cx = document.getElementById('s-chave');
+    if (!cx || document.getElementById(ID)) return;
+    const bt = document.createElement('button');
+    bt.type = 'button'; bt.id = ID; bt.textContent = 'Pronto \u2014 usar esta chave';
+    bt.style.cssText = 'margin:8px 0 2px;padding:12px 20px;border:0;border-radius:10px;background:#6B4A98;color:#fff;font-weight:700;font-size:15.5px;cursor:pointer';
+    const av = document.createElement('div'); av.id = AVISO;
+    bt.addEventListener('click', () => confirmar(bt));
+    cx.parentNode.insertBefore(bt, cx.nextSibling);
+    bt.parentNode.insertBefore(av, bt.nextSibling);
+    /* apertar Enter no campo faz o mesmo */
+    cx.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); confirmar(bt); } });
   }
   setInterval(monta, 800);
 })();
