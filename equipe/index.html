@@ -17,6 +17,15 @@
     --teal:#6B4A98; --teal-dark:#4E3572; --teal-soft:#EEE8F5; --accent:#9935F4; --bg:#F5F3F9; --card:#FFFFFF;
     --text:#221C2E; --muted:#5E5670; --line:#DED8EA; --sel:#FFD54F; --sel-text:#3A2E00;
     --danger:#B23A3A; --ok:#2E7D32; --radius:18px;
+    /* cores que antes estavam escritas à mão: viraram variáveis para o modo escuro */
+    --branco:#FFFFFF; --suave:#FAFBFB; --pre-bg:#F7F9F9; --sobre-teal:#FFFFFF; --sobre-ok:#FFFFFF;
+    --sombra:0 2px 10px rgba(0,0,0,.06);
+    --aviso-bg:#FFF4D6; --aviso-br:#E0B400; --aviso-tx:#3D3000;
+    --ruim-bg:#FBE3E3; --ruim-tx:#9B1C1C;
+    --bom-bg:#E6F4EA; --bom-br:#9CCFA9; --bom-tx:#1B3D26;
+    --tag-ok-bg:#E6F4EA; --tag-ok-tx:#1E6B34; --subiu:#1E6B34; --cur-bg:#F1F8F4;
+    --toast-bg:#222222; --toast-tx:#FFFFFF;
+    --ok-tx:#1B7A52; --ok-bg:#E4F4EC; --neutro-bg:#EFEDF4;
     color-scheme: light;   /* o app é sempre claro: evita texto claro do modo escuro do aparelho em botões e campos */
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -26,13 +35,13 @@
   body{overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   textarea,input,pre{-webkit-user-select:text;user-select:text}
   #app{min-height:100vh;display:flex;flex-direction:column}
-  .top{background:#fff;color:var(--teal-dark);border-bottom:1px solid var(--line);padding:calc(12px + env(safe-area-inset-top,0px)) 20px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .top{background:var(--card);color:var(--teal-dark);border-bottom:1px solid var(--line);padding:calc(12px + env(safe-area-inset-top,0px)) 20px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
   .top .brand{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;color:var(--muted)}
   .top .step{font-size:15px;text-align:right;color:var(--teal-dark);font-weight:600}
   .progress{height:6px;background:var(--teal-soft)}
   .progress > div{height:100%;background:var(--sel);transition:width .25s}
   .wrap{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px 16px calc(70px + env(safe-area-inset-bottom,0px))}
-  .card{width:100%;max-width:820px;background:var(--card);border-radius:var(--radius);padding:22px 22px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+  .card{width:100%;max-width:820px;background:var(--card);border-radius:var(--radius);padding:22px 22px;box-shadow:var(--sombra)}
   h1{font-size:28px;line-height:1.2;margin:0 0 10px;color:var(--teal-dark)}
   h2{font-size:23px;line-height:1.25;margin:0 0 12px}
   h3{font-size:19px;margin:18px 0 8px;color:var(--teal-dark)}
@@ -42,25 +51,25 @@
   .muted{color:var(--muted)}
   .small{font-size:15px}
   .notice{background:var(--teal-soft);border-radius:12px;padding:14px 16px;font-size:16px;margin:12px 0}
-  .good{background:#E6F4EA;border:1px solid #9CCFA9;border-radius:12px;padding:12px 14px;margin:10px 0 14px;font-size:16px;color:#1B3D26}
-  .datefield{padding:12px 14px;border:2px dashed var(--line);border-radius:12px;font-size:19px;font-weight:600;color:var(--teal-dark);background:#fff}
+  .good{background:var(--bom-bg);border:1px solid var(--bom-br);border-radius:12px;padding:12px 14px;margin:10px 0 14px;font-size:16px;color:var(--bom-tx)}
+  .datefield{padding:12px 14px;border:2px dashed var(--line);border-radius:12px;font-size:19px;font-weight:600;color:var(--teal-dark);background:var(--branco)}
   details{margin:8px 0 14px}
   summary{cursor:pointer;color:var(--teal-dark);font-weight:600;font-size:16px;padding:8px 0}
   .dim{display:inline-block;background:var(--teal-soft);color:var(--teal-dark);border-radius:999px;padding:4px 12px;font-size:14px;font-weight:600;margin-bottom:8px}
   .statement{font-size:26px;font-weight:600;line-height:1.3;margin:4px 0 18px}
   .opts{display:flex;flex-direction:column;gap:10px}
-  .opt{display:flex;align-items:center;gap:16px;width:100%;min-height:68px;padding:10px 18px;border:2px solid var(--line);border-radius:14px;background:#fff;font-size:21px;font-weight:600;text-align:left;cursor:pointer;color:var(--text)}
+  .opt{display:flex;align-items:center;gap:16px;width:100%;min-height:68px;padding:10px 18px;border:2px solid var(--line);border-radius:14px;background:var(--branco);font-size:21px;font-weight:600;text-align:left;cursor:pointer;color:var(--text)}
   .opt .num{flex:0 0 46px;height:46px;border-radius:50%;background:var(--teal-soft);color:var(--teal-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px}
   .opt.sel{background:var(--sel);border-color:#E0B400;color:var(--sel-text)}
   .opt.sel .num{background:#fff;font-size:30px;line-height:1}
   .opt.alt{border-style:dashed;color:var(--muted);font-size:17px;font-weight:500;min-height:52px}
   .scale{display:grid;grid-template-columns:repeat(11,1fr);gap:8px;margin:8px 0 6px}
-  .scale button{min-height:62px;border:2px solid var(--line);border-radius:12px;background:#fff;font-size:22px;font-weight:700;cursor:pointer;color:var(--text)}
+  .scale button{min-height:62px;border:2px solid var(--line);border-radius:12px;background:var(--branco);font-size:22px;font-weight:700;cursor:pointer;color:var(--text)}
   .scale button.sel{background:var(--sel);border-color:#E0B400;color:var(--sel-text)}
   .anchors{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:12px;gap:10px}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:56px;padding:12px 22px;border-radius:14px;border:0;background:var(--teal);color:#fff;font-size:19px;font-weight:600;cursor:pointer}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:56px;padding:12px 22px;border-radius:14px;border:0;background:var(--teal);color:var(--sobre-teal);font-size:19px;font-weight:600;cursor:pointer}
   .btn.block{width:100%}
-  .btn.ghost{background:#fff;color:var(--teal-dark);border:2px solid var(--teal)}
+  .btn.ghost{background:var(--branco);color:var(--teal-dark);border:2px solid var(--teal)}
   .btn.light{background:var(--teal-soft);color:var(--teal-dark)}
   .btn.danger{background:var(--danger)}
   .btn.link{background:transparent;color:var(--muted);font-weight:500;font-size:16px;min-height:44px;padding:8px 12px}
@@ -69,14 +78,14 @@
   .row > .btn{flex:1 1 200px}
   .spread{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
   label{display:block;font-weight:600;margin:14px 0 6px}
-  input[type=text],input[type=month],input[type=password],input[type=url],input[type=search],textarea,select{width:100%;font:inherit;font-size:19px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--text)}
+  input[type=text],input[type=month],input[type=password],input[type=url],input[type=search],textarea,select{width:100%;font:inherit;font-size:19px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--branco);color:var(--text)}
   textarea{min-height:140px;resize:vertical}
   textarea.obs{min-height:54px;font-size:16px;margin-top:12px;padding:8px 12px;border-style:dashed}
   .unitfield{display:flex;gap:10px;align-items:stretch}
   .unitfield input{flex:1}
   .unitfield .btn{flex:0 0 auto;min-height:0;padding:8px 16px;font-size:16px}
   .ulist{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:60vh;overflow:auto}
-  .uitem{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;text-align:left;cursor:pointer;color:var(--text)}
+  .uitem{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--branco);text-align:left;cursor:pointer;color:var(--text)}
   .uitem b{font-size:18px;color:var(--teal-dark)}
   .uitem span{font-size:14px;color:var(--muted)}
   table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
@@ -88,32 +97,32 @@
   .kpi b{display:block;font-size:26px;color:var(--teal-dark)}
   .kpi span{font-size:13px;color:var(--muted)}
   .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:12px auto}
-  .pinpad button{min-height:62px;font-size:26px;border-radius:14px;border:2px solid var(--line);background:#fff;cursor:pointer;color:var(--text)}
-  .pinpad button.ok{background:var(--teal);border-color:var(--teal);color:#fff;font-size:20px;font-weight:700}
+  .pinpad button{min-height:62px;font-size:26px;border-radius:14px;border:2px solid var(--line);background:var(--branco);cursor:pointer;color:var(--text)}
+  .pinpad button.ok{background:var(--teal);border-color:var(--teal);color:var(--sobre-teal);font-size:20px;font-weight:700}
   /* campo único do PIN: mostra os pontos (sem type=password, para o navegador não oferecer "salvar senha") e aceita o teclado do tablet ou físico */
   .pininput{display:block;max-width:320px;margin:8px auto 6px;text-align:center;font-size:30px;letter-spacing:12px;min-height:60px;-webkit-text-security:disc}
   .pininput::placeholder{letter-spacing:0;font-size:15px;-webkit-text-security:none}
   .thanks{text-align:center;padding:36px 10px}
-  .thanks .check{width:96px;height:96px;border-radius:50%;background:var(--ok);color:#fff;font-size:56px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:12px 18px;border-radius:12px;font-size:16px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;z-index:9}
+  .thanks .check{width:96px;height:96px;border-radius:50%;background:var(--ok);color:var(--sobre-ok);font-size:56px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-tx);padding:12px 18px;border-radius:12px;font-size:16px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;z-index:9}
   .toast.show{opacity:1}
-  .corner{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.94);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;z-index:5;box-shadow:0 1px 4px rgba(0,0,0,.10)}
-  .warn{background:#FFF4D6;border-left:5px solid #E0B400;padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
-  .bad{background:#FBE3E3;border-left:5px solid var(--danger);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
-  pre{white-space:pre-wrap;font-size:13px;background:#F7F9F9;border:1px solid var(--line);border-radius:10px;padding:10px;max-height:260px;overflow:auto}
+  .corner{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--branco);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;z-index:5;box-shadow:0 1px 4px rgba(0,0,0,.10)}
+  .warn{background:var(--aviso-bg);border-left:5px solid var(--aviso-br);color:var(--aviso-tx);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  .bad{background:var(--ruim-bg);border-left:5px solid var(--danger);color:var(--ruim-tx);padding:10px 14px;border-radius:8px;font-size:15px;margin:10px 0}
+  pre{white-space:pre-wrap;font-size:13px;background:var(--pre-bg);border:1px solid var(--line);border-radius:10px;padding:10px;max-height:260px;overflow:auto}
   .legend{font-size:13px;color:var(--muted);margin:6px 0 0}
   .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:6px}
   .filters label{margin:0 0 4px;font-size:13px;color:var(--muted)}
   .filters select{font-size:16px;padding:8px 10px}
   .tag{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
-  .tag.ok{background:#E6F4EA;color:#1E6B34}
-  .tag.pend{background:#FBE3E3;color:#9B1C1C}
-  .up{color:#1E6B34;font-weight:700} .down{color:var(--danger);font-weight:700}
-  tr.cur td{background:#F1F8F4}
+  .tag.ok{background:var(--tag-ok-bg);color:var(--tag-ok-tx)}
+  .tag.pend{background:var(--ruim-bg);color:var(--ruim-tx)}
+  .up{color:var(--subiu);font-weight:700} .down{color:var(--danger);font-weight:700}
+  tr.cur td{background:var(--cur-bg)}
   .check{display:flex;gap:10px;align-items:center;font-weight:500;margin:10px 0 4px;font-size:16px}
   .check input{width:22px;height:22px}
   .obslist{padding-left:18px;font-size:15px} .obslist > li{margin:8px 0} .obslist ul{padding-left:18px;margin:4px 0}
-  .pergunta{border:1px solid var(--line);border-radius:12px;padding:10px 14px 14px;margin:10px 0;background:#FAFBFB}
+  .pergunta{border:1px solid var(--line);border-radius:12px;padding:10px 14px 14px;margin:10px 0;background:var(--suave)}
   .pergunta label{font-size:14px;margin:8px 0 4px} .pergunta input,.pergunta textarea,.pergunta select{font-size:16px;padding:8px 10px} .pergunta textarea{min-height:0}
   /* identidade Maxipark: barra branca com o logo, barra de progresso violeta → índigo */
   .brand .logo{height:44px;width:auto;display:block}
@@ -128,7 +137,98 @@
     .opts{gap:8px} .opt{min-height:54px;padding:6px 14px;font-size:19px} .opt .num{flex-basis:38px;height:38px;font-size:17px}
     .spread{margin-top:10px} .dim{margin-bottom:4px} .scale button{min-height:50px} .top{padding-top:8px;padding-bottom:8px}
   }
+
+  /* ═══════════ MODO ESCURO ═══════════
+     Só troca as cores: o desenho das telas continua igual.
+     Entra com o botão 🌙, ou sozinho quando o aparelho está no escuro
+     e ninguém escolheu nada ainda. */
+  :root[data-theme="dark"]{
+    --teal:#B18BE0; --teal-dark:#D3BCEF; --teal-soft:#2E2340; --accent:#C08BFF;
+    --bg:#17111E; --card:#211A2B; --text:#F2EDF8; --muted:#B3A8C2; --line:#382C48;
+    --danger:#F0A0A8; --ok:#3F8F63;
+    --branco:#2A2136; --suave:#241D30; --pre-bg:#241D30; --sobre-teal:#1B1226; --sobre-ok:#F2EDF8;
+    --sombra:0 2px 10px rgba(0,0,0,.45);
+    --aviso-bg:#3A3117; --aviso-br:#8A6D1F; --aviso-tx:#F0E2BC;
+    --ruim-bg:#3C2027; --ruim-tx:#F6C9CE;
+    --bom-bg:#1C3A2C; --bom-br:#2F6B4C; --bom-tx:#CFEEDD;
+    --tag-ok-bg:#1C3A2C; --tag-ok-tx:#8FE0B6; --subiu:#6FD3A4; --cur-bg:#1C3A2C;
+    --toast-bg:#E9E2F3; --toast-tx:#1B1226;
+    --ok-tx:#6FD3A4; --ok-bg:#1C3A2C; --neutro-bg:#2A2136;
+    color-scheme: dark;
+  }
+  /* o logo é roxo sobre fundo transparente: no escuro ele é clareado */
+  :root[data-theme="dark"] .top img,
+  :root[data-theme="dark"] .logo-hero img{filter:brightness(1.6)}
+
+  /* ---- botão claro/escuro: canto de baixo à direita, nas cinco telas ---- */
+  .botao-tema{position:fixed;right:14px;bottom:calc(62px + env(safe-area-inset-bottom,0px));
+    width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;
+    border:1px solid var(--line);background:var(--card);color:var(--text);
+    font-size:21px;line-height:1;cursor:pointer;z-index:30;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);-webkit-appearance:none;appearance:none}
+  /* o botao nao herda a cor dos outros botoes: no escuro ficaria invisivel */
+  :root[data-theme="dark"] .botao-tema,
+  :root[data-theme="light"] .botao-tema{background:var(--card);color:var(--text)}
+  .botao-tema:active{transform:scale(.94)}
+  .botao-tema:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  @media print{ .botao-tema{display:none!important} }
 </style>
+<script>
+/* ═════════ BOTÃO CLARO / ESCURO  (🌙 escurece · ☀ clareia) ═════════════════
+   Fica no canto de baixo à direita de todas as telas.
+   A escolha é guardada NO APARELHO e vale para as CINCO telas de uma vez,
+   porque todas moram no mesmo endereço de site.
+   Enquanto ninguém escolher, o app segue o modo claro/escuro do aparelho.
+   Roda antes de a tela ser desenhada: no escuro, não pisca branco.          */
+(function () {
+  'use strict';
+  var GUARDA = 'maxipark_tema', raiz = document.documentElement;
+  function escolhido() { try { return localStorage.getItem(GUARDA); } catch (e) { return null; } }
+  function doAparelho() {
+    try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro'; }
+    catch (e) { return 'claro'; }
+  }
+  function agora() { var e = escolhido(); return (e === 'escuro' || e === 'claro') ? e : doAparelho(); }
+  function aplica(t) {
+    raiz.setAttribute('data-theme', t === 'escuro' ? 'dark' : 'light');
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', t === 'escuro' ? '#17111E' : '#6B4A98');
+    var b = document.getElementById('btn-tema');
+    if (b) {
+      b.textContent = t === 'escuro' ? '\u2600' : '\uD83C\uDF19';
+      var r = t === 'escuro' ? 'Clarear a tela' : 'Escurecer a tela';
+      b.setAttribute('aria-label', r); b.title = r;
+    }
+  }
+  aplica(agora());
+  function troca() {
+    var novo = agora() === 'escuro' ? 'claro' : 'escuro';
+    try { localStorage.setItem(GUARDA, novo); } catch (e) {}
+    aplica(novo);
+  }
+  /* ninguém escolheu ainda: acompanha o aparelho quando ele troca de modo */
+  try {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var ouve = function () { if (!escolhido()) aplica(doAparelho()); };
+    if (mq.addEventListener) mq.addEventListener('change', ouve);
+    else if (mq.addListener) mq.addListener(ouve);
+  } catch (e) {}
+  /* trocou numa tela com outra aberta ao lado: a outra acompanha na hora */
+  try { window.addEventListener('storage', function (ev) { if (ev.key === GUARDA) aplica(agora()); }); } catch (e) {}
+  function poeBotao() {
+    if (document.getElementById('btn-tema')) return;
+    var b = document.createElement('button');
+    b.id = 'btn-tema'; b.type = 'button'; b.className = 'botao-tema';
+    b.addEventListener('click', troca);
+    document.body.appendChild(b);
+    aplica(agora());
+  }
+  if (document.body) poeBotao();
+  else document.addEventListener('DOMContentLoaded', poeBotao);
+})();
+</script>
+
 </head>
 <body>
 <div id="app"></div>
@@ -637,7 +737,7 @@ function viewAdmin(){
     '<p class="small muted">Esta área não mostra mais as respostas. Entre na página inicial com seu ' +
     'e-mail e senha: lá aparecem só as pesquisas e os resultados liberados para o seu acesso.</p>' +
     '<p style="margin-top:20px"><a href="../" ' +
-    'style="display:inline-block;padding:14px 24px;border-radius:12px;background:#6B4A98;color:#fff;' +
+    'style="display:inline-block;padding:14px 24px;border-radius:12px;background:var(--teal);color:var(--sobre-teal);' +
     'font-weight:700;font-size:17px;text-decoration:none">Ir para a página inicial &rarr;</a></p>' +
     '<p style="margin-top:16px"><button class="btn" data-action="tocollect">Voltar ao atendimento</button></p>' +
     '</div></div>';
@@ -1709,7 +1809,7 @@ render();
   if (!/^https?:/.test(location.protocol)) return;
   const ID = 'estado-servidor';
   let ultimo = '', pedido = 0, tempo = null;
-  const cores = { ok: ['#1B7A52', '#E4F4EC'], ruim: ['#A8323F', '#FBE9EB'], neutro: ['#5E5670', '#EFEDF4'] };
+  const cores = { ok: ['var(--ok-tx)', 'var(--ok-bg)'], ruim: ['var(--ruim-tx)', 'var(--ruim-bg)'], neutro: ['var(--muted)', 'var(--neutro-bg)'] };
   function pinta(tipo, texto) {
     const el = document.getElementById(ID); if (!el) return;
     const c = cores[tipo] || cores.neutro;
@@ -1763,10 +1863,10 @@ render();
     let txt = partes.join(' \u00b7 ');
     if (publicada && aqui && publicada !== aqui) {
       txt += ' \u2014 h\u00e1 uma vers\u00e3o nova (' + publicada + '): toque em Atualizar app agora.';
-      el.style.color = '#A8323F'; el.style.fontWeight = '700';
+      el.style.color = 'var(--ruim-tx)'; el.style.fontWeight = '700';
     } else if (publicada && aqui && publicada === aqui) {
       txt += ' \u2014 est\u00e1 na vers\u00e3o mais nova.';
-      el.style.color = '#1B7A52'; el.style.fontWeight = '600';
+      el.style.color = 'var(--ok-tx)'; el.style.fontWeight = '600';
     }
     el.textContent = txt;
   }
@@ -1794,7 +1894,7 @@ render();
       el.id = ID;
       const bt = document.createElement('button');
       bt.type = 'button'; bt.id = 'btn-atualizar-app'; bt.textContent = 'Atualizar app agora';
-      bt.style.cssText = 'padding:10px 16px;border:2px solid #6B4A98;border-radius:10px;background:#fff;color:#6B4A98;font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap';
+      bt.style.cssText = 'padding:10px 16px;border:2px solid var(--teal);border-radius:10px;background:var(--branco);color:var(--teal-dark);font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap';
       bt.addEventListener('click', async () => {
         bt.disabled = true; bt.textContent = 'Atualizando\u2026';
         try {
@@ -1813,7 +1913,7 @@ render();
       cx.insertAdjacentElement('afterend', linha);
       const ver = document.createElement('div');
       ver.id = 'versao-app';
-      ver.style.cssText = 'margin:2px 0 6px;font-size:13.5px;color:#5E5670';
+      ver.style.cssText = 'margin:2px 0 6px;font-size:13.5px;color:var(--muted)';
       ver.textContent = 'Conferindo a vers\u00e3o deste aparelho\u2026';
       linha.insertAdjacentElement('afterend', ver);
       mostraVersao();
@@ -1906,10 +2006,10 @@ render();
     else resposta = 'falta a chave neste aparelho';
 
     let veredito, cor;
-    if (/^LIGADO/.test(resposta)) { veredito = 'Est\u00e1 tudo certo: este aparelho fala com o servidor.'; cor = '#0a7d3c'; }
-    else if (!doApp) { veredito = 'Falta digitar a chave neste aparelho. Digite no campo acima e toque em Salvar.'; cor = '#b00020'; }
-    else if (/NAO confere/.test(resposta)) { veredito = 'A chave deste aparelho esta errada. Apague o campo acima, digite a chave certa e toque em Salvar.'; cor = '#b00020'; }
-    else { veredito = 'O aparelho nao conseguiu falar com o servidor. Confira a internet.'; cor = '#b00020'; }
+    if (/^LIGADO/.test(resposta)) { veredito = 'Est\u00e1 tudo certo: este aparelho fala com o servidor.'; cor = 'var(--ok-tx)'; }
+    else if (!doApp) { veredito = 'Falta digitar a chave neste aparelho. Digite no campo acima e toque em Salvar.'; cor = 'var(--ruim-tx)'; }
+    else if (/NAO confere/.test(resposta)) { veredito = 'A chave deste aparelho esta errada. Apague o campo acima, digite a chave certa e toque em Salvar.'; cor = 'var(--ruim-tx)'; }
+    else { veredito = 'O aparelho nao conseguiu falar com o servidor. Confira a internet.'; cor = 'var(--ruim-tx)'; }
 
     return '<div style="font-size:14.5px;line-height:1.5">' +
       '<div style="padding:10px 12px;border-radius:10px;background:' + cor + '11;color:' + cor + ';font-weight:700;margin-bottom:10px">' + veredito + '</div>' +
@@ -1929,10 +2029,10 @@ render();
     if (!cx || document.getElementById(ID + '-bt')) return;
     const bt = document.createElement('button');
     bt.type = 'button'; bt.id = ID + '-bt'; bt.textContent = 'Diagn\u00f3stico do servidor';
-    bt.style.cssText = 'margin:10px 0 2px;padding:10px 16px;border:2px solid #6B4A98;border-radius:10px;background:#fff;color:#6B4A98;font-weight:700;font-size:14.5px;cursor:pointer';
+    bt.style.cssText = 'margin:10px 0 2px;padding:10px 16px;border:2px solid var(--teal);border-radius:10px;background:var(--branco);color:var(--teal-dark);font-weight:700;font-size:14.5px;cursor:pointer';
     const cx2 = document.createElement('div'); cx2.id = ID; cx2.style.cssText = 'margin:8px 0';
     bt.addEventListener('click', async () => {
-      bt.disabled = true; cx2.innerHTML = '<span style="color:#666">Conferindo\u2026</span>';
+      bt.disabled = true; cx2.innerHTML = '<span style="color:var(--muted)">Conferindo\u2026</span>';
       try { cx2.innerHTML = await levantar(); } catch (e) { cx2.textContent = 'Nao consegui conferir: ' + e.message; }
       bt.disabled = false;
     });
@@ -2003,7 +2103,7 @@ render();
     if (!cx || document.getElementById(ID)) return;
     const bt = document.createElement('button');
     bt.type = 'button'; bt.id = ID; bt.textContent = 'Pronto \u2014 usar esta chave';
-    bt.style.cssText = 'margin:8px 0 2px;padding:12px 20px;border:0;border-radius:10px;background:#6B4A98;color:#fff;font-weight:700;font-size:15.5px;cursor:pointer';
+    bt.style.cssText = 'margin:8px 0 2px;padding:12px 20px;border:0;border-radius:10px;background:var(--teal);color:var(--sobre-teal);font-weight:700;font-size:15.5px;cursor:pointer';
     const av = document.createElement('div'); av.id = AVISO;
     bt.addEventListener('click', () => confirmar(bt));
     cx.parentNode.insertBefore(bt, cx.nextSibling);
