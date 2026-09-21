@@ -94,10 +94,12 @@ const ESCOPO = (() => {
     while (b.length % 4) b += '=';
     const j = JSON.parse(decodeURIComponent(escape(atob(b))));
     if (!j || !j.e) return null;
+    const ab = /[#&]aba=([a-z]+)/.exec(location.hash || '');
     return {
       nome: j.n || j.e, email: j.e, papel: j.p || 'total',
       pesquisas: Array.isArray(j.q) ? j.q : ['clientes', 'equipe', 'conselho'],
-      unidades: (!j.u || j.u === 'todas') ? null : (Array.isArray(j.u) ? j.u : [j.u])
+      unidades: (!j.u || j.u === 'todas') ? null : (Array.isArray(j.u) ? j.u : [j.u]),
+      aba: ab ? ab[1] : null
     };
   } catch (e) { return null; }
 })();
@@ -329,7 +331,19 @@ function calc(cf){ travaUnidade(cf);
 }
 
 /* ---------------- telas ---------------- */
-const state = { screen: (ESCOPO && ESCOPO.papel !== 'aplicar') ? 'painel' : 'pin', pin: '', cf: cfDefault(), aba: 'clientes' };
+function abasLiberadas(){
+  const todas = ['clientes', 'equipe', 'conselho', 'consolidado'];
+  if (!ESCOPO || ESCOPO.papel === 'admin' || ESCOPO.papel === 'total') return todas;
+  const q = ESCOPO.pesquisas || [];
+  const l = todas.filter(k => q.indexOf(k) >= 0);
+  return l.length ? l : ['consolidado'];
+}
+function abaInicial(){
+  const l = abasLiberadas();
+  const pedida = ESCOPO && ESCOPO.aba;
+  return (pedida && l.indexOf(pedida) >= 0) ? pedida : l[0];
+}
+const state = { screen: (ESCOPO && ESCOPO.papel !== 'aplicar') ? 'painel' : 'pin', pin: '', cf: cfDefault(), aba: abaInicial() };
 function header(passo){ return `<div class="top"><div class="marca"><a href="../" class="home" title="Página inicial: escolher a pesquisa" aria-label="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a><span>Painel de resultados</span></div><div class="passo">${esc(passo || '')}</div></div>`; }
 function logoHero(){ return `<div class="logo-hero"><a href="../" class="home" title="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a></div>`; }
 function viewPin(){
@@ -386,7 +400,9 @@ function blocoConselho(g){
     ${g.identTotal ? '<div class="ruim">Menos de 3 respostas: identifica quem respondeu — uso restrito da governança.</div>' : (g.blocosIdent.length ? `<div class="ruim">Bloco com menos de 3 avaliações: ${esc(g.blocosIdent.join(', '))} — não discutir individualmente.</div>` : '')}` : '<p class="muted">Sem avaliações do conselho no filtro.</p>'}</div>`;
 }
 function abasBarra(){
-  const abas = [['clientes', '🚗 Clientes'], ['equipe', '👷 Equipe'], ['conselho', '🏛️ Conselho'], ['consolidado', '📊 Consolidado']];
+  const nomes = { clientes: '🚗 Clientes', equipe: '👷 Equipe', conselho: '🏛️ Conselho', consolidado: '📊 Consolidado' };
+  const abas = abasLiberadas().map(k => [k, nomes[k]]);
+  if (abas.length < 2) return '';
   return '<div class="abas">' + abas.map(([k, t]) =>
     `<button class="aba${state.aba === k ? ' on' : ''}" data-action="aba" data-aba="${k}">${t}</button>`).join('') + '</div>';
 }
@@ -453,7 +469,7 @@ function cardTendenciaUma(C, qual){
 function viewPainel(){
   const C = calc(state.cf); const { gEq, gCl, gCo } = C;
   const vazio = !gEq.n && !gCl.n && !gCo.n;
-  const aba = state.aba || 'clientes';
+  const aba = abasLiberadas().indexOf(state.aba) >= 0 ? state.aba : abaInicial();
 
   if (aba === 'clientes') {
     return header('Painel · clientes') + `<div class="wrap">${abasBarra()}
@@ -683,7 +699,7 @@ document.addEventListener('click', e => {
     case 'pinkey': { if (el.dataset.k === 'del') state.pin = state.pin.slice(0, -1); else if (state.pin.length < 8) state.pin += el.dataset.k; render(); break; }
     case 'pinok': pinTentativa(); break;
     case 'painel': go('painel'); break;
-    case 'aba': { state.aba = el.dataset.aba || 'clientes'; render(); window.scrollTo(0, 0); break; }
+    case 'aba': { const k = el.dataset.aba || ''; state.aba = abasLiberadas().indexOf(k) >= 0 ? k : abaInicial(); render(); window.scrollTo(0, 0); break; }
     case 'config': go('config'); break;
     case 'sync': sincronizar(false); break;
     case 'syncfull': sincronizar(false, true); break;
