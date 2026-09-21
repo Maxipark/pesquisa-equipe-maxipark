@@ -593,7 +593,8 @@
 
 
 
-  /* ═════════ HISTÓRICO DE USO (só o administrador) ═════════ */
+  /* ═════════ HISTÓRICO DE USO (só o administrador) ═════════
+     Apagar ou reescrever um registro NAO gera registro: foi pedido assim. */
   let HIST = [], histCarregado = false, histEditando = null;
 
   async function pedeHistorico() {
@@ -967,8 +968,6 @@
         const ok = await mandaHistorico('historico-apagar', { ids: f.map(h => h.id) });
         b.disabled = false;
         if (!ok) return toast('Não consegui apagar: o servidor não respondeu.');
-        reg('apagou registros do histórico', { detalhe: f.length + ' registro(s)' });
-        await window.__historico.envia();
         toast(f.length + ' registro(s) apagados.');
         return historico(true);
       }
@@ -977,8 +976,6 @@
         if (!confirm('Apagar este registro do histórico?')) return;
         const ok = await mandaHistorico('historico-apagar', { ids: [h.id] });
         if (!ok) return toast('Não consegui apagar: o servidor não respondeu.');
-        reg('apagou registro do histórico', { detalhe: h.evento + ' de ' + (h.quem_nome || '') });
-        await window.__historico.envia();
         return historico(true);
       }
       if (b.dataset.hed) {
@@ -994,8 +991,6 @@
         const ok = await mandaHistorico('historico-editar', { itens: [novo] });
         b.disabled = false;
         if (!ok) return toast('Não consegui salvar: o servidor não respondeu.');
-        reg('reescreveu registro do histórico', { detalhe: 'era: ' + h.evento + ' de ' + (h.quem_nome || '') });
-        await window.__historico.envia();
         fechaEditorHist(); toast('Registro alterado.');
         return historico(true);
       }
@@ -1170,11 +1165,27 @@
   /* a pagina inicial nao tem cracha na URL: ela avisa quem entrou por aqui */
   function defineQuem(q) { if (q && q.email) guardaQuem({ nome: q.nome || q.email, email: q.email }); }
   function esqueceQuem() { try { localStorage.removeItem(QUEM); } catch (e) {} }
+  /* Ao fechar a pagina, um fetch normal e cancelado pelo navegador no meio do caminho.
+     sendBeacon foi feito para isso: entrega mesmo com a pagina fechando. Como ele nao
+     devolve resposta, a fila nao e limpa aqui — o servidor ignora id repetido e o
+     proximo envio normal limpa o que ja chegou. */
+  function enviaAoFechar() {
+    try {
+      const f = leFila(); if (!f.length) return;
+      const k = chave(); if (!k) return;
+      if (!navigator.sendBeacon) { envia(); return; }
+      const corpo = new Blob([JSON.stringify({ op: 'historico-add', chave: k, itens: f.slice(0, 80) })],
+                             { type: 'text/plain;charset=UTF-8' });
+      navigator.sendBeacon(servidor(), corpo);
+    } catch (e) {}
+  }
+
   window.__historico = { registra: registra, envia: envia, quem: quem, fila: leFila,
-                         defineQuem: defineQuem, esqueceQuem: esqueceQuem };
+                         defineQuem: defineQuem, esqueceQuem: esqueceQuem, enviaAoFechar: enviaAoFechar };
   setInterval(envia, 45000);
   window.addEventListener('online', envia);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) envia(); });
+  window.addEventListener('pagehide', enviaAoFechar);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) enviaAoFechar(); });
 })();
 </script>
 </body>
