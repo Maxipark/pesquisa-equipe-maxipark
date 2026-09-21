@@ -244,7 +244,13 @@ if (!settings.chave) settings.chave = CHAVE_PADRAO;
 try { LS.set('mp_settings', settings); } catch (e) {}
 function saveSettings(){ LS.set('mp_settings', settings); }
 aplicarTextos();   // perguntas, respostas e pesos: padrão ou alterados pelo gestor
-if ('avaliador' in settings) { delete settings.avaliador; saveSettings(); }   // apaga o nome do usuário gravado por versões anteriores
+// Limpeza de campos antigos: versões bem antigas guardavam o nome de quem aplicava a pesquisa.
+// Os nomes entre aspas abaixo são NOMES DE DADO gravados no tablet, não texto de tela — por isso
+// 'avaliador' continua escrito assim: é a chave que ficou salva naqueles tablets. Apagamos as duas
+// grafias para não sobrar nada, aconteça o que acontecer.
+['avaliador', 'usuario'].forEach(function (campoAntigo) {
+  if (campoAntigo in settings) { delete settings[campoAntigo]; saveSettings(); }
+});
 // PIN programado: aplica o PIN padrão uma única vez (também em tablets que já tinham outro PIN de teste); depois disso, um PIN trocado em Configurações é respeitado.
 if (settings.pinPadraoAplicado !== PIN_PADRAO_MARCA) { settings.pin = PIN_PADRAO; settings.pinFails = 0; settings.lockUntil = 0; settings.pinPadraoAplicado = PIN_PADRAO_MARCA; saveSettings(); }
 if (settings.senhaZerarAplicada !== SENHA_ZERAR_MARCA) { settings.senhaZerar = SENHA_ZERAR_PADRAO; settings.senhaZerarAplicada = SENHA_ZERAR_MARCA; saveSettings(); }
