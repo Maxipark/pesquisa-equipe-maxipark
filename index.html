@@ -196,7 +196,7 @@
       <div class="papeis">
         <label class="papel"><input type="radio" name="papel" value="total" checked>
           <span><span class="t">Visualizar tudo — todas as pesquisas e todas as unidades</span>
-          <span class="d">Vê o painel, as respostas e as três pesquisas, sem exceção. Somente leitura: não exclui, não edita, não zera.</span></span></label>
+          <span class="d">Vê o painel e as respostas das três pesquisas, sem exceção. Não abre pesquisa para responder, não exclui, não edita, não zera.</span></span></label>
         <label class="papel"><input type="radio" name="papel" value="respostas">
           <span><span class="t">Somente ver as respostas</span>
           <span class="d">Abre o painel com as pesquisas e unidades marcadas abaixo.</span></span></label>
@@ -272,7 +272,7 @@
   const NOME_PAPEL = { admin:'Administrador', total:'Visualiza tudo', respostas:'Vê as respostas', aplicar:'Aplica as pesquisas' };
   const FRASE = {
     admin: 'Você administra os acessos e enxerga tudo.',
-    total: 'Você visualiza tudo — todas as pesquisas e todas as unidades — sem alterar nada.',
+    total: 'Você vê os resultados de todas as pesquisas e de todas as unidades. Só leitura: não aplica pesquisa nem altera nada.',
     respostas: 'Você vê as respostas das pesquisas e unidades liberadas para você.',
     aplicar: 'Você abre as pesquisas para as pessoas responderem.'
   };
@@ -375,7 +375,7 @@
     $('resumo-acesso').textContent = FRASE[c.papel] || '';
     const cards = [];
     const podePainel = ['admin','total','respostas'].includes(c.papel);
-    const podeAplicar = ['admin','total','aplicar'].includes(c.papel);
+    const podeAplicar = ['admin','aplicar'].includes(c.papel);   /* 'visualizar tudo' so le resultados: nao abre pesquisa */
 
     /* ORDEM FIXA DOS CARDS — nao alterar:
        1) Pesquisa com CLIENTES  2) Pesquisa com a EQUIPE  3) Avaliação do CONSELHO
