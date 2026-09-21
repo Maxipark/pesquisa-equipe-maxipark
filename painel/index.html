@@ -341,8 +341,12 @@ function abasLiberadas(){
 function abaInicial(){
   const l = abasLiberadas();
   const pedida = ESCOPO && ESCOPO.aba;
-  return (pedida && l.indexOf(pedida) >= 0) ? pedida : l[0];
+  if (pedida && l.indexOf(pedida) >= 0) return pedida;
+  /* sem aba pedida: abre no consolidado quando a pessoa pode ve-lo */
+  return (l.indexOf('consolidado') >= 0) ? 'consolidado' : l[0];
 }
+/* trocar o cracha no endereco (outro login no mesmo aparelho) recarrega o painel */
+window.addEventListener('hashchange', function(){ location.reload(); });
 const state = { screen: (ESCOPO && ESCOPO.papel !== 'aplicar') ? 'painel' : 'pin', pin: '', cf: cfDefault(), aba: abaInicial() };
 function header(passo){ return `<div class="top"><div class="marca"><a href="../" class="home" title="Página inicial: escolher a pesquisa" aria-label="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a><span>Painel de resultados</span></div><div class="passo">${esc(passo || '')}</div></div>`; }
 function logoHero(){ return `<div class="logo-hero"><a href="../" class="home" title="Página inicial: escolher a pesquisa"><img src="data:image/png;base64,${LOGO_B64}" alt="Maxipark"></a></div>`; }
