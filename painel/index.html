@@ -193,7 +193,13 @@ let toastT; function toast(m){ const t = document.getElementById('toast'); t.tex
 
 /* ---------------- configurações do painel ---------------- */
 const DEFAULT_SETTINGS = { pin: '', webhook: '', chave: '', ultimaSync: '', pinFails: 0, lockUntil: 0 };
+const SERVIDOR_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';   /* servidor das respostas (Apps Script + Planilha) */
+const CHAVE_PADRAO = '';   /* a chave nao fica no codigo: digite uma vez em Configuracoes (PIN 2819) */
 let settings = Object.assign({}, DEFAULT_SETTINGS, LS.get('mpp_settings', {}));
+/* servidor ligado de fabrica: quem nunca configurou nada ja nasce sincronizado; quem digitou um endereco proprio nas Configuracoes continua com o dele */
+if (!settings.webhook) settings.webhook = SERVIDOR_PADRAO;
+if (!settings.chave) settings.chave = CHAVE_PADRAO;
+try { LS.set('mpp_settings', settings); } catch (e) {}
 if (!settings.webhook || !settings.chave) {   // aproveita a URL e a chave já digitadas em qualquer das três pesquisas neste aparelho
   const outro = ['mp_settings', 'mpc_settings', 'mpco_settings'].map(k => LS.get(k, null)).find(s => s && s.webhook && s.chave);
   if (outro) { settings.webhook = outro.webhook; settings.chave = outro.chave; }
@@ -626,6 +632,8 @@ window.addEventListener('storage', () => { invalidar(); if (state.screen === 'pa
 
 /* ---------------- início ---------------- */
 render();
+/* ao abrir o painel ja busca o que os outros tablets mandaram */
+if (state.screen === 'painel' && syncOk()) sincronizar(true);
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { navigator.serviceWorker.register('../sw.js').catch(() => {}); }
 </script>
 </body>
