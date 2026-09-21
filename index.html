@@ -192,6 +192,8 @@
       Sem ele, ficam guardadas só aqui.</p>
     <div id="erro-chave" class="erro" hidden></div>
     <p id="aviso-chave" class="small" style="margin:0;color:var(--cinza);font-size:14.5px" hidden></p>
+    <label for="k-servidor" id="rot-servidor" hidden><span class="nm">Endereço do servidor</span>
+      <input id="k-servidor" type="text" autocomplete="off" spellcheck="false" placeholder="https://…/exec"></label>
     <label for="k-chave"><span class="nm">Chave do servidor</span>
       <input id="k-chave" type="text" autocomplete="off" spellcheck="false" placeholder="cole ou digite a chave"></label>
     <button id="btn-chave-ok" type="button">Ligar agora</button>
@@ -381,8 +383,11 @@
   }
 
   /* ---------- chave do servidor neste aparelho ---------- */
-  const SERVIDOR = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';
-  const GUARDA_CHAVE = 'maxipark_chave_sync', GUARDA_DEPOIS = 'maxipark_chave_depois';
+  const SERVIDOR_DE_FABRICA = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';
+  const GUARDA_CHAVE = 'maxipark_chave_sync', GUARDA_DEPOIS = 'maxipark_chave_depois', GUARDA_SRV = 'maxipark_servidor';
+  /* O endereco fica guardado no aparelho: da para trocar de provedor sem mexer no codigo. */
+  const servidorDoAparelho = () => { try { return (localStorage.getItem(GUARDA_SRV) || '').trim() || SERVIDOR_DE_FABRICA; } catch (e) { return SERVIDOR_DE_FABRICA; } };
+  function guardaServidor(u) { try { if (u && u !== SERVIDOR_DE_FABRICA) localStorage.setItem(GUARDA_SRV, u); else localStorage.removeItem(GUARDA_SRV); } catch (e) {} }
   /* Chaves antigas do tempo em que a chave vinha embutida no codigo: nunca mais valem. */
   const chaveMorta = k => /^MAXIPARK-/i.test(String(k || '').trim());
   const chaveDoAparelho = () => {
@@ -406,28 +411,32 @@
       ['mpc_settings', 'mp_settings', 'mpco_settings', 'mpp_settings'].forEach(n => {
         let o = {}; try { o = JSON.parse(localStorage.getItem(n)) || {}; } catch (e) {}
         o.chave = k;                      /* apaga qualquer chave antiga que tenha sobrado neste app */
-        if (!o.webhook) o.webhook = SERVIDOR;
+        o.webhook = servidorDoAparelho();   /* o endereco tambem vale para os quatro apps */
         localStorage.setItem(n, JSON.stringify(o));
       });
     } catch (e) {}
   }
-  async function testaChave(k) {
+  async function testaChave(k, url) {
     try {
-      const j = await (await fetch(SERVIDOR + '?op=ping&chave=' + encodeURIComponent(k))).json();
+      const u = (url || servidorDoAparelho()).trim();
+      const j = await (await fetch(u + (u.indexOf('?') >= 0 ? '&' : '?') + 'op=ping&chave=' + encodeURIComponent(k))).json();
       if (j && j.ok) return 'ok';
       if (j && j.erro === 'chave') return 'Essa chave não confere com a do servidor.';
       return 'O servidor respondeu algo inesperado.';
     } catch (e) { return 'Não consegui falar com o servidor (sem internet?).'; }
   }
   async function ligarServidor() {
-    const el = $('k-chave'), err = $('erro-chave'), b = $('btn-chave-ok');
+    const el = $('k-chave'), err = $('erro-chave'), b = $('btn-chave-ok'), es = $('k-servidor');
     const k = (el.value || '').trim();
+    const u = (es && !$('rot-servidor').hidden) ? (es.value || '').trim() : servidorDoAparelho();
     err.hidden = true;
     if (!k) { err.textContent = 'Digite a chave, ou toque em “Fazer isso mais tarde”.'; err.hidden = false; return; }
+    if (!/^https?:\/\//.test(u)) { err.textContent = 'O endereço do servidor precisa começar com https://'; err.hidden = false; return; }
     b.disabled = true; b.textContent = 'Conferindo…';
-    const r = await testaChave(k);
+    const r = await testaChave(k, u);
     b.disabled = false; b.textContent = 'Ligar agora';
     if (r !== 'ok') { err.textContent = r; err.hidden = false; return; }
+    guardaServidor(u);
     guardaChave(k);
     try { localStorage.removeItem(GUARDA_DEPOIS); } catch (e) {}
     el.value = '';
@@ -469,10 +478,15 @@
           k.placeholder = (jaTem && !eAdmin) ? 'já configurada — digite outra só se for trocar' : 'cole ou digite a chave';
           setTimeout(() => { k.focus(); if (eAdmin) k.select(); }, 60);
         }
+        /* so o administrador troca o endereco do servidor (mudar de provedor) */
+        const rot = $('rot-servidor'), es = $('k-servidor');
+        if (rot) rot.hidden = !eAdmin;
+        if (es && eAdmin) es.value = servidorDoAparelho();
         if (aviso) {
-          aviso.hidden = !jaTem;
-          aviso.textContent = eAdmin ? 'Você é administrador: a chave aparece aqui para você conferir.'
-                                     : 'Este aparelho já está ligado ao servidor. A chave não é exibida.';
+          aviso.hidden = !(jaTem || eAdmin);
+          aviso.textContent = eAdmin
+            ? 'Você é administrador: pode conferir a chave e trocar o endereço do servidor aqui. Vale para as quatro telas deste aparelho.'
+            : 'Este aparelho já está ligado ao servidor. A chave não é exibida.';
         }
       }
       if (tela === 'admin') admin();
