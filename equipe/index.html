@@ -236,7 +236,7 @@ const LS = {
 };
 const DEFAULT_SETTINGS = { pin:'', unidade:'', mes:'', data:'', rodada:'R1', webhook:'', chave:'', ultimaSync:'', exported:{}, pinFails:0, lockUntil:0 };   // sem nome do avaliador (pedido do gestor): o app não guarda nome de ninguém
 const SERVIDOR_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';   /* servidor das respostas (Apps Script + Planilha) */
-const CHAVE_PADRAO = '';   /* a chave nao fica no codigo: digite uma vez em Configuracoes (PIN 2819) */
+const CHAVE_PADRAO = 'MAXIPARK-3W1EZ3DAQWW0G84X';
 let settings = Object.assign({}, DEFAULT_SETTINGS, LS.get('mp_settings', {}));
 /* servidor ligado de fabrica: quem nunca configurou nada ja nasce sincronizado; quem digitou um endereco proprio nas Configuracoes continua com o dele */
 if (!settings.webhook) settings.webhook = SERVIDOR_PADRAO;
@@ -1655,6 +1655,44 @@ setTimeout(() => { if (syncOk() && navigator.onLine) sendPending(true); }, 4000)
 setInterval(() => { if (syncOk() && navigator.onLine) sendPending(true); }, 15 * 60 * 1000);
 state.screen = 'setup';   // abre SEMPRE em "Preparar a coleta" (escolher/confirmar a unidade), como as outras pesquisas; homeScreen() continua valendo dentro do app (idle, cancelar, voltar à coleta)
 render();
+</script>
+
+<script>
+/* ---- atualizacao automatica ----------------------------------------------
+   A cada minuto o app olha o relogio. Se ninguem tocar na tela por 10 minutos
+   e existir uma versao nova publicada, ele recarrega sozinho. Nunca recarrega
+   com alguem usando: qualquer toque, tecla ou rolagem zera a contagem.        */
+(() => {
+  if (!/^https?:/.test(location.protocol)) return;
+  let ocioso = 10 * 60 * 1000, ultimo = Date.now(), base = null, ocupado = false;
+  const toque = () => { ultimo = Date.now(); };
+  ['pointerdown', 'keydown', 'touchstart', 'wheel', 'input'].forEach(e => addEventListener(e, toque, { passive: true }));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) toque(); });
+  async function impressao() {
+    const r = await fetch(location.pathname, { cache: 'no-store' });
+    if (!r.ok) throw new Error('http ' + r.status);
+    const t = await r.text();
+    let h = 5381;
+    for (let i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0;
+    return t.length + ':' + h;
+  }
+  async function verificar() {
+    if (ocupado || document.hidden || !navigator.onLine) return 'pulou';
+    ocupado = true;
+    try {
+      const agora = await impressao();
+      if (base === null) { base = agora; return 'primeira leitura'; }
+      if (agora === base) return 'sem novidade';
+      if (Date.now() - ultimo < ocioso) return 'tem versao nova, mas alguem esta usando';
+      location.reload();
+      return 'recarregando';
+    } catch (e) { return 'falhou: ' + (e && e.message); }
+    finally { ocupado = false; }
+  }
+  impressao().then(x => { base = x; }).catch(() => {});
+  setInterval(() => { if (Date.now() - ultimo >= ocioso) verificar(); }, 60 * 1000);
+  window.__atualiza = { verificar, ociosoMs: ms => { ocioso = ms; }, parado: () => Date.now() - ultimo };
+})();
 </script>
 </body>
 </html>
