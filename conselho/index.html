@@ -1050,7 +1050,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
 
     return '<div style="font-size:14.5px;line-height:1.5">' +
       '<div style="padding:10px 12px;border-radius:10px;background:' + cor + '11;color:' + cor + ';font-weight:700;margin-bottom:10px">' + veredito + '</div>' +
-      linha('Versao no aparelho', (typeof VERSAO_TELA !== 'undefined' ? VERSAO_TELA : 'tela') ) +
+      linha('Versao desta tela', (typeof VERSAO !== 'undefined' && VERSAO) ? String(VERSAO) : '\u2014') +
       linha('Versao publicada', versao) +
       linha('Chave deste app', oculta(doApp)) +
       linha('Chave do aparelho', oculta(doAparelho)) +
