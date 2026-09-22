@@ -1,0 +1,16 @@
+{
+  "name": "testes-pesquisas-maxipark",
+  "private": true,
+  "description": "Bateria de testes do app de pesquisas da Maxipark (nao vai para o ar: so serve para conferir antes de publicar)",
+  "scripts": {
+    "teste": "node audita.js && node tema.js",
+    "audita": "node audita.js",
+    "tema": "node tema.js",
+    "fotos": "node fotos.js"
+  },
+  "dependencies": {
+    "acorn": "^8",
+    "acorn-walk": "^8",
+    "playwright": "^1"
+  }
+}
