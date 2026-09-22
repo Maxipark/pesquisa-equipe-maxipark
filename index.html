@@ -92,8 +92,6 @@
   a.opcao h2{margin:0;font-size:25px;line-height:1.2;color:var(--roxo-escuro)}
   a.opcao p{margin:0;color:var(--cinza);font-size:16px}
   a.opcao .vai{margin-top:auto;font-weight:700;color:var(--roxo);font-size:17px}
-  a.opcao.destaque{background:var(--roxo-claro);border-color:var(--roxo-claro)}
-  a.opcao.destaque .icone{background:var(--superficie)}
   .vazio{background:var(--superficie);border:1px dashed var(--linha);border-radius:18px;padding:26px;color:var(--cinza)}
 
   /* ---- admin ---- */
@@ -652,14 +650,14 @@
     const soUn = c.unidades && c.unidades !== 'todas' ? ' Filtrado para ' + txtUn(c.unidades).toLowerCase() + '.' : '';
     if (podePainel && vistos.length && c.papel === 'respostas') {
       vistos.forEach(r => cards.push({
-        cls: r.id === 'consolidado' ? 'opcao destaque' : 'opcao', icone:r.icone, tag:r.tag, h:r.nome,
+        cls: 'opcao', icone:r.icone, tag:r.tag, h:r.nome,
         p: r.desc + soUn, vai:'Ver resultados \u2192',
         url: URL_PAINEL + '#a=' + passe(c) + '&aba=' + r.id }));
     } else if (podePainel && vistos.length) {
       const nomes = vistos.map(r => r.curto);
       const lista = nomes.length === 1 ? nomes[0]
                   : nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
-      cards.push({ cls:'opcao destaque', icone:'\ud83d\udcca', tag:'Resultados', h:'PAINEL DE RESULTADOS',
+      cards.push({ cls:'opcao', icone:'\ud83d\udcca', tag:'Resultados', h:'PAINEL DE RESULTADOS',
         p: (vistos.length === 1
              ? 'Respostas de ' + lista + ', com filtros por unidade e por m\u00eas.'
              : 'Tudo num painel s\u00f3: ' + lista + '. Troque de aba l\u00e1 dentro e filtre por unidade e por m\u00eas.')
