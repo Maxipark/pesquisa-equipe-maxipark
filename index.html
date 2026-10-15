@@ -145,6 +145,8 @@
     padding:16px 18px;font-size:15px;color:var(--cinza);margin-top:20px}
   .nota b{color:var(--texto)}
   .rodape{margin-top:26px;text-align:center;font-size:13.5px;color:var(--cinza)}
+  .atualizar-tudo{margin-top:22px;text-align:center}
+  .atualizar-tudo button{width:100%;max-width:420px}
   .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));
     background:var(--roxo-escuro);color:#fff;padding:13px 22px;border-radius:999px;font-size:15.5px;
     box-shadow:var(--sombra);z-index:9;max-width:92vw;text-align:center}
@@ -251,6 +253,10 @@
   <section id="tela-inicio" hidden>
     <div class="saudacao"><h1 id="ola">Olá</h1><p id="resumo-acesso">—</p></div>
     <div class="escolhas" id="cards"></div>
+    <div class="atualizar-tudo">
+      <button class="leve" type="button" id="btn-atualizar-tudo">🔄 Atualizar app e pesquisas</button>
+      <p id="msg-atualizar" class="rodape" style="margin-top:8px" aria-live="polite"></p>
+    </div>
     <p class="rodape" id="estado-sync">—</p>
     <p class="rodape">Maxipark · Experiência do Cliente · uso interno</p>
   </section>
@@ -1295,6 +1301,66 @@
   window.addEventListener('online', envia);
   window.addEventListener('pagehide', enviaAoFechar);
   document.addEventListener('visibilitychange', () => { if (document.hidden) enviaAoFechar(); });
+})();
+</script>
+<script>
+/* ═════════ ATUALIZAR TUDO (um botão só) ═════════
+   1) Abre a pesquisa com a EQUIPE e a com CLIENTES escondidas, uma de cada vez: cada uma envia o que está
+      pendente neste aparelho e baixa as respostas novas da nuvem (o mesmo "Atualizar da nuvem" de dentro delas).
+   2) Pede a versão nova do app (service worker + limpa o cache dos arquivos) e recarrega a página.
+   Nada é apagado: as respostas ficam no aparelho; só o cache dos arquivos do site é renovado. */
+(function () {
+  const bt = document.getElementById('btn-atualizar-tudo'), msg = document.getElementById('msg-atualizar');
+  if (!bt || !msg) return;
+  const NOMES = { 'pesquisa-equipe-maxipark': 'Equipe', 'pesquisa-clientes-maxipark': 'Clientes' };
+  function sincroniza(src, app) {
+    return new Promise(res => {
+      const f = document.createElement('iframe');
+      f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1;
+      f.style.cssText = 'position:absolute;left:-9999px;top:0;width:10px;height:10px;border:0;opacity:0';
+      let feito = false;
+      const fim = v => { if (feito) return; feito = true; window.removeEventListener('message', ouve); f.remove(); res(v); };
+      const ouve = e => { if (e.origin !== location.origin || !e.data || e.data.tipo !== 'atualizar-tudo' || e.data.app !== app) return; fim(e.data); };
+      window.addEventListener('message', ouve);
+      setTimeout(() => fim({ app, ok: false, erro: 'demorou demais' }), 45000);
+      f.src = src + '#atualizar-tudo';
+      document.body.appendChild(f);
+    });
+  }
+  function resumo(r) {
+    if (!r.online) return 'App atualizado. Sem internet agora: as respostas pendentes sobem quando a conexão voltar.';
+    const partes = (r.itens || []).map(x => {
+      const n = NOMES[x.app] || x.app;
+      if (!x.conectado) return n + ': aparelho não ligado ao servidor';
+      if (!x.ok) return n + ': não consegui falar com o servidor' + (x.erro ? ' (' + x.erro + ')' : '');
+      return n + ': ok' + (x.pendentes ? ' (' + x.pendentes + ' ainda pendente' + (x.pendentes > 1 ? 's' : '') + ')' : '');
+    });
+    return 'Tudo atualizado' + (r.versao ? ' — versão ' + r.versao : '') + '. ' + partes.join(' · ') + '.';
+  }
+  bt.addEventListener('click', async () => {
+    bt.disabled = true;
+    const r = { online: navigator.onLine, itens: [] };
+    if (r.online) {
+      msg.textContent = 'Enviando e baixando as respostas da pesquisa com a equipe…';
+      r.itens.push(await sincroniza('equipe/', 'pesquisa-equipe-maxipark'));
+      msg.textContent = 'Enviando e baixando as respostas da pesquisa com clientes…';
+      r.itens.push(await sincroniza('cliente/', 'pesquisa-clientes-maxipark'));
+    }
+    msg.textContent = 'Buscando a versão nova do app…';
+    try {
+      if (r.online) { const t = await (await fetch('sw.js?v=' + Date.now(), { cache: 'no-store' })).text(); const m = /VERSAO = '([^']+)'/.exec(t); if (m) r.versao = m[1]; }
+    } catch (e) {}
+    try {
+      if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(x => x.update().catch(() => {}))); }
+      if (r.online && window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); }
+    } catch (e) {}
+    try { sessionStorage.setItem('mp_atualizou', JSON.stringify(r)); } catch (e) {}
+    location.reload();
+  });
+  try {
+    const x = sessionStorage.getItem('mp_atualizou');
+    if (x) { sessionStorage.removeItem('mp_atualizou'); msg.textContent = resumo(JSON.parse(x)); }
+  } catch (e) {}
 })();
 </script>
 </body>
