@@ -24,6 +24,7 @@ function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     const erro = verificaChave(body.chave); if (erro) return erro;
+    if (body.op === 'relatorio-equipe') return json(enviaRelatorioEquipe(body.relatorio || {}));   // relatorio da visita (pesquisa com a equipe) por e-mail
     if (body.op === 'historico-add') {            // eventos novos vindos dos apps
       const ws = abaHistorico();
       const lock = LockService.getScriptLock(); lock.waitLock(25000);
@@ -105,7 +106,7 @@ function doGet(e) {
   try {
     const p = (e && e.parameter) || {};
     const erro = verificaChave(p.chave); if (erro) return erro;
-    if (p.op === 'ping') return json({ ok: true, servidor: 'apps-script', versao: 4, abas: Object.keys(ABAS), usuarios: true, historico: true });
+    if (p.op === 'ping') return json({ ok: true, servidor: 'apps-script', versao: 5, abas: Object.keys(ABAS), usuarios: true, historico: true, relatorio: true });
     if (p.op === 'historico') {
       const ws = abaHistorico(); const last = ws.getLastRow();
       if (last < 2) return json({ ok: true, itens: [] });
@@ -194,3 +195,24 @@ function celula(v) {   // texto digitado pelo público nunca vira fórmula na pl
 }
 function semFormula(s) { return /^[=+\-@]/.test(s) ? "'" + s : s; }
 function json(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+
+/* ---------- Relatório da visita (pesquisa com a equipe) ----------
+   O tablet monta o relatório (HTML) ao encerrar a visita numa unidade e diz para quem vai (o e-mail digitado na hora,
+   até 5). Aqui ele vai por e-mail, com um PDF anexo. Se o tablet não mandar destinatário, vai para o administrador. */
+const RELATORIO_PADRAO = ['raphael@maxipark.com.br'];
+const RELATORIO_MAX_PARA = 5;
+function enviaRelatorioEquipe(r) {
+  const html = String(r.html || '');
+  if (!html) return { ok: false, erro: 'relatorio-vazio' };
+  if (html.length > 400000) return { ok: false, erro: 'relatorio-grande' };
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  let para = (Array.isArray(r.para) ? r.para : []).map(function (x) { return String(x || '').trim().toLowerCase(); }).filter(Boolean);
+  if (para.some(function (x) { return !ok.test(x); })) return { ok: false, erro: 'email-invalido' };
+  if (para.length > RELATORIO_MAX_PARA) return { ok: false, erro: 'emails-demais' };
+  if (!para.length) para = RELATORIO_PADRAO;
+  const assunto = String(r.assunto || 'Relatório da visita - Pesquisa equipe').slice(0, 200);
+  const nome = String(r.arquivo || 'relatorio-equipe').replace(/[^\w.-]+/g, '_').slice(0, 120) + '.pdf';
+  const pdf = Utilities.newBlob(html, 'text/html', 'relatorio.html').getAs('application/pdf').setName(nome);
+  MailApp.sendEmail({ to: para.join(','), subject: assunto, htmlBody: html, attachments: [pdf], name: 'Pesquisas Maxipark' });
+  return { ok: true, enviado: para.length };
+}
