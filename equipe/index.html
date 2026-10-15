@@ -305,28 +305,51 @@ const PIN_PADRAO = '2819', PIN_PADRAO_MARCA = '2819-2026-09-09';
 // Senha separada para "Zerar todo o histórico" (pedido do gestor): padrão 5541, trocável em Configurações → Trocar senha de zerar.
 const SENHA_ZERAR_PADRAO = '5541', SENHA_ZERAR_MARCA = '5541-2026-09-09';
 
-/* Lista padrão de unidades (Grande São Paulo — do roteiro da ficha externa). Pode ser substituída pela importação do Excel/CSV. */
+/* Lista padrão de unidades: Base de Filiais (atualizada em 01/09/2026), unidades ativas + as do Guilherme sem status = 169. Pode ser substituída pela importação do Excel/CSV. */
 const UNIDADES_PADRAO = [
-  ['GAZETA','Bela Vista'],['FIESP','Jardins'],['FL.PARA','Bela Vista'],['BP','Bela Vista'],
-  ['HABITAT','Santa Cecília'],['LAV.ANGEL','Consolação'],['LAV.ANGEL II','Santa Cecília'],['ALTA.HIGIE','Higienópolis'],
-  ['NSB','Jardim América'],['ALTA.JARD','Jardins'],['GARDEN','Cerqueira César'],['INCOR','Cerqueira César'],
-  ['ACCAST','Aclimação'],['ACPRUDE','Liberdade'],['AC.PIRES','Liberdade'],['FL.JUND','Paraíso'],
-  ['SAL.PARAI','Paraíso'],['SAL.VMARIA','Vila Clementino'],['DEL.MAIO','Vila Clementino'],['DEL.RICAJAF','Vila Mariana'],
-  ['PAINEIRA','Vila da Saúde'],['LAV.LABAL','Ipiranga'],['A+MOOCA','Cambuci'],['DEL.MOOCA','Mooca'],
-  ['A+MOEMA','Indianópolis'],['LAV.MOE','Indianópolis'],['SAL.MOE','Moema'],['MONTREAL','Moema'],
-  ['FL.IBIRA','Ibirapuera'],['ALTA.IBIRA','Vila Mariana'],['VITA.REP','Moema'],['SAL.IBIRA','Planalto Paulista'],
-  ['ALTA.CBEL','Campo Belo'],['DEL.BROK','Santo Amaro'],['PET.CBEL','Campo Belo'],['GLOBO.SP','Vila Cordeiro'],
-  ['LAV.BORGAT','Santo Amaro'],['A+FLORA','Jd. Marajoara'],['DEL.WASLUIS','Jd. Marajoara'],['ALTA.PAN','Vila Andrade'],['DEL.JSUL','Vila Andrade'],['SAL.PORTAL','Vila Suzana'],
-  ['FL.ITAIM','Vila Olímpia'],['DEL.ITAIM','Itaim Bibi'],['AC.ITAIM','Jardim Paulista'],
-  ['QUITANDA','Pinheiros'],['DEL.PIN','Vila Madalena'],['ALTA.PIN','Vila Ida'],['FL.VILLA','Alto de Pinheiros'],
-  ['FL.SUMA','Perdizes'],['CARL','Perdizes / Sumaré'],['DEL.POM','Pompeia'],
-  ['CVLOP','Vila Romana'],['SAL.LAPA','Alto da Lapa'],['A+LAPA','Lapa'],
-  ['LAV.LAPA','Lapa'],['BR.LAPA','Lapa'],['DEL.LAPA','Lapa'],['DEL.OSASCO','Centro / Osasco'],['SAL.OSASCO','Vila Yara / Osasco'],
-  ['A+ALPHA','Alphaville / Barueri'],['RESERVA','Alphaville / Barueri'],['ARAGUAI','Alphaville / Barueri'],['DEL.ALPHA','Alphaville / Barueri'],
-  ['SAL.TATUA','Vila Gomes Cardim'],['DEL.TATU','Tatuapé'],['FL.AFRA','Vila Carrão'],['ALTA.AFRAN','Jd. Anália Franco'],['LAV.AMARBUE','Penha de França'],
-  ['LAV.DARZAN','Santana'],['SAL.SANTA','Jd. São Paulo'],['DEL.DUMVIL','Jd. São Paulo'],
-  ['LAV.TUCUR','Tucuruvi'],['DEL.GUARU','Macedo / Guarulhos'],['A+GUARU','Centro / Guarulhos'],
-  ['A+SAND','Santo André'],['DEL.SAND II','Santo André'],['DEL.SAND I','Centro / Santo André'],['DEL.SBC','Centro / S.B. Campo'],['FL.SBC','Centro / S.B. Campo'],
+  ['AC.CAST','Aclimação'],['AC.PIRES MOTA','Aclimação'],['AC.TAMAN','Aclimação'],['ALTA.PIN','Alto de Pinheiros'],
+  ['DEL.PINHEIROS','Alto de Pinheiros'],['FL.VILLA','Alto de Pinheiros'],['SAL. LAPA','Alto de Pinheiros'],['ALTA.AFRAN','Anália Franco'],
+  ['ALSANT','Bela Vista'],['FIESP','Bela Vista'],['FL.PARA','Bela Vista'],['GAZETA','Bela Vista'],
+  ['A+CBEL','Campo Belo'],['ALTA.CBEL','Campo Belo'],['DEL. BROOKLIN','Campo Belo'],['PET.CBEL','Campo Belo'],
+  ['A+BRAZ','Casa Verde'],['FL.OSCAR','Cidade Jardim'],['SAL. TATUAPÉ','Cidade Mãe do Céu'],['HABITAT','Consolação'],
+  ['LAV. ANGÉLICA I','Consolação'],['SAL. ANGÉLICA','Consolação'],['YAMAMURA / CLIENTES','Consolação'],['ALTA.HIGI','Higienópolis'],
+  ['FL.IBIRA (REP II)','Ibirapuera'],['FL.REPUB (REP I)','Ibirapuera'],['VITA.REP','Ibirapuera'],['A+MOEMA','Indianopólis'],
+  ['VET.MOE','Indianopólis'],['FL.MOEMA','Indianópolis'],['DEL.RICARDO JAFET','Ipiranga'],['FL.IPIRA','Ipiranga'],
+  ['LAV. LABATUT','Ipiranga'],['DEL. ITAIM BIBI','Itaim Bibi'],['A+NOVEJULHO','Jardim America'],['FL.JARD','Jardim America'],
+  ['NSB','Jardim America'],['A+CANT','Jardim Franca'],['AC.ITAIM','Jardim Paulista'],['FLEURY JAÚ','Jardim Paulista'],
+  ['INCOR','Jardim Paulista'],['SAL. SANTANA','Jardim São Paulo'],['A+LEON','Jardim São Paulo (Zona Norte)'],['DEL.DUMONT VILLARES','Jardim São Paulo (Zona Norte)'],
+  ['FL.KLAB','Jardim Vila Mariana'],['ALTA.JARD','Jardins'],['ENTREPOSTO','Jd. Europa'],['A+LAPA','Lapa'],
+  ['BR.LAPA','Lapa'],['DEL.LAPA','Lapa'],['LAV. LAPA LV','Lapa'],['AC.PRUDE','Liberdade'],
+  ['B.P MIRANTE','Liberdade'],['B.P PAULISTA','Liberdade'],['ABIMAQ','Mirandópolis'],['ALTA.MOE','Moema'],
+  ['FL.VNC (REP III)','Moema'],['LAV. MOEMA','Moema'],['MONTREAL','Moema'],['SAL. MOEMA','Moema'],
+  ['VITA.MOE','Moema'],['DEL. MOOCA','Mooca'],['FL.MORU','Morumbi'],['FL.CBEL','Parque Jabaquara'],
+  ['LAV. AMADOR BUENO','Penha de França'],['DEL.SUMARÉ','Perdizes'],['FL.SUMA','Perdizes'],['VITA.PER','Perdizes'],
+  ['A+PEDROSO','Pinheiros'],['ALTA.IBI','Pinheiros'],['LACERDA','Pinheiros'],['QUITANDA','Pinheiros'],
+  ['SAL. IBIRAPUERA','Planalto Paulista'],['BR.PAIS','República'],['LAV. ANGÉLICA II','Santa Cecilia'],['A+ AUGU','Santana'],
+  ['DEL. ALTO DE SANTANA','Santana'],['DEL. BRAZ LEME','Santana'],['FL.BRAZ','Santana'],['LAV. DARZAN','Santana'],
+  ['DEL. WASHINGTON LUIS','Santo Amaro'],['FL.POLARIS','Santo Amaro'],['A+HEIT','Sumarezinho'],['DEL.TATUAPÉ','Tatuapé'],
+  ['FL.AFRA','Tatuapé'],['LAV. TUCURUVI','Tucuruvi'],['ALTA.PAN','Vila Andrade'],['DEL. JARDIM SUL','Vila Andrade'],
+  ['SAL. PANAMBY','Vila Andrade'],['DEL.23 DE MAIO','Vila Clementino'],['FL.VMAR','Vila Clementino'],['GLOBO SP','Vila Cordeiro'],
+  ['VITA.FRAN','Vila Formosa'],['LAV. EUCLIDES PACHECO','Vila Gomes Cardim'],['A+QUEIROZ','Vila Hamburguesa'],['CVLOP','Vila Hamburguesa'],
+  ['FL.WEBER','Vila Leopoldina'],['S.SANTA','Vila Mariana'],['SAL. PARAÍSO','Vila Mariana'],['SAL. VILA MARIANA','Vila Mariana'],
+  ['FL.ITAIM','Vila Nova Conceição'],['LAV. JABAQUARA LV','Vila Parque Jabaquara'],['DEL.POMPEIA','Vila Pompéia'],['DEL. BUTANTÃ','Vila Progredior'],
+  ['SAL. PORTAL','Vila Suzana'],['PAINEIR','Vila da Saúde'],['LAV. BORBA GATO','Vila das Monções'],['A+ALPHA','18 Do Forte Empresarial / Barueri'],
+  ['DEL.ALPHAVILLE','Alphaville / Barueri'],['FL.ALPHA','Alphaville / Barueri'],['SEMEADOR','Alphaville / Barueri'],['ARAGUAI','Alphaville Industrial / Barueri'],
+  ['CLI.AXIAL','Funcionários / Belo Horizonte'],['HERMES PARTINI BH','Funcionários / Belo Horizonte'],['OCULARE','Santa Efigenia / Belo Horizonte'],['BETIM','Riacho de Areias / Betim'],
+  ['FL.CAMP','Vila Lídia / Campinas'],['VILLAGIO','Rio Branco / Cariacica'],['FL.VIANA','Vila Santo Antônio / Cotia'],['BLUE.CENTER','Centro / Florianópolis'],
+  ['CARL','Centro / Florianópolis'],['FERLIMA','Centro / Florianópolis'],['H. VALERIM','Centro / Florianópolis'],['HOTEL VALERIM','Centro / Florianópolis'],
+  ['NOVOTEL','Centro / Florianópolis'],['PETZ SC','Centro / Florianópolis'],['TROMP.MC','Centro / Florianópolis'],['BEIRAMAR','Estreito / Florianópolis'],
+  ['A+GUARULHOS','Macedo / Guarulhos'],['DEL. GUARULHOS','Vila das Palmeiras / Guarulhos'],['SHOPPING PAINEIRAS','Chácara Urbana / Jundiaí'],['SIEMENS','Distrito Indusrial / Jundiaí'],
+  ['FL.JUND','Jardim Brasil / Jundiaí'],['DEL.OSASCO','Centro / Osasco'],['SAL. OSASCO','Centro / Osasco'],['A+AGUIAR','Boa Viagem / Recife'],
+  ['A+CONSELHEIRO','Boa Viagem / Recife'],['JANETE','Boa Viagem / Recife'],['JANETE COSTA','Boa Viagem / Recife'],['TORREÃO','Encruzilhada / Recife'],
+  ['A+DAHORA','Espinheiro / Recife'],['TR.ESPI','Espinheiro / Recife'],['A+JAQUEIRA','Graças / Recife'],['GERALDÃO','Imbiribeira / Recife'],
+  ['FM - BARRA TIJUCA','Barra da tijuca / Rio de Janeiro'],['TOK.RIO','Barra da tijuca / Rio de Janeiro'],['Globo EG','Curicica / Rio de Janeiro'],['FM - JARDIM BOTANICO','Jardim Botanico / Rio de Janeiro'],
+  ['GLOBO RJ','Jardim Botanico / Rio de Janeiro'],['DIVINA','Jardim Botânico / Rio de Janeiro'],['Globo 695','Jardim Botânico / Rio de Janeiro'],['LQ303','Jardim Botânico / Rio de Janeiro'],
+  ['PL70','Jardim Botânico / Rio de Janeiro'],['A+MADU','Madureira / Rio de Janeiro'],['PUNTO','Vila da Penha / Rio de Janeiro'],['DEL.SANTO ANDRÉ I','Centro / Santo André'],
+  ['A+SAND','Jardim / Santo André'],['DEL.SANTO ANDRÉ II','Jardim / Santo André'],['FL.SAND','Jardim Santo André / Santo André'],['FL.SAND-II','Jardim Santo André / Santo André'],
+  ['DEL.SANTOS','Campo Grande / Santos'],['DEL.SÃO BERNARDO','Centro / São Bernardo do Campo'],['FL.SBC','Centro / São Bernardo do Campo'],['HERMES PARTINI','Centro / São Bernardo do Campo'],
+  ['FL.SCAE','Santo Antônio / São Caetano do Sul'],['A+SGON','Antonina / São Gonçalo'],['BR.SJOSE','Campinas / São José'],['BR.VVEL','Centro / Vila Velha'],
+  ['BR.JERO','Centro / Vitória'],
 ].map(a => ({ codigo:a[0], nome:a[1] }));   // lista padrão: só código e nome (local) — sem endereço; a lista completa da empresa vem pela importação
 
 /* ---------------- armazenamento local (só neste tablet) ---------------- */
@@ -407,7 +430,7 @@ function shuffle(a){ const x = a.slice(); for (let i = x.length - 1; i > 0; i--)
 function configured(){ return !!(settings.pin && settings.unidade && settings.mes); }
 /* lista de unidades: importada (localStorage) ou padrão */
 function unidades(){ const u = LS.get('mp_unidades', null); return (u && u.origem && Array.isArray(u.lista) && u.lista.length) ? u.lista : UNIDADES_PADRAO; }
-function unidadesInfo(){ const u = LS.get('mp_unidades', null); return (u && u.origem) ? `${u.lista.length} unidades importadas (${u.origem})` : `${UNIDADES_PADRAO.length} unidades da lista padrão (Grande SP)`; }
+function unidadesInfo(){ const u = LS.get('mp_unidades', null); return (u && u.origem) ? `${u.lista.length} unidades importadas (${u.origem})` : `${UNIDADES_PADRAO.length} unidades da lista padrão (Base de Filiais, 01/09/2026)`; }
 function unidadePorCodigo(c){ return unidades().find(u => u.codigo === c) || null; }
 
 /* ---------------- estado da tela ---------------- */
@@ -1514,7 +1537,7 @@ function handle(action, el){
     case 'importfile': document.getElementById('file-unidades').click(); break;
     case 'pastelist': go('colar'); break;
     case 'importpaste': { const t = document.getElementById('c-lista').value; if (saveUnidades(rowsToUnidades(parseDelimited(t)), 'lista colada')) go('settings'); break; }
-    case 'resetlist': askConfirm('Voltar à lista padrão de unidades (Grande SP)? A lista importada será removida deste tablet.', () => { localStorage.removeItem('mp_unidades'); toast('Lista padrão restaurada.'); go('settings'); }); break;
+    case 'resetlist': askConfirm('Voltar à lista padrão de unidades (Base de Filiais)? A lista importada será removida deste tablet.', () => { localStorage.removeItem('mp_unidades'); toast('Lista padrão restaurada.'); go('settings'); }); break;
     case 'install': if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; render(); } break;
     case 'gosetpin': state.newPin = ''; state.newPinStage = 0; state.newPinFirst = ''; state.setPinMode = 'pin'; go('setpin'); break;
     case 'gosetzerar': state.newPin = ''; state.newPinStage = 0; state.newPinFirst = ''; state.setPinMode = 'zerar'; go('setpin'); break;
