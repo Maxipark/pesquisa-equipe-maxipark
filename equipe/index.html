@@ -531,7 +531,7 @@ function viewUnidades(){
   const f = (state.filtro || '').trim().toLowerCase();
   const lista = unidades();
   const hits = lista.filter(u => !f || [u.codigo, u.nome, u.endereco, u.bairro, u.regiao].join(' ').toLowerCase().includes(f));
-  const shown = hits.slice(0, 80);
+  const shown = hits;   // lista completa: todas as unidades aparecem de uma vez (pedido do Raphael em 15/10/2026)
   return header('Escolher unidade', 0) + `<div class="wrap"><div class="card">
     <h2>Qual é a unidade?</h2>
     <input type="search" id="u-filtro" value="${esc(state.filtro)}" placeholder="${(LS.get('mp_unidades', null) || {}).origem ? 'Digite parte do código, do cliente, do endereço, do bairro ou da região' : 'Digite parte do código ou do bairro (ex.: GAZETA ou Bela Vista)'}" autocomplete="off" autofocus>
