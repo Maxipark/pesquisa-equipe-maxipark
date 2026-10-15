@@ -78,7 +78,7 @@
   .row > .btn{flex:1 1 200px}
   .spread{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
   label{display:block;font-weight:600;margin:14px 0 6px}
-  input[type=text],input[type=month],input[type=password],input[type=url],input[type=search],textarea,select{width:100%;font:inherit;font-size:19px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--branco);color:var(--text)}
+  input[type=text],input[type=month],input[type=password],input[type=url],input[type=email],input[type=search],textarea,select{width:100%;font:inherit;font-size:19px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--branco);color:var(--text)}
   textarea{min-height:140px;resize:vertical}
   textarea.obs{min-height:54px;font-size:16px;margin-top:12px;padding:8px 12px;border-style:dashed}
   .unitfield{display:flex;gap:10px;align-items:stretch}
@@ -477,7 +477,7 @@ function startThanks(){ go('thanks'); clearTimeout(thanksTimer); thanksTimer = s
 /* ---------------- telas ---------------- */
 function render(){
   const foco = document.activeElement && /^(pin|newpin)-input$/.test(document.activeElement.id) ? document.activeElement.id : '';
-  const views = { setup:viewSetup, setpin:viewSetPin, welcome:viewWelcome, q:viewQuestion, enps:viewEnps, ces:viewCes, open:viewOpen, thanks:viewThanks, pin:viewPin, admin:viewAdmin, settings:viewSettings, text:viewText, saveerror:viewSaveError, confirm:viewConfirm, unidades:viewUnidades, colar:viewColar, consolidado:viewConsolidado, perguntas:viewPerguntas };
+  const views = { setup:viewSetup, setpin:viewSetPin, welcome:viewWelcome, q:viewQuestion, enps:viewEnps, ces:viewCes, open:viewOpen, thanks:viewThanks, pin:viewPin, admin:viewAdmin, settings:viewSettings, text:viewText, saveerror:viewSaveError, confirm:viewConfirm, relatorio:viewRelatorio, unidades:viewUnidades, colar:viewColar, consolidado:viewConsolidado, perguntas:viewPerguntas };
   document.getElementById('app').innerHTML = (views[state.screen] || viewSetup)();
   if (foco) { const el = document.getElementById(foco); if (el && !el.disabled) { el.focus({ preventScroll: true }); try { el.setSelectionRange(el.value.length, el.value.length); } catch(e) {} } }   // mantém o teclado aberto após cada tecla
 }
@@ -669,6 +669,26 @@ function viewConfirm(){
   </div></div>`;
 }
 
+/* E-mails já usados no relatório da visita: ficam guardados NESTE tablet (o mais recente primeiro) para escolher na próxima vez. */
+const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function emailsRelatorio(){ const l = LS.get('mp_emails_relatorio', []); return Array.isArray(l) ? l.filter(x => typeof x === 'string' && x) : []; }
+function salvaEmailsRelatorio(l){ LS.set('mp_emails_relatorio', [...new Set(l)].slice(0, 15)); }
+function viewRelatorio(){
+  const t = tally(currentResponses()), salvos = emailsRelatorio();
+  return header('Enviar relatório', 0) + `<div class="wrap"><div class="card" style="max-width:620px">
+    <h2>Enviar relatório da visita</h2>
+    <p class="muted">${esc(unidadeLabel(settings.unidade))} · ${esc(rodadaNome(settings.rodada))} · ${t.nResp} resposta${t.nResp === 1 ? '' : 's'}</p>
+    ${t.identificavel ? `<div class="warn">Só ${t.nResp} resposta${t.nResp > 1 ? 's' : ''}: o relatório vai marcado como RESTRITO. Envie só para a área de Experiência do Cliente.</div>` : ''}
+    <label for="rel-email">E-mail para enviar</label>
+    <input type="email" id="rel-email" list="rel-emails" value="${esc(salvos[0] || '')}" placeholder="nome@maxipark.com.br" autocomplete="off" autocapitalize="none" inputmode="email">
+    <datalist id="rel-emails">${salvos.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+    <p class="small muted" style="margin:6px 0 0">Para mais de uma pessoa, separe por vírgula (até 5).</p>
+    ${salvos.length ? `<p class="small" style="margin:16px 0 6px"><b>E-mails já usados neste tablet</b> — toque para escolher</p>
+    <div class="row" style="flex-wrap:wrap;gap:8px">${salvos.map(x => `<span style="display:inline-flex;align-items:center;gap:2px"><button class="btn light" data-action="relemail" data-email="${esc(x)}" style="min-height:40px;font-size:15px">${esc(x)}</button><button class="btn link" data-action="relesquecer" data-email="${esc(x)}" title="Esquecer este e-mail" aria-label="Esquecer ${esc(x)}" style="min-height:40px;font-size:15px">✕</button></span>`).join('')}</div>` : ''}
+    <div class="row" style="margin-top:20px"><button class="btn" data-action="relenviar">Enviar relatório</button><button class="btn ghost" data-action="admin">Voltar</button></div>
+  </div></div>`;
+}
+
 function viewPin(){
   const locked = Date.now() < (settings.lockUntil || 0);
   const dots = '●'.repeat(state.pin.length);
@@ -740,6 +760,57 @@ function tallyText(t){
   L.push(`CES (escritório)\t${CES_OPTS[2]}: ${t.ces.nao}\t${CES_OPTS[1]}: ${t.ces.meio}\t${CES_OPTS[0]}: ${t.ces.sim}\tNunca precisei: ${t.ces.np}\t${t.cesFacil == null ? '' : '% fácil = ' + t.cesFacil + '%'}${t.cesPoucas ? ' (menos de ' + N_DIVULGA_DETALHE + ' precisaram do escritório)' : ''}`);
   if (t.poucasDetalhe) L.push(`(eNPS e CES: não divulgar por unidade com menos de ${N_DIVULGA_DETALHE} respostas)`);
   return L.join('\n');
+}
+
+/* ---------------- relatório da visita (enviado por e-mail pelo servidor ao encerrar a visita) ----------------
+   Gerado no tablet a partir das contagens desta unidade e rodada. O servidor repassa por e-mail para quem foi
+   escolhido na tela de envio (até 5) e anexa um PDF. Nada de nome nem de ordem das respostas. */
+function relatorioEquipe(t){
+  const e = esc, unid = settings.unidade, nomeU = unidadeLabel(unid);
+  const dataTxt = settings.data ? dataLabel(settings.data) : mesLabel(settings.mes);
+  const cor = p => p == null ? '#8a8a93' : (p >= 80 ? '#1f8a4c' : (p >= 60 ? '#b7791f' : '#c0392b'));
+  const faixa = p => p == null ? '—' : (p >= 80 ? 'Bom' : (p >= 60 ? 'Atenção' : 'Crítico'));
+  const barra = p => p == null ? '' : `<div style="background:#ece9f3;border-radius:6px;height:8px;width:100%"><div style="background:${cor(p)};height:8px;border-radius:6px;width:${Math.max(2, p)}%"></div></div>`;
+  const pct = p => p == null ? '—' : p + '%';
+  const linhas = t.items.map((it, i) => ({ i, n: ITENS[i].n, dim: ITENS[i].dim, frase: ITENS[i].t, op: ITENS[i].opts, c: it.c, na: it.na, resp: it.n, p: it.pctSim, poucas: it.poucas }));
+  const comNota = linhas.filter(l => l.p != null);
+  const melhorias = comNota.filter(l => l.p < 80).sort((a, b) => a.p - b.p).slice(0, 5);
+  const fortes = comNota.filter(l => l.p >= 80).sort((a, b) => b.p - a.p).slice(0, 3);
+  const dims = []; linhas.forEach(l => { let d = dims.find(x => x.dim === l.dim); if (!d) dims.push(d = { dim: l.dim, sim: 0, n: 0 }); d.sim += l.c[2]; d.n += l.resp; });
+  dims.forEach(d => { d.p = d.n ? Math.round(d.sim / d.n * 100) : null; });
+  const restrito = t.identificavel || t.poucasDetalhe;
+  const caixa = (titulo, valor, sub, c) => `<td style="padding:6px;width:25%"><div style="border:1px solid #e3dff0;border-radius:10px;padding:12px;text-align:center"><div style="font-size:12px;color:#6e6a7c;text-transform:uppercase;letter-spacing:.5px">${titulo}</div><div style="font-size:26px;font-weight:700;color:${c || '#1f1a33'};margin:4px 0">${valor}</div><div style="font-size:12px;color:#6e6a7c">${sub}</div></div></td>`;
+  const blocoFrase = l => `<tr><td style="padding:10px 8px;border-bottom:1px solid #eee;vertical-align:top"><b style="color:${cor(l.p)}">B${l.n}</b></td><td style="padding:10px 8px;border-bottom:1px solid #eee"><div style="font-weight:600">${e(l.frase)}</div><div style="font-size:12px;color:#6e6a7c;margin:2px 0 6px">${e(l.dim)} · ${l.c[2]} Sim · ${l.c[1]} ${e(l.op[1])} · ${l.c[0]} Não${l.na ? ' · ' + l.na + ' não se aplica' : ''}</div>${barra(l.p)}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;vertical-align:top"><b style="font-size:18px;color:${cor(l.p)}">${pct(l.p)}</b><div style="font-size:11px;color:${cor(l.p)}">${faixa(l.p)}</div></td></tr>`;
+  const aviso = t.identificavel
+    ? `<div style="background:#fdecea;border:1px solid #f5c2bd;color:#8a1f14;border-radius:10px;padding:12px;margin:12px 0"><b>Uso restrito.</b> Só ${t.nResp} resposta${t.nResp > 1 ? 's' : ''}: os números abaixo mostram as respostas de ${t.nResp === 1 ? 'uma pessoa' : 'duas pessoas'}. Não divulgar à unidade nem ao encarregado.</div>`
+    : (t.poucasDetalhe ? `<div style="background:#fff6e0;border:1px solid #f1d9a0;color:#7a5410;border-radius:10px;padding:12px;margin:12px 0">${t.nResp} respostas: as frases podem ser divulgadas; eNPS, facilidade com o escritório e comentários ficam só com a área de Experiência do Cliente (menos de ${N_DIVULGA_DETALHE} respostas).</div>` : '');
+  const coments = (!t.poucasDetalhe && t.coments.length) ? `<h2 style="font-size:17px;margin:22px 0 8px">O que a equipe escreveu</h2><ul style="margin:0;padding-left:18px">${t.coments.slice(0, 15).map(c => `<li style="margin:4px 0">${e(c)}</li>`).join('')}</ul>` : '';
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;color:#1f1a33;max-width:720px;margin:0 auto;font-size:14px;line-height:1.45;text-align:left">
+  <div style="background:#1f1a33;color:#fff;border-radius:12px;padding:18px 20px">
+    <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#c9b8e8">Maxipark · Pesquisa com a equipe</div>
+    <div style="font-size:22px;font-weight:700;margin-top:4px">Relatório da visita · ${e(unid)}</div>
+    <div style="font-size:14px;color:#ddd5ef;margin-top:4px">${e(nomeU)} · ${e(rodadaNome(settings.rodada))} · ${e(dataTxt)}</div>
+  </div>
+  ${aviso}
+  <table style="width:100%;border-collapse:collapse;margin-top:10px"><tr>
+    ${caixa('Responderam', t.nResp, refusals() ? refusals() + ' preferiram não responder' : 'colaboradores')}
+    ${caixa('% de Sim', pct(t.pctSimGeral), 'nas 15 frases', cor(t.pctSimGeral))}
+    ${caixa('eNPS', t.poucasDetalhe || t.enpsVal == null ? '—' : t.enpsVal, t.poucasDetalhe ? 'poucas respostas' : 'de −100 a +100')}
+    ${caixa('Escritório', t.poucasDetalhe || t.cesFacil == null ? '—' : t.cesFacil + '%', t.poucasDetalhe ? 'poucas respostas' : 'acharam fácil resolver')}
+  </tr></table>
+  <h2 style="font-size:17px;margin:22px 0 8px">Principais pontos de melhoria</h2>
+  ${melhorias.length ? `<table style="width:100%;border-collapse:collapse">${melhorias.map(blocoFrase).join('')}</table>` : '<p style="color:#1f8a4c">Nenhuma frase abaixo de 80% de Sim nesta visita.</p>'}
+  ${fortes.length ? `<h2 style="font-size:17px;margin:22px 0 8px">O que está funcionando bem</h2><table style="width:100%;border-collapse:collapse">${fortes.map(blocoFrase).join('')}</table>` : ''}
+  <h2 style="font-size:17px;margin:22px 0 8px">Por tema</h2>
+  <table style="width:100%;border-collapse:collapse">${dims.map(d => `<tr><td style="padding:8px;border-bottom:1px solid #eee;width:45%">${e(d.dim)}</td><td style="padding:8px;border-bottom:1px solid #eee">${barra(d.p)}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right;width:60px"><b style="color:${cor(d.p)}">${pct(d.p)}</b></td></tr>`).join('')}</table>
+  <h2 style="font-size:17px;margin:22px 0 8px">Todas as frases</h2>
+  <table style="width:100%;border-collapse:collapse">${linhas.map(blocoFrase).join('')}</table>
+  ${coments}
+  <p style="font-size:12px;color:#6e6a7c;margin-top:22px">Faixas: Bom = 80% de Sim ou mais · Atenção = 60% a 79% · Crítico = abaixo de 60%. Pesquisa anônima: o relatório não traz nomes nem a ordem das respostas. Gerado pelo app de pesquisas v${e(VERSAO)} em ${e(dataLabel(hojeISO()))}.</p>
+</div>`;
+  const assunto = (restrito ? 'RESTRITO - ' : '') + `Relatório da visita - Pesquisa equipe - ${unid} - ${rodadaNome(settings.rodada)} - ${dataTxt}`;
+  const arquivo = `relatorio-equipe_${String(unid || "").replace(/[^\w.-]+/g, "_")}_${settings.rodada}_${settings.data || settings.mes || hojeISO()}`;
+  return { assunto, html, arquivo, unidade: unid, rodada: settings.rodada, data: settings.data || '', n: t.nResp };
 }
 
 function csvText(list){
@@ -815,6 +886,9 @@ function viewAdminAntigo(){
     ${tabela}
     <h3>Comentários</h3>
     ${comentHtml}
+    <h3>Encerrar visita</h3>
+    <p class="small muted">Ao terminar as respostas desta unidade, encerre a visita: o relatório com os pontos de melhoria e as pontuações vai por e-mail para quem você escolher.${(settings.relatorios || {})[key()] ? ' <b>Último relatório enviado em ' + esc((settings.relatorios || {})[key()]) + '.</b>' : ''}</p>
+    <div class="row"><button class="btn" data-action="encerrar" ${t.nResp ? '' : 'disabled'}>Encerrar visita e enviar relatório</button></div>
     <h3>Exportar</h3>
     <p class="small muted">As contagens saem a partir de 1 resposta (há unidades com 1 colaborador). Regra de divulgação por unidade: com menos de ${N_DIVULGA_FRASE} respostas, nada — uso restrito da área de Experiência do Cliente; com ${N_DIVULGA_FRASE} a ${N_DIVULGA_DETALHE - 1}, Nota B e dimensões; eNPS, CES e comentários só com ${N_DIVULGA_DETALHE} ou mais. O arquivo de respostas tem uma linha por pessoa, em ordem embaralhada, com as colunas <i>versao</i> e <i>escala</i> (${ESCALA} = 3 respostas por frase) — só para a área de Experiência do Cliente. O texto das contagens traz o número de recusas; mande os dois juntos.</p>
     <div class="row">
@@ -1649,6 +1723,41 @@ function handle(action, el){
     case 'copy': copyText(tallyText(tally(list()))); break;
     case 'showtext': go('text', { showText: tallyText(tally(list())), textReturn: 'admin' }); break;
     case 'csv': exportCsv(); break;
+    case 'encerrar': {
+      const t = tally(list());
+      if (!t.nResp) { toast('Ainda não há respostas desta unidade nesta rodada.'); break; }
+      if (!syncOk()) { toast('Ligue este tablet ao servidor em Configurações para enviar o relatório.'); break; }
+      go('relatorio'); break;
+    }
+    case 'relemail': { const inp = document.getElementById('rel-email'); if (inp) { inp.value = el.dataset.email || ''; inp.focus(); } break; }
+    case 'relesquecer': {
+      const typed = (document.getElementById('rel-email') || {}).value || '';
+      salvaEmailsRelatorio(emailsRelatorio().filter(x => x !== el.dataset.email));
+      render(); const inp = document.getElementById('rel-email'); if (inp) inp.value = typed; break;
+    }
+    case 'relenviar': {
+      const t = tally(list());
+      const bruto = ((document.getElementById('rel-email') || {}).value || '').trim();
+      const para = bruto.split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+      if (!para.length) { toast('Digite o e-mail para onde vai o relatório.'); break; }
+      const ruim = para.find(x => !EMAIL_OK.test(x));
+      if (ruim) { toast('Confira o e-mail: ' + ruim); break; }
+      if (para.length > 5) { toast('No máximo 5 e-mails por envio.'); break; }
+      const btn = document.querySelector('[data-action="relenviar"]'); if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+      (async () => { try {
+        const rel = relatorioEquipe(t); rel.para = para;
+        const j = await apiPost({ op: 'relatorio-equipe', relatorio: rel });
+        if (j && j.ok && j.enviado) {
+          salvaEmailsRelatorio(para.concat(emailsRelatorio().filter(x => !para.includes(x))));
+          settings.relatorios = Object.assign({}, settings.relatorios || {}, { [key()]: dataLabel(hojeISO()) + ' para ' + para.join(', ') }); saveSettings();
+          go('admin'); toast('Relatório enviado para ' + para.join(', ') + '.');
+        } else {
+          toast(j && j.ok && !j.enviado ? 'O servidor ainda não sabe enviar relatórios: atualize o Apps Script.' : 'O servidor não enviou o relatório' + (j && j.erro ? ' (' + j.erro + ')' : '') + '. Tente de novo.');
+          if (btn) { btn.disabled = false; btn.textContent = 'Enviar relatório'; }
+        }
+      } catch (err) { toast('Sem conexão com o servidor agora. Tente de novo quando tiver internet.'); if (btn) { btn.disabled = false; btn.textContent = 'Enviar relatório'; } } })();
+      break;
+    }
     case 'mail': {
       const t = tally(list());
       const restrito = t.identificavel || t.poucasDetalhe;   // poucas respostas: o e-mail carrega respostas quase individuais
