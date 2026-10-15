@@ -202,6 +202,19 @@
 
 </head>
 <body>
+<!-- AVALIACAO DO CONSELHO DESATIVADA em 15/10/2026 a pedido do Raphael.
+     A tela fica coberta por este aviso; nada e apagado (as respostas antigas continuam no painel).
+     Para religar: apague este bloco (do comentario ate o fim do script abaixo). -->
+<div id="aviso-desativada" style="position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg,#f4f1fa);color:var(--texto,#1f1a33);text-align:center">
+  <div style="max-width:520px">
+    <div style="font-size:48px;line-height:1">🏛️</div>
+    <h1 style="font-size:24px;margin:14px 0 8px">Avaliação do conselho desativada</h1>
+    <p style="margin:0 0 18px">Esta pesquisa não está recebendo respostas no momento. As avaliações já feitas continuam guardadas e aparecem no painel de resultados.</p>
+    <a href="../" style="display:inline-block;padding:12px 20px;border-radius:12px;background:#6d28d9;color:#fff;text-decoration:none;font-weight:600">Voltar ao início</a>
+  </div>
+</div>
+<script>window.CONSELHO_DESATIVADA = true;</script>
+
 <div id="app"></div>
 <div class="toast" id="toast"></div>
 <script>
