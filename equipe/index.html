@@ -2375,5 +2375,22 @@ render();
   setInterval(() => { if (conta() > base) { fecha(); fechou = false; inicio = new Date(); base = conta(); } }, 4 * 60 * 60 * 1000);
 })();
 </script>
+<script>
+/* ---- pedido do botão "Atualizar app e pesquisas" da página inicial ----
+   Quando esta pesquisa é aberta escondida pela página inicial (#atualizar-tudo), ela só sobe o pendente,
+   baixa o novo da nuvem e avisa a página inicial. Aberta normalmente, este bloco não faz nada. */
+(function () {
+  if (window.parent === window || !/[#&]atualizar-tudo\b/.test(location.hash)) return;
+  (async () => {
+    const r = { tipo: 'atualizar-tudo', app: APP_ID, conectado: syncOk(), ok: false };
+    try {
+      if (r.conectado) { const antes = settings.ultimaSync; await sincronizar(true, false); r.ok = !!settings.ultimaSync && settings.ultimaSync !== antes; }
+      else r.ok = true;
+      r.pendentes = allResponses().filter(x => !x.sent).length;
+    } catch (e) { r.erro = String((e && e.message) || e); }
+    try { window.parent.postMessage(r, location.origin); } catch (e) {}
+  })();
+})();
+</script>
 </body>
 </html>
