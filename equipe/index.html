@@ -527,16 +527,59 @@ function viewSetup(){
   </div></div>`;
 }
 
+/* Busca inteligente de unidades (pedido do Raphael em 15/10/2026): ignora acento, maiúscula, ponto e espaço,
+   aceita as palavras em qualquer ordem e tolera erro de digitação pequeno. Mostra primeiro o que mais parece. */
+function normBusca(s){ return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+function distEd(a, b){   // distância de edição (Levenshtein), parando cedo
+  if (Math.abs(a.length - b.length) > 2) return 9;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function buscaUnidades(lista, consulta, campos){
+  const q = normBusca(consulta);
+  if (!q) return { hits: lista.slice(), exata: null, parecidas: false };
+  const qc = q.replace(/ /g, ''), toks = q.split(' ');
+  const res = [];
+  lista.forEach((u, ordem) => {
+    const cod = normBusca(u.codigo), codc = cod.replace(/ /g, '');
+    const txt = normBusca(campos(u).filter(Boolean).join(' ')), txtc = txt.replace(/ /g, '');
+    const pal = txt.split(' ').filter(Boolean);
+    let s = 0;
+    if (codc === qc) s = 1000;                                                     // digitou o código inteiro
+    else if (codc.startsWith(qc)) s = 600 - codc.length;                           // começo do código
+    else if (toks.every(t => pal.some(p => p.startsWith(t)))) s = 400;             // começo das palavras, qualquer ordem
+    else if (txtc.includes(qc) || toks.every(t => txt.includes(t))) s = 300;       // aparece no meio (sem ligar para ponto/espaço)
+    else {                                                                         // parecido: até 1 letra errada (2 nas palavras longas)
+      let tot = 0;
+      const ok = toks.every(t => {
+        if (t.length < 3) return pal.some(p => p.startsWith(t));
+        const lim = t.length >= 7 ? 2 : 1;
+        let melhor = 9; pal.forEach(p => { melhor = Math.min(melhor, distEd(t, p), p.length > t.length ? distEd(t, p.slice(0, t.length)) : 9); });
+        tot += melhor; return melhor <= lim;
+      });
+      if (ok) s = 100 - tot * 10;
+    }
+    if (s > 0) res.push({ u, s, ordem });
+  });
+  res.sort((a, b) => b.s - a.s || a.ordem - b.ordem);
+  return { hits: res.map(r => r.u), exata: res.length && res[0].s === 1000 ? res[0].u : null, parecidas: res.length > 0 && res[0].s < 300 };
+}
+
 function viewUnidades(){
-  const f = (state.filtro || '').trim().toLowerCase();
   const lista = unidades();
-  const hits = lista.filter(u => !f || [u.codigo, u.nome, u.endereco, u.bairro, u.regiao].join(' ').toLowerCase().includes(f));
+  const B = buscaUnidades(lista, state.filtro, u => [u.codigo, u.nome, u.endereco, u.bairro, u.regiao]);
+  const hits = B.hits;
   const shown = hits;   // lista completa: todas as unidades aparecem de uma vez (pedido do Raphael em 15/10/2026)
   return header('Escolher unidade', 0) + `<div class="wrap"><div class="card">
     <h2>Qual é a unidade?</h2>
     <input type="search" id="u-filtro" value="${esc(state.filtro)}" placeholder="${(LS.get('mp_unidades', null) || {}).origem ? 'Digite parte do código, do cliente, do endereço, do bairro ou da região' : 'Digite parte do código ou do bairro (ex.: GAZETA ou Bela Vista)'}" autocomplete="off" autofocus>
-    <p class="small muted" style="margin:8px 0 0">${hits.length} de ${lista.length} unidades${hits.length > shown.length ? ' (mostrando as primeiras ' + shown.length + ' — refine a busca)' : ''} · ${esc(unidadesInfo())}</p>
-    <div class="ulist">${shown.map(u => `<button class="uitem" data-action="chooseunit" data-c="${esc(u.codigo)}"><b>${esc(u.codigo)}${u.nome ? ' · ' + esc(u.nome) : ''}</b><span>${esc([u.endereco, u.bairro, u.regiao].filter(Boolean).join(' · '))}</span></button>`).join('') || '<p class="muted">Nenhuma unidade com esse texto. Você pode digitar o código direto no campo Unidade.</p>'}</div>
+    <p class="small muted" style="margin:8px 0 0">${B.exata ? '<b>✓ Unidade encontrada</b> — toque nela (ou em Ir/Enter) para escolher · ' : (B.parecidas ? 'Não achei exatamente isso; estas são as mais parecidas · ' : '')}${hits.length} de ${lista.length} unidades · ${esc(unidadesInfo())}</p>
+    <div class="ulist">${shown.map((u, i) => `<button class="uitem"${i === 0 && (B.exata || (state.filtro || '').trim()) ? ' style="border-color:var(--teal,#7c3aed);border-width:2px"' : ''} data-action="chooseunit" data-c="${esc(u.codigo)}"><b>${esc(u.codigo)}${u.nome ? ' · ' + esc(u.nome) : ''}</b><span>${esc([u.endereco, u.bairro, u.regiao].filter(Boolean).join(' · '))}</span></button>`).join('') || '<p class="muted">Nenhuma unidade com esse texto. Você pode digitar o código direto no campo Unidade.</p>'}</div>
     <div class="row"><button class="btn ghost block" data-action="cancelpick">Voltar</button></div>
   </div></div>`;
 }
@@ -1860,6 +1903,10 @@ document.addEventListener('input', e => {
     const pos = e.target.selectionStart; render();
     const el = document.getElementById('u-filtro'); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch(err) {} }
   }
+});
+document.addEventListener('keydown', e => {   // Enter/Ir na busca de unidades: escolhe a primeira (a mais parecida)
+  if (e.key !== 'Enter' || !e.target || e.target.id !== 'u-filtro' || !(e.target.value || '').trim()) return;
+  const b = document.querySelector('.ulist .uitem'); if (b) { e.preventDefault(); b.click(); }
 });
 document.getElementById('file-unidades').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) importFile(f); e.target.value = ''; });
 document.getElementById('file-hist').addEventListener('change', e => { const fs = e.target.files ? [...e.target.files] : []; if (fs.length) importHist(fs); e.target.value = ''; });
