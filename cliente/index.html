@@ -375,7 +375,7 @@ function viewSetup(){
 function viewPick(){
   const q = (state.busca || '').trim().toLowerCase();
   const lista = unidades(); const hits = q ? lista.filter(u => (u.codigo + ' ' + (u.nome || '') + ' ' + (u.cliente || '') + ' ' + (u.endereco || '')).toLowerCase().includes(q)) : lista;
-  const shown = hits.slice(0, 60);
+  const shown = hits;   // lista completa: todas as unidades aparecem de uma vez (pedido do Raphael em 15/10/2026)
   return header('Escolher unidade') + `<div class="wrap"><div class="card"><h2>Escolher a unidade</h2>
     <input type="search" id="busca" placeholder="Digite código ou bairro" value="${esc(state.busca || '')}" autocomplete="off" autofocus>
     <div class="opcoes" style="margin-top:12px">${shown.map(u => `<button class="opt" data-action="pickone" data-cod="${esc(u.codigo)}"><b>${esc(u.codigo)}</b><span class="small muted">${esc(u.nome || '')}${u.cliente ? ' · ' + esc(u.cliente) : ''}</span></button>`).join('') || '<p class="muted">Nenhuma unidade encontrada. Pode digitar o código direto na tela anterior.</p>'}</div>
