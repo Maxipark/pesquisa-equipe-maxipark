@@ -477,7 +477,7 @@ function startThanks(){ go('thanks'); clearTimeout(thanksTimer); thanksTimer = s
 /* ---------------- telas ---------------- */
 function render(){
   const foco = document.activeElement && /^(pin|newpin)-input$/.test(document.activeElement.id) ? document.activeElement.id : '';
-  const views = { setup:viewSetup, setpin:viewSetPin, welcome:viewWelcome, q:viewQuestion, enps:viewEnps, ces:viewCes, open:viewOpen, thanks:viewThanks, pin:viewPin, admin:viewAdmin, settings:viewSettings, text:viewText, saveerror:viewSaveError, confirm:viewConfirm, relatorio:viewRelatorio, unidades:viewUnidades, colar:viewColar, consolidado:viewConsolidado, perguntas:viewPerguntas };
+  const views = { setup:viewSetup, setpin:viewSetPin, welcome:viewWelcome, q:viewQuestion, enps:viewEnps, ces:viewCes, open:viewOpen, thanks:viewThanks, pin:viewPin, admin:viewAdmin, settings:viewSettings, text:viewText, saveerror:viewSaveError, confirm:viewConfirm, relatorio:viewRelatorio, fim:viewFim, unidades:viewUnidades, colar:viewColar, consolidado:viewConsolidado, perguntas:viewPerguntas };
   document.getElementById('app').innerHTML = (views[state.screen] || viewSetup)();
   if (foco) { const el = document.getElementById(foco); if (el && !el.disabled) { el.focus({ preventScroll: true }); try { el.setSelectionRange(el.value.length, el.value.length); } catch(e) {} } }   // mantém o teclado aberto após cada tecla
 }
@@ -694,7 +694,7 @@ function viewThanks(){
     <p>Pronto — você já terminou. Pode entregar o tablet ao usuário.</p>
     <p class="muted">Em até 15 dias vem o retorno — da sua unidade ou, se a equipe é pequena, da região: o que ouvimos, o que vamos fazer e quando.</p>
     <div class="row"><button class="btn block" data-action="nextperson">Próximo colaborador</button></div>
-    <div class="row"><button class="btn ghost block" data-action="pin" data-target="setup" data-fin="1">Finalizar pesquisa — só o usuário (pede o PIN)</button></div>
+    <div class="row"><button class="btn ghost block" data-action="pin" data-target="fim" data-fin="1">Finalizar pesquisa — só o usuário (pede o PIN)</button></div>
   </div></div>`;
 }
 
@@ -729,6 +729,31 @@ function viewRelatorio(){
     ${salvos.length ? `<p class="small" style="margin:16px 0 6px"><b>E-mails já usados neste tablet</b> — toque para escolher</p>
     <div class="row" style="flex-wrap:wrap;gap:8px">${salvos.map(x => `<span style="display:inline-flex;align-items:center;gap:2px"><button class="btn light" data-action="relemail" data-email="${esc(x)}" style="min-height:40px;font-size:15px">${esc(x)}</button><button class="btn link" data-action="relesquecer" data-email="${esc(x)}" title="Esquecer este e-mail" aria-label="Esquecer ${esc(x)}" style="min-height:40px;font-size:15px">✕</button></span>`).join('')}</div>` : ''}
     <div class="row" style="margin-top:20px"><button class="btn" data-action="relenviar">Enviar relatório</button><button class="btn ghost" data-action="admin">Voltar</button></div>
+  </div></div>`;
+}
+
+/* Tela depois de "Finalizar pesquisa" + PIN (pedido do Raphael em 15/10/2026): mostra o resultado da visita na hora,
+   com o mesmo relatório que vai por e-mail, e os botões de PDF e de e-mail logo no topo. */
+function viewFim(){
+  const t = tally(currentResponses()), rec = refusals();
+  const quando = settings.data ? dataLabel(settings.data) : mesLabel(settings.mes);
+  const topo = `<h2>Pesquisa finalizada · ${esc(settings.unidade || '—')}</h2>
+    <p class="muted">${esc(unidadeLabel(settings.unidade))} · ${esc(rodadaNome(settings.rodada))} · ${esc(quando)} · <b>${t.nResp} resposta${t.nResp === 1 ? '' : 's'}</b>${rec ? ` · ${rec} preferi${rec === 1 ? 'u' : 'ram'} não responder` : ''}</p>`;
+  if (!t.nResp) return header('Pesquisa finalizada', 0) + `<div class="wrap"><div class="card" style="max-width:760px">${topo}
+    <div class="warn">Ainda não há respostas desta unidade nesta rodada, então não há resultado para mostrar.</div>
+    <div class="row"><button class="btn" data-action="tosetup">Preparar outra unidade</button><button class="btn ghost" data-action="admin">Ver contagens</button></div></div></div>`;
+  const rel = relatorioEquipe(t);
+  const enviado = (settings.relatorios || {})[key()];
+  return header('Pesquisa finalizada', 0) + `<div class="wrap"><div class="card" style="max-width:760px">${topo}
+    ${enviado ? `<div class="good">Relatório já enviado em ${esc(enviado)}.</div>` : ''}
+    <div class="row" style="flex-wrap:wrap;gap:10px">
+      <button class="btn" data-action="encerrar">Enviar relatório por e-mail</button>
+      <button class="btn light" data-action="pdfatual">${navigator.share ? 'Compartilhar' : 'Baixar'} PDF</button>
+      <button class="btn ghost" data-action="admin">Ver contagens completas</button>
+      <button class="btn ghost" data-action="tosetup">Preparar outra unidade</button>
+    </div>
+    <h3 style="margin-top:18px">Resultado da visita</h3>
+    <div style="background:#fff;color:#1f1a33;border-radius:12px;padding:14px;overflow-x:auto">${rel.html}</div>
   </div></div>`;
 }
 
