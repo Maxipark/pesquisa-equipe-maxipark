@@ -257,7 +257,9 @@ function limpaResposta(t) {
   t = String(t || '').replace(/\r/g, '');
   const corte = t.search(/\n[^\n]*(Em .{0,250}escreveu:|On .{0,250}wrote:|-{2,}\s*(Original Message|Mensagem original)|^De:\s)/im);
   if (corte > 0) t = t.slice(0, corte);
+  const sublinhado = t.search(/\n\s*_{5,}/); if (sublinhado > 0) t = t.slice(0, sublinhado);   // separador do Outlook antes do e-mail original
   t = t.split('\n').filter(function (l) { return !/^\s*>/.test(l); }).join('\n').trim();
+  t = t.replace(/\n+\S{1,3}$/, '').trim();   // sobra de uma linha de cabeçalho cortada
   return t.slice(0, 5000);
 }
 function coletaRespostasRelatorios() {
