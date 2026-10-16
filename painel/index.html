@@ -1327,5 +1327,72 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) { naviga
   olha();
 })();
 </script>
+<script>
+/* ---- aviso de versão nova (pedido do Raphael em 15/10/2026) ----------------
+   Ao abrir o app (ou voltar para ele), compara a versão publicada (sw.js) com a
+   deste aparelho. Se houver versão nova, aparece um card solto na tela com o
+   botão "Atualizar app", que faz a atualização completa: atualiza o service
+   worker, apaga todas as cópias guardadas, baixa de novo as páginas e recarrega. */
+(() => {
+  if (!/^https?:/.test(location.protocol)) return;
+  const RAIZ = /\/(equipe|cliente|painel|conselho)\/(index\.html)?$/.test(location.pathname) ? '../' : './';
+  const CHAVE = 'mp_app_versao';
+  const PAGINAS = ['', 'index.html', 'equipe/', 'cliente/', 'painel/', 'conselho/', 'sw.js'];
+  let mostrando = false;
+  async function versaoPublicada() {
+    const t = await (await fetch(RAIZ + 'sw.js?v=' + Date.now(), { cache: 'no-store' })).text();
+    const m = /VERSAO\s*=\s*'([0-9.]+)'/.exec(t); return m ? m[1] : '';
+  }
+  async function versaoAqui() {
+    let v = ''; try { v = localStorage.getItem(CHAVE) || ''; } catch (e) {}
+    if (v) return v;
+    try { const k = (await caches.keys()).find(x => /^pesquisa-maxipark-/.test(x)); if (k) return k.replace('pesquisa-maxipark-', ''); } catch (e) {}
+    return '';
+  }
+  async function atualizarTudo(nova) {
+    try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.update().catch(() => {}))); } } catch (e) {}
+    try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } } catch (e) {}
+    try { await Promise.all(PAGINAS.map(p => fetch(RAIZ + p, { cache: 'reload' }).catch(() => {}))); } catch (e) {}
+    try { localStorage.setItem(CHAVE, nova); } catch (e) {}
+    const u = new URL(location.href); u.searchParams.set('v', nova); location.replace(u.toString());
+  }
+  function card(nova, atual) {
+    if (mostrando || document.getElementById('card-atualizar')) return; mostrando = true;
+    const fundo = document.createElement('div');
+    fundo.id = 'card-atualizar';
+    fundo.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,10,30,.55)';
+    fundo.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="ca-tit" style="max-width:420px;width:100%;background:var(--card,var(--branco,#fff));color:var(--texto,var(--text,#1f1a33));border-radius:18px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.35);text-align:center;font-family:inherit">'
+      + '<div style="font-size:40px;line-height:1">🔄</div>'
+      + '<h2 id="ca-tit" style="margin:10px 0 6px;font-size:21px">Tem atualização do app</h2>'
+      + '<p style="margin:0 0 16px;font-size:16px;opacity:.85">Versão nova: <b>' + nova + '</b>' + (atual ? ' (neste aparelho: ' + atual + ')' : '') + '. Toque em atualizar — leva poucos segundos e nenhuma resposta é perdida.</p>'
+      + '<button type="button" id="ca-sim" style="width:100%;padding:14px 16px;border:0;border-radius:12px;background:#6d28d9;color:#fff;font-size:18px;font-weight:700;cursor:pointer">Atualizar app</button>'
+      + '<button type="button" id="ca-nao" style="width:100%;margin-top:10px;padding:10px;border:0;background:transparent;color:inherit;opacity:.75;font-size:15px;cursor:pointer">Agora não</button></div>';
+    document.body.appendChild(fundo);
+    const sim = document.getElementById('ca-sim');
+    sim.addEventListener('click', () => { sim.disabled = true; sim.textContent = 'Atualizando…'; atualizarTudo(nova); });
+    document.getElementById('ca-nao').addEventListener('click', () => { fundo.remove(); mostrando = false; try { sessionStorage.setItem('mp_adiou_' + nova, '1'); } catch (e) {} });
+  }
+  async function conferir() {
+    if (!navigator.onLine || document.hidden) return;
+    try {
+      const nova = await versaoPublicada(); if (!nova) return;
+      const atual = await versaoAqui();
+      if (!atual) { try { localStorage.setItem(CHAVE, nova); } catch (e) {} return; }   // primeira vez neste aparelho: já veio da rede
+      let manual = false; try { manual = sessionStorage.getItem('mp_atualizou_agora') === '1'; sessionStorage.removeItem('mp_atualizou_agora'); } catch (e) {}
+      if (manual) { try { localStorage.setItem(CHAVE, nova); } catch (e) {} return; }   // acabou de usar o botão de atualizar da tela
+      if (atual === nova) return;
+      try { if (sessionStorage.getItem('mp_adiou_' + nova)) return; } catch (e) {}
+      card(nova, atual);
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', conferir); else conferir();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) conferir(); });
+  document.addEventListener('click', e => {   // os botões de atualizar que já existiam também contam como "atualizado"
+    const b = e.target && e.target.closest && e.target.closest('#btn-atualizar-app, #btn-atualizar-tudo');
+    if (b) { try { sessionStorage.setItem('mp_atualizou_agora', '1'); } catch (x) {} }
+  }, true);
+  window.__aviso = { conferir, atualizarTudo };
+})();
+</script>
 </body>
 </html>
