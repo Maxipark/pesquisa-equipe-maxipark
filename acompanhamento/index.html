@@ -156,7 +156,7 @@ const ESCOPO = (() => {
     return { nome: j.n || j.e, email: j.e, papel: j.p || 'total', unidades: (!j.u || j.u === 'todas') ? null : (Array.isArray(j.u) ? j.u : [j.u]) };
   } catch (e) { return null; }
 })();
-const podeResponder = () => !!ESCOPO && (ESCOPO.papel === 'admin' || ESCOPO.papel === 'total');
+const podeResponder = () => !!ESCOPO && ['admin', 'total', 'gestor'].includes(ESCOPO.papel);   // gestor = Visualização completa
 function conexao(){
   const proprio = LS.get('mpa_settings', {}) || {};
   if (proprio.webhook && proprio.chave) return proprio;
