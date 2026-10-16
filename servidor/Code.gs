@@ -106,6 +106,12 @@ function doGet(e) {
   try {
     const p = (e && e.parameter) || {};
     const erro = verificaChave(p.chave); if (erro) return erro;
+    if (p.op === 'respostas-relatorio') {            // relatórios enviados + respostas recebidas por e-mail (filtra por unidade e rodada)
+      let novas = 0, aviso = '';
+      try { novas = coletaRespostasRelatorios(); } catch (e) { aviso = String(e); }
+      const filtro = o => (!p.unidade || o.unidade === p.unidade) && (!p.rodada || o.rodada === p.rodada);
+      return json({ ok: true, novas: novas, aviso: aviso, relatorios: lerAba(ABA_RELATORIOS, COLS_REL).filter(filtro), respostas: lerAba(ABA_RESP_REL, COLS_RESP).filter(filtro) });
+    }
     if (p.op === 'ping') return json({ ok: true, servidor: 'apps-script', versao: 5, abas: Object.keys(ABAS), usuarios: true, historico: true, relatorio: true });
     if (p.op === 'historico') {
       const ws = abaHistorico(); const last = ws.getLastRow();
@@ -213,6 +219,72 @@ function enviaRelatorioEquipe(r) {
   const assunto = String(r.assunto || 'Relatório da visita - Pesquisa equipe').slice(0, 200);
   const nome = String(r.arquivo || 'relatorio-equipe').replace(/[^\w.-]+/g, '_').slice(0, 120) + '.pdf';
   const pdf = Utilities.newBlob(html, 'text/html', 'relatorio.html').getAs('application/pdf').setName(nome);
-  MailApp.sendEmail({ to: para.join(','), subject: assunto, htmlBody: html, attachments: [pdf], name: 'Pesquisas Maxipark' });
-  return { ok: true, enviado: para.length };
+  const rid = idRelatorio();
+  const assuntoFinal = assunto.slice(0, 180) + ' [' + rid + ']';
+  const aviso = '<div style="font-family:Arial,Helvetica,sans-serif;background:#efe9fb;border:1px solid #d9cdf3;border-radius:10px;padding:12px 14px;margin:0 auto 14px;max-width:720px;color:#1f1a33;font-size:14px;text-align:left">'
+    + '<b>Responda a este e-mail</b> com o que vai ser feito em cada ponto de melhoria e o <b>prazo</b> de cada ação. '
+    + 'Pode responder mais de uma vez: todas as respostas ficam guardadas no histórico desta pesquisa (código ' + rid + ').</div>';
+  MailApp.sendEmail({ to: para.join(','), subject: assuntoFinal, htmlBody: aviso + html, attachments: [pdf], name: 'Pesquisas Maxipark' });
+  try { abaSimples(ABA_RELATORIOS, COLS_REL).appendRow([rid, new Date(), semFormula(String(r.unidade || '')), String(r.rodada || ''), "'" + String(r.data || ''), para.join(', '), semFormula(assuntoFinal)]); } catch (e) {}
+  return { ok: true, enviado: para.length, id: rid };
 }
+
+/* ---------- Respostas aos relatórios da visita (servidor v13, 15/10/2026) ----------
+   Cada relatório sai com um código no assunto ([REL-aammdd-XXXXX]) e fica registrado na aba "Relatorios".
+   Quem recebe responde o e-mail com o plano de melhoria e o prazo. Sempre que o app pede as respostas
+   (op=respostas-relatorio), o servidor procura no Gmail desta conta as respostas com esse código e guarda
+   cada uma na aba "RespostasRelatorios" (uma linha por e-mail; pode haver várias por relatório).
+   Precisa da permissão do Gmail (rodar autorizarRespostas pelo editor uma vez). */
+const ABA_RELATORIOS = 'Relatorios', ABA_RESP_REL = 'RespostasRelatorios';
+const REMETENTE_RELATORIO = 'raphaelfrascinofl@gmail.com';   // conta do Gmail de onde saem os relatórios (e onde chegam as respostas)
+const COLS_REL = ['id', 'enviado_em', 'unidade', 'rodada', 'data', 'para', 'assunto'];
+const COLS_RESP = ['msg_id', 'relatorio_id', 'unidade', 'rodada', 'data', 'de', 'recebido_em', 'texto'];
+function abaSimples(nome, cols) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let ws = ss.getSheetByName(nome);
+  if (!ws) { ws = ss.insertSheet(nome); ws.appendRow(cols); ws.setFrozenRows(1); ws.getRange(1, 1, 1, cols.length).setFontWeight('bold'); }
+  return ws;
+}
+function lerAba(nome, cols) {
+  const ws = abaSimples(nome, cols), l = ws.getLastRow();
+  if (l < 2) return [];
+  return ws.getRange(2, 1, l - 1, cols.length).getValues().map(function (r) {
+    const o = {}; cols.forEach(function (c, i) { o[c] = r[i] instanceof Date ? r[i].toISOString() : String(r[i] === null || r[i] === undefined ? '' : r[i]); }); return o;
+  });
+}
+function idRelatorio() { return 'REL-' + Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyMMdd') + '-' + Utilities.getUuid().replace(/-/g, '').slice(0, 5).toUpperCase(); }
+function limpaResposta(t) {
+  t = String(t || '').replace(/\r/g, '');
+  const corte = t.search(/\n[^\n]*(Em .{0,250}escreveu:|On .{0,250}wrote:|-{2,}\s*(Original Message|Mensagem original)|^De:\s)/im);
+  if (corte > 0) t = t.slice(0, corte);
+  t = t.split('\n').filter(function (l) { return !/^\s*>/.test(l); }).join('\n').trim();
+  return t.slice(0, 5000);
+}
+function coletaRespostasRelatorios() {
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return 0;
+  try {
+    const rels = {};
+    lerAba(ABA_RELATORIOS, COLS_REL).forEach(function (r) { rels[r.id] = r; });
+    if (!Object.keys(rels).length) return 0;
+    const wsA = abaSimples(ABA_RESP_REL, COLS_RESP), vistos = {};
+    lerAba(ABA_RESP_REL, COLS_RESP).forEach(function (r) { vistos[r.msg_id] = true; });
+    const eu = REMETENTE_RELATORIO;   // a conta dona do servidor: o próprio envio não é resposta
+    const novas = [];
+    GmailApp.search('subject:"Relatório da visita" newer_than:365d', 0, 200).forEach(function (th) {
+      const m = /\[(REL-\d{6}-[A-Z0-9]{5})\]/.exec(th.getFirstMessageSubject() || ''); if (!m || !rels[m[1]]) return;
+      const rel = rels[m[1]];
+      th.getMessages().forEach(function (msg) {
+        const id = msg.getId(); if (vistos[id]) return;
+        const de = String(msg.getFrom() || ''); if (eu && de.toLowerCase().indexOf(eu) >= 0) return;
+        vistos[id] = true;
+        novas.push([id, m[1], rel.unidade, rel.rodada, rel.data, semFormula(de), msg.getDate(), semFormula(limpaResposta(msg.getPlainBody()))]);
+      });
+    });
+    if (novas.length) wsA.getRange(wsA.getLastRow() + 1, 1, novas.length, COLS_RESP.length).setValues(novas);
+    return novas.length;
+  } finally { lock.releaseLock(); }
+}
+/* Rode UMA vez pelo editor para o Google pedir a permissão de ler as respostas no Gmail. */
+function autorizarRespostas() { const n = GmailApp.search('subject:"Relatório da visita"', 0, 1).length; Logger.log('Acesso ao Gmail OK (' + n + ')'); return coletaRespostasRelatorios(); }
+/* Rode UMA vez pelo editor para o Google pedir a permissão de enviar e-mail. Não envia nada. */
+function autorizarEmail() { const resta = MailApp.getRemainingDailyQuota(); Logger.log('Permissão de e-mail OK. E-mails que ainda podem sair hoje: ' + resta); return resta; }
