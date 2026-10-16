@@ -328,10 +328,13 @@
       <span class="rot">O que pode fazer</span>
       <div class="papeis">
         <label class="papel"><input type="radio" name="papel" value="total" checked>
-          <span><span class="t">Usuário — vê todas as respostas e aplica as pesquisas</span>
-          <span class="d">As três pesquisas e todas as unidades, sem exceção: vê todos os resultados e também abre as pesquisas para as pessoas responderem. Não exclui, não edita, não zera.</span></span></label>
+          <span><span class="t">Aplica e acompanha — vê tudo, aplica as pesquisas e faz o acompanhamento</span>
+          <span class="d">Todas as pesquisas e todas as unidades: vê os resultados, abre as pesquisas para as pessoas responderem e responde os e-mails do acompanhamento. Não cadastra usuários, não exclui, não zera.</span></span></label>
+        <label class="papel"><input type="radio" name="papel" value="gestor">
+          <span><span class="t">Visualização completa — vê tudo e faz o acompanhamento, não aplica</span>
+          <span class="d">Todas as pesquisas e todas as unidades: vê os resultados e responde os e-mails do acompanhamento. Não aplica pesquisas e não cadastra usuários.</span></span></label>
         <label class="papel"><input type="radio" name="papel" value="respostas">
-          <span><span class="t">Somente visualização — você escolhe o que ele vê</span>
+          <span><span class="t">Visualização restrita — você escolhe o que ele vê</span>
           <span class="d">Vê apenas os ícones e as unidades marcados abaixo. Também não aplica pesquisa.</span></span></label>
         <label class="papel"><input type="radio" name="papel" value="aplicar">
           <span><span class="t">Usuário de campo — aplica as pesquisas, não vê respostas</span>
@@ -424,11 +427,12 @@
   }
   const UNS = lerUnidades();
   const nomeU = c => { const u = UNS.find(x => x.codigo === c); return u && u.nome ? u.nome : ''; };
-  const NOME_PAPEL = { admin:'Administrador', total:'Usuário · vê tudo e aplica', respostas:'Somente visualização', aplicar:'Usuário de campo · não vê respostas' };
+  const NOME_PAPEL = { admin:'Administrador', total:'Aplica e acompanha', gestor:'Visualização completa', respostas:'Visualização restrita', aplicar:'Usuário de campo · não vê respostas' };
   const FRASE = {
     admin: 'Você administra os acessos e enxerga tudo.',
-    total: 'Usuário: você vê as respostas de todas as pesquisas e de todas as unidades, e também pode aplicar as pesquisas.',
-    respostas: 'Somente visualização: você vê apenas os resultados e as unidades liberados para o seu acesso.',
+    total: 'Aplica e acompanha: você vê as respostas de todas as pesquisas e unidades, aplica as pesquisas e faz o acompanhamento dos relatórios.',
+    gestor: 'Visualização completa: você vê as respostas de todas as pesquisas e unidades e faz o acompanhamento dos relatórios. Não aplica pesquisas.',
+    respostas: 'Visualização restrita: você vê apenas os resultados e as unidades liberados para o seu acesso.',
     aplicar: 'Usuário de campo: você abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.'
   };
   const norm = e => (e || '').trim().toLowerCase();
@@ -638,7 +642,7 @@
     $('ola').textContent = 'Olá, ' + c.nome.split(' ')[0];
     $('resumo-acesso').textContent = FRASE[c.papel] || '';
     const cards = [];
-    const podePainel = ['admin','total','respostas'].includes(c.papel);
+    const podePainel = ['admin','total','gestor','respostas'].includes(c.papel);
     const podeAplicar = ['admin','total','aplicar'].includes(c.papel);   /* o usuário tambem aplica as pesquisas */
 
     /* ORDEM FIXA DOS CARDS — nao alterar:
@@ -651,7 +655,7 @@
     /* RESULTADOS.
        - Somente visualiza\u00e7\u00e3o: um card para cada coisa liberada (as pesquisas e o consolidado).
        - Demais perfis: um card s\u00f3, e as pesquisas viram abas dentro do painel. */
-    const liberados = (c.papel === 'admin' || c.papel === 'total') ? RESULTADOS.map(r => r.id) : (c.pesquisas || []);
+    const liberados = (c.papel === 'admin' || c.papel === 'total' || c.papel === 'gestor') ? RESULTADOS.map(r => r.id) : (c.pesquisas || []);
     const vistos = RESULTADOS.filter(r => liberados.includes(r.id));
     const soUn = c.unidades && c.unidades !== 'todas' ? ' Filtrado para ' + txtUn(c.unidades).toLowerCase() + '.' : '';
     if (podePainel && vistos.length && c.papel === 'respostas') {
@@ -825,11 +829,12 @@
     return '<div class="editor-perfil">' +
       '<span class="rot">O que ' + e(c.nome.split(' ')[0]) + ' pode fazer</span>' +
       '<div class="papeis">' +
-        rad('total', 'Usuário — vê todas as respostas e aplica as pesquisas', 'As três pesquisas e todas as unidades, sem exceção: resultados e aplicação.') +
-        rad('respostas', 'Somente visualização — você escolhe o que ele vê', 'Vê apenas os ícones e as unidades marcados abaixo.') +
+        rad('total', 'Aplica e acompanha — vê tudo, aplica e faz o acompanhamento', 'Todas as pesquisas e unidades: resultados, aplicação e respostas do acompanhamento.') +
+        rad('gestor', 'Visualização completa — vê tudo e faz o acompanhamento, não aplica', 'Todas as pesquisas e unidades: resultados e respostas do acompanhamento. Não aplica pesquisas.') +
+        rad('respostas', 'Visualização restrita — você escolhe o que ele vê', 'Vê apenas os ícones e as unidades marcados abaixo.') +
         rad('aplicar', 'Usuário de campo — aplica as pesquisas, não vê respostas', 'Abre as pesquisas no tablet. Não enxerga nenhum resultado.') +
       '</div>' +
-      (papel === 'total' ? '' :
+      ((papel === 'total' || papel === 'gestor') ? '' :
         '<span class="rot">' + (papel === 'aplicar' ? 'Quais pesquisas ele pode aplicar' : 'Quais ícones aparecem na página inicial') + '</span>' +
         '<div class="caixas">' +
           '<label class="cx"><input type="checkbox" data-epq="clientes"' + marcado('clientes') + '> \ud83d\ude97 Clientes</label>' +
@@ -854,7 +859,7 @@
   function limpaEdicao() { editando = null; editPapel = null; editPq = null; editUn = null; }
   function leEditor() {
     const papel = (document.querySelector('input[name=e-papel]:checked') || {}).value || 'total';
-    if (papel === 'total') return { papel, pesquisas: ['clientes','equipe','conselho','consolidado'], unidades: 'todas' };
+    if (papel === 'total' || papel === 'gestor') return { papel, pesquisas: ['clientes','equipe','conselho','consolidado'], unidades: 'todas' };
     const pesquisas = Array.from(document.querySelectorAll('[data-epq]')).filter(i => i.checked).map(i => i.dataset.epq);
     const todas = (document.getElementById('e-un-todas') || {}).checked;
     const unidades = todas ? 'todas' : Array.from(document.querySelectorAll('[data-eun]')).filter(i => i.checked).map(i => i.dataset.eun);
@@ -880,7 +885,7 @@
     : Array.from(document.querySelectorAll('[data-un]')).filter(i => i.checked).map(i => i.dataset.un);
   function ajustaQuais() {
     const p = document.querySelector('input[name=papel]:checked').value;
-    $('quais').hidden = (p === 'total');
+    $('quais').hidden = (p === 'total' || p === 'gestor');
     /* quem so aplica pesquisa nao tem "consolidado": isso e coisa de resultado */
     const cons = document.querySelector('#cx-pq [data-pq="consolidado"]');
     if (cons) { const cx = cons.closest('label'); cx.hidden = (p === 'aplicar'); if (p === 'aplicar') cons.checked = false; }
@@ -898,7 +903,7 @@
       const nomes = (c.pesquisas || []).map(i => ({ clientes:'Clientes', equipe:'Equipe', conselho:'Conselho', consolidado:'Consolidado' })[i]).filter(Boolean);
       const selos = [
         '<span class="selo">' + NOME_PAPEL[c.papel] + '</span>',
-        (c.papel === 'total' || c.papel === 'admin') ? '' :
+        (c.papel === 'total' || c.papel === 'gestor' || c.papel === 'admin') ? '' :
           '<span class="selo">' + (nomes.length === 4 ? 'Tudo' : (nomes.join(' · ') || 'Nada')) + '</span>' +
           '<span class="selo">' + txtUn(c.unidades) + '</span>',
         c.bloqueado ? '<span class="selo no">Bloqueado</span>' : '<span class="selo ok">Ativo</span>',
@@ -991,8 +996,9 @@
     const falha = t => { err.textContent = t; err.hidden = false; };
     const nome = $('c-nome').value.trim(), email = norm($('c-email').value), senha = $('c-senha').value;
     const papel = document.querySelector('input[name=papel]:checked').value;
-    const pesquisas = papel === 'total' ? ['clientes','equipe','conselho','consolidado'] : lePq();
-    const unidades = papel === 'total' ? 'todas' : leUn();
+    const completo = papel === 'total' || papel === 'gestor';
+    const pesquisas = completo ? ['clientes','equipe','conselho','consolidado'] : lePq();
+    const unidades = completo ? 'todas' : leUn();
     if (!nome) return falha('Escreva o nome da pessoa.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return falha('E-mail inválido.');
     if (dados.contas.some(c => c.email === email)) return falha('Esse e-mail já está cadastrado.');
@@ -1028,7 +1034,7 @@
   document.addEventListener('change', ev => {
     if (ev.target.name === 'e-papel') {   /* so troca o papel: as marcacoes vem do que a pessoa ja tem */
       editPapel = ev.target.value;
-      if (editPapel === 'total') { editPq = ['clientes','equipe','conselho','consolidado']; editUn = 'todas'; }
+      if (editPapel === 'total' || editPapel === 'gestor') { editPq = ['clientes','equipe','conselho','consolidado']; editUn = 'todas'; }
       admin(); return; }
     if (ev.target.dataset && (ev.target.dataset.epq || ev.target.dataset.eun || ev.target.id === 'e-un-todas')) {
       if (ev.target.id === 'e-un-todas' && ev.target.checked) document.querySelectorAll('[data-eun]').forEach(i => { i.checked = false; });
