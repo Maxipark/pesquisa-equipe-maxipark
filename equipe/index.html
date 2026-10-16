@@ -722,13 +722,16 @@ function viewRelatorio(){
     <h2>Enviar relatório da visita</h2>
     <p class="muted">${esc(unidadeLabel(settings.unidade))} · ${esc(rodadaNome(settings.rodada))} · ${t.nResp} resposta${t.nResp === 1 ? '' : 's'}</p>
     ${t.identificavel ? `<div class="warn">Só ${t.nResp} resposta${t.nResp > 1 ? 's' : ''}: o relatório vai marcado como RESTRITO. Envie só para a área de Experiência do Cliente.</div>` : ''}
-    <label for="rel-email">E-mail para enviar</label>
+    ${state.relMsg && state.relMsg.chave === key() ? (state.relMsg.tipo === 'ok'
+      ? `<div class="good" style="font-size:18px"><b>✓ ${esc(state.relMsg.texto)}</b><br><span class="small">O relatório chega em 1 ou 2 minutos, com o PDF anexo. Se não aparecer, olhe no spam.</span></div>`
+      : `<div class="bad"><b>✕ ${esc(state.relMsg.texto)}</b></div>`) : ''}
+    <label for="rel-email">${state.relMsg && state.relMsg.tipo === 'ok' && state.relMsg.chave === key() ? 'Enviar para outro e-mail?' : 'E-mail para enviar'}</label>
     <input type="email" id="rel-email" list="rel-emails" value="${esc(salvos[0] || '')}" placeholder="nome@maxipark.com.br" autocomplete="off" autocapitalize="none" inputmode="email">
     <datalist id="rel-emails">${salvos.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
     <p class="small muted" style="margin:6px 0 0">Para mais de uma pessoa, separe por vírgula (até 5).</p>
     ${salvos.length ? `<p class="small" style="margin:16px 0 6px"><b>E-mails já usados neste tablet</b> — toque para escolher</p>
     <div class="row" style="flex-wrap:wrap;gap:8px">${salvos.map(x => `<span style="display:inline-flex;align-items:center;gap:2px"><button class="btn light" data-action="relemail" data-email="${esc(x)}" style="min-height:40px;font-size:15px">${esc(x)}</button><button class="btn link" data-action="relesquecer" data-email="${esc(x)}" title="Esquecer este e-mail" aria-label="Esquecer ${esc(x)}" style="min-height:40px;font-size:15px">✕</button></span>`).join('')}</div>` : ''}
-    <div class="row" style="margin-top:20px"><button class="btn" data-action="relenviar">Enviar relatório</button><button class="btn ghost" data-action="admin">Voltar</button></div>
+    <div class="row" style="margin-top:20px"><button class="btn" data-action="relenviar">Enviar relatório</button><button class="btn ghost" data-action="relvoltar">Voltar</button></div>
   </div></div>`;
 }
 
@@ -1795,7 +1798,9 @@ function handle(action, el){
       const t = tally(list());
       if (!t.nResp) { toast('Ainda não há respostas desta unidade nesta rodada.'); break; }
       if (!syncOk()) { toast('Ligue este tablet ao servidor em Configurações para enviar o relatório.'); break; }
-      go('relatorio'); break;
+      state.relMsg = null; state.relVolta = state.screen === 'fim' ? 'fim' : 'admin'; go('relatorio'); break;
+    }
+    case 'relvoltar': { go(state.relVolta || 'admin'); break;
     }
     case 'relemail': { const inp = document.getElementById('rel-email'); if (inp) { inp.value = el.dataset.email || ''; inp.focus(); } break; }
     case 'relesquecer': {
@@ -1818,12 +1823,13 @@ function handle(action, el){
         if (j && j.ok && j.enviado) {
           salvaEmailsRelatorio(para.concat(emailsRelatorio().filter(x => !para.includes(x))));
           settings.relatorios = Object.assign({}, settings.relatorios || {}, { [key()]: dataLabel(hojeISO()) + ' para ' + para.join(', ') }); saveSettings();
-          go('admin'); toast('Relatório enviado para ' + para.join(', ') + '.');
+          state.relMsg = { tipo: 'ok', chave: key(), texto: 'E-mail enviado para ' + para.join(', ') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '.' };
+          render(); toast('Relatório enviado.');
         } else {
-          toast(j && j.ok && !j.enviado ? 'O servidor ainda não sabe enviar relatórios: atualize o Apps Script.' : 'O servidor não enviou o relatório' + (j && j.erro ? ' (' + j.erro + ')' : '') + '. Tente de novo.');
-          if (btn) { btn.disabled = false; btn.textContent = 'Enviar relatório'; }
+          state.relMsg = { tipo: 'erro', chave: key(), texto: j && j.ok && !j.enviado ? 'O servidor ainda não sabe enviar relatórios: atualize o Apps Script.' : 'O e-mail não foi enviado' + (j && j.erro ? ' (' + j.erro + ')' : '') + '. Tente de novo.' };
+          render();
         }
-      } catch (err) { toast('Sem conexão com o servidor agora. Tente de novo quando tiver internet.'); if (btn) { btn.disabled = false; btn.textContent = 'Enviar relatório'; } } })();
+      } catch (err) { state.relMsg = { tipo: 'erro', chave: key(), texto: 'Sem conexão com o servidor agora. O e-mail não foi enviado — tente de novo quando tiver internet.' }; render(); } })();
       break;
     }
     case 'mail': {
