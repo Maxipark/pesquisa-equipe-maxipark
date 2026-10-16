@@ -338,6 +338,31 @@ function dataLabel(iso){ if (!iso || iso.length < 10) return iso || ''; return i
 function mesLabel(m){ if (!m) return ''; const n = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; return n[parseInt(m.slice(5, 7), 10) - 1] + '/' + m.slice(0, 4); }
 function shuffle(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function pinAtual(){ return settings.pin || PIN_PADRAO; }
+
+/* ---------- PIN de quem abriu a pesquisa (17/10/2026) ----------
+   Cada usuário que aplica pesquisa tem o próprio PIN, criado na página inicial. Ele vem no crachá (#a=...)
+   como sal + impressão SHA-256 e fica guardado neste aparelho, para conferir sem internet.
+   Sem crachá (pesquisa aberta direto, sem entrar na página inicial), vale o PIN do tablet. */
+const PIN_USUARIO = (() => {
+  try {
+    const m = /[#&]a=([A-Za-z0-9\-_]+)/.exec(location.hash || '');
+    if (m) {
+      let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+      const j = JSON.parse(decodeURIComponent(escape(atob(b))));
+      if (j && j.k && /^[0-9a-f]{32}$/.test(j.k.s) && /^[0-9a-f]{64}$/.test(j.k.h)) {
+        const o = { nome: j.n || j.e, email: j.e, s: j.k.s, h: j.k.h };
+        localStorage.setItem('mp_pin_usuario', JSON.stringify(o)); return o;
+      }
+      if (j && j.e) { localStorage.removeItem('mp_pin_usuario'); return null; }
+    }
+    const g = JSON.parse(localStorage.getItem('mp_pin_usuario') || 'null');
+    return g && g.s && g.h ? g : null;
+  } catch (e) { return null; }
+})();
+async function confereComPinUsuario(pin) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PIN_USUARIO.s + ':' + pin));
+  return Array.from(new Uint8Array(d)).map(x => x.toString(16).padStart(2, '0')).join('') === PIN_USUARIO.h;
+}
 let toastT; function toast(m){ const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
 
 /* ---------------- estado e navegação ---------------- */
@@ -471,7 +496,8 @@ function viewSaveError(){
 function viewPin(){
   const bloqueado = settings.lockUntil && Date.now() < settings.lockUntil;
   return header('Área do usuário') + `<div class="wrap"><div class="card" style="max-width:520px;margin:0 auto;text-align:center">${logoHero()}
-    <h2>Digite o PIN do usuário</h2>
+    <h2>${PIN_USUARIO ? 'Digite o seu PIN' : 'Digite o PIN do usuário'}</h2>
+    ${PIN_USUARIO ? `<p class="muted">PIN de ${esc(PIN_USUARIO.nome)}</p>` : ''}
     ${bloqueado ? `<div class="ruim">Muitas tentativas. Aguarde ${Math.ceil((settings.lockUntil - Date.now()) / 1000)} s.</div>` : ''}
     <input class="pininput" id="pin-input" type="text" inputmode="numeric" autocomplete="off" value="${esc(state.pin)}" ${bloqueado ? 'disabled' : ''} aria-label="PIN">
     <div class="pinpad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button data-action="pinkey" data-k="${k}" ${bloqueado ? 'disabled' : ''}>${k}</button>`).join('')}<button data-action="pinkey" data-k="del">⌫</button><button data-action="pinkey" data-k="0" ${bloqueado ? 'disabled' : ''}>0</button><button data-action="pinok" ${bloqueado ? 'disabled' : ''} style="background:var(--roxo);color:#fff">OK</button></div>
@@ -930,9 +956,10 @@ async function importarUnidades(file){
 }
 
 /* ---------------- eventos ---------------- */
-function pinTentativa(){
+async function pinTentativa(){
   if (settings.lockUntil && Date.now() < settings.lockUntil) { render(); return; }
-  if (state.pin === pinAtual()) { settings.pinFails = 0; saveSettings(); state.pin = ''; go(state.pinPara || 'admin'); }
+  const okPin = PIN_USUARIO ? await confereComPinUsuario(state.pin) : state.pin === pinAtual();
+  if (okPin) { settings.pinFails = 0; saveSettings(); state.pin = ''; go(state.pinPara || 'admin'); }
   else { settings.pinFails = (settings.pinFails || 0) + 1; if (settings.pinFails >= PIN_MAX_FALHAS) { settings.lockUntil = Date.now() + PIN_BLOQUEIO_MS; settings.pinFails = 0; } saveSettings(); state.pin = ''; toast('PIN incorreto.'); render(); }
 }
 document.addEventListener('click', e => {
