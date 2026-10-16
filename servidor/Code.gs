@@ -26,6 +26,7 @@ function doPost(e) {
     if (body.op === 'recuperar-senha') return json(recuperarSenha(body));   // públicos: esqueci a senha, criar senha pelo link e entrar
     if (body.op === 'definir-senha') return json(definirSenha(body));
     if (body.op === 'entrar') return json(entrarPeloServidor(body));
+    if (body.op === 'definir-pin') return json(definirPin(body));   // público, com a prova da senha: cada usuário escolhe o próprio PIN
     const erro = verificaChave(body.chave); if (erro) return erro;
     if (body.op === 'convidar') return json(convidarUsuario(body));   // administrador: manda o e-mail de primeiro acesso
     if (body.op === 'relatorio-equipe') return json(enviaRelatorioEquipe(body.relatorio || {}));   // relatorio da visita (pesquisa com a equipe) por e-mail
@@ -82,7 +83,7 @@ function doPost(e) {
     if (body.op === 'usuarios-salvar') {          // cadastro de usuarios do app: guarda a lista inteira
       const ws = abaUsuarios();
       const lock = LockService.getScriptLock(); lock.waitLock(25000);
-      try { ws.getRange(1, 1).setValue(JSON.stringify(body.dados || {})); } finally { lock.releaseLock(); }
+      try { ws.getRange(1, 1).setValue(JSON.stringify(protegeCredenciais(body.dados || {}))); } finally { lock.releaseLock(); }
       return json({ ok: true, salvo: true });
     }
     const itens = Array.isArray(body.itens) ? body.itens : [body];
@@ -515,4 +516,30 @@ function entrarPeloServidor(b) {   // público: confere a prova e devolve o perf
   if (c.bloqueado) return { ok: false, erro: 'bloqueado' };
   cache.remove(k);
   return { ok: true, conta: c, sairTodos: d.sairTodos || 0 };
+}
+
+/* ---------- PIN de cada usuário que aplica pesquisa (17/10/2026) ----------
+   Quem aplica pesquisa escolhe o próprio PIN (4 a 6 números) na página inicial. O servidor guarda só o sal e a
+   impressão (SHA-256) do PIN, e só aceita a troca de quem prova que sabe a senha. O PIN vai no crachá (#a=...)
+   para o tablet conferir sem internet. Senha e PIN nunca são trocados pelo cadastro do administrador. */
+function definirPin(b) {
+  if (!/^[0-9a-f]{32}$/.test(String(b.pinSalt || '')) || !/^[0-9a-f]{64}$/.test(String(b.pinHash || ''))) return { ok: false, erro: 'dados-invalidos' };
+  const lock = LockService.getScriptLock(); lock.waitLock(25000);
+  try {
+    const d = lerUsuarios(), c = contaPorEmail(d, b.email);
+    if (!c || !c.hash || String(b.prova || '') !== c.hash) return { ok: false, erro: 'nao-confere' };
+    if (c.bloqueado) return { ok: false, erro: 'bloqueado' };
+    c.pinSalt = String(b.pinSalt); c.pinHash = String(b.pinHash);
+    d.versao = (d.versao || 0) + 1; salvarUsuarios(d);
+    return { ok: true, versao: d.versao };
+  } finally { lock.releaseLock(); }
+}
+function protegeCredenciais(novo) {   // no "salvar usuários" do administrador, senha e PIN sempre vêm do servidor
+  const atual = lerUsuarios();
+  ((novo && novo.contas) || []).forEach(function (c) {
+    const a = contaPorEmail(atual, c.email); if (!a) return;
+    ['salt', 'iter', 'hash', 'pinSalt', 'pinHash'].forEach(function (k) { if (a[k] !== undefined) c[k] = a[k]; else delete c[k]; });
+    if (a.hash) delete c.pendente;
+  });
+  return novo;
 }
