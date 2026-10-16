@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Acompanhamento dos relatórios · Maxipark</title>
+<meta name="theme-color" content="#6B4A98">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Acompanhamento Maxipark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{
+    --roxo:#6B4A98; --roxo-escuro:#4E3572; --roxo-claro:#EEE8F5; --bg:#F5F3F9; --card:#FFFFFF;
+    --texto:#221C2E; --cinza:#5E5670; --linha:#DED8EA; --perigo:#B23A3A; --raio:18px;
+    --branco:#FFFFFF; --sombra:0 2px 10px rgba(34,28,46,.06);
+    --aviso-bg:#FFF4D6; --aviso-br:#E0B400; --aviso-tx:#3D3000;
+    --ruim-bg:#FBE3E3; --ruim-tx:#7A1F1F; --bom-bg:#E6F4EA; --bom-br:#9CCFA9; --bom-tx:#1B3D26;
+    --toast-bg:#221C2E; --toast-tx:#FFFFFF; --sobre-roxo:#FFFFFF;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"]{
+    --roxo:#B18BE0; --roxo-escuro:#D3BCEF; --roxo-claro:#2E2340; --acento:#C08BFF;
+    --bg:#17111E; --card:#211A2B; --texto:#F2EDF8; --cinza:#B3A8C2; --linha:#382C48;
+    --perigo:#F0A0A8; --ok:#3F8F63;
+    --branco:#2A2136; --suave:#241D30; --sobre-roxo:#1B1226; --sobre-ok:#F2EDF8;
+    --sombra:0 2px 10px rgba(0,0,0,.45);
+    --aviso-bg:#3A3117; --aviso-br:#8A6D1F; --aviso-tx:#F0E2BC;
+    --ruim-bg:#3C2027; --ruim-tx:#F6C9CE;
+    --bom-bg:#1C3A2C; --bom-br:#2F6B4C; --bom-tx:#CFEEDD;
+    --tag-ok-bg:#1C3A2C; --tag-ok-tx:#8FE0B6; --tag-pend-bg:#3A3117; --tag-pend-tx:#EBD08A;
+    --toast-bg:#E9E2F3; --toast-tx:#1B1226;
+    --ok-tx:#6FD3A4; --ok-bg:#1C3A2C; --neutro-bg:#2A2136;
+    --grade:#3E3152; --serie-c:#C08BFF; --serie-e:#B18BE0; --serie-n:#6FD3A4;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:17px;line-height:1.4}
+  button,input,select,textarea{font-family:inherit;font-size:16px;color:var(--texto)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:var(--card);border-bottom:3px solid var(--roxo)}
+  .top a{color:var(--roxo-escuro);font-weight:700;text-decoration:none}
+  .top .passo{font-size:15px;color:var(--roxo-escuro);font-weight:600;text-align:right}
+  .wrap{max-width:980px;margin:0 auto;padding:16px 16px 70px}
+  .card{background:var(--card);border-radius:var(--raio);padding:18px 20px;box-shadow:var(--sombra);margin-bottom:14px}
+  h1{font-size:24px;margin:0 0 6px;color:var(--roxo-escuro)} h2{font-size:19px;margin:0;color:var(--roxo-escuro)}
+  .muted{color:var(--cinza)} .small{font-size:14px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0 4px}
+  .kpi{background:var(--roxo-claro);border-radius:14px;padding:12px;text-align:center}
+  .kpi b{display:block;font-size:26px;color:var(--roxo-escuro)} .kpi span{font-size:13px;color:var(--cinza)}
+  .filtros{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .filtros input,.filtros select{flex:1 1 200px;padding:10px 12px;border:2px solid var(--linha);border-radius:12px;background:var(--branco)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 18px;border-radius:12px;border:0;background:var(--roxo);color:var(--sobre-roxo);font-weight:700;cursor:pointer}
+  .btn.light{background:var(--roxo-claro);color:var(--roxo-escuro)} .btn:disabled{opacity:.55;cursor:default}
+  details.rel{background:var(--card);border-radius:var(--raio);box-shadow:var(--sombra);margin-bottom:12px;overflow:hidden}
+  details.rel > summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+  details.rel > summary::-webkit-details-marker{display:none}
+  .tag{display:inline-block;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .tag.ok{background:var(--bom-bg);color:var(--bom-tx)} .tag.pend{background:var(--aviso-bg);color:var(--aviso-tx)}
+  .corpo{padding:0 18px 18px}
+  .item{border-left:4px solid var(--linha);padding:8px 0 8px 12px;margin:12px 0}
+  .item.env{border-color:var(--roxo)} .item.rec{border-color:#2E7D32} .item.app{border-color:#9935F4}
+  .item .cab{font-size:13px;color:var(--cinza)} .item .txt{white-space:pre-wrap;margin-top:4px;word-break:break-word}
+  textarea{width:100%;min-height:120px;padding:12px;border:2px solid var(--linha);border-radius:12px;background:var(--branco);resize:vertical}
+  .msg{border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+  .msg.ok{background:var(--bom-bg);color:var(--bom-tx)} .msg.erro{background:var(--ruim-bg);color:var(--ruim-tx)}
+  .vazio{text-align:center;padding:30px 10px}
+    .botao-tema{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom,0px));
+    width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;
+    border:1px solid var(--linha);background:var(--card);color:var(--texto);
+    font-size:21px;line-height:1;cursor:pointer;z-index:30;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);-webkit-appearance:none;appearance:none}
+  /* o botao nao herda a cor dos outros botoes: no escuro ficaria invisivel */
+  :root[data-theme="dark"] .botao-tema,
+  :root[data-theme="light"] .botao-tema{background:var(--card);color:var(--texto)}
+  .botao-tema:active{transform:scale(.94)}
+  .botao-tema:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+  @media print{ .botao-tema{display:none!important} }
+
+</style>
+<script>
+/* ═════════ BOTÃO CLARO / ESCURO  (🌙 escurece · ☀ clareia) ═════════════════
+   Fica no canto de baixo à direita de todas as telas.
+   A escolha é guardada NO APARELHO e vale para as CINCO telas de uma vez,
+   porque todas moram no mesmo endereço de site.
+   Enquanto ninguém escolher, o app segue o modo claro/escuro do aparelho.
+   Roda antes de a tela ser desenhada: no escuro, não pisca branco.          */
+(function () {
+  'use strict';
+  var GUARDA = 'maxipark_tema', raiz = document.documentElement;
+  function escolhido() { try { return localStorage.getItem(GUARDA); } catch (e) { return null; } }
+  function doAparelho() {
+    try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro'; }
+    catch (e) { return 'claro'; }
+  }
+  function agora() { var e = escolhido(); return (e === 'escuro' || e === 'claro') ? e : doAparelho(); }
+  function aplica(t) {
+    raiz.setAttribute('data-theme', t === 'escuro' ? 'dark' : 'light');
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', t === 'escuro' ? '#17111E' : '#6B4A98');
+    var b = document.getElementById('btn-tema');
+    if (b) {
+      b.textContent = t === 'escuro' ? '\u2600' : '\uD83C\uDF19';
+      var r = t === 'escuro' ? 'Clarear a tela' : 'Escurecer a tela';
+      b.setAttribute('aria-label', r); b.title = r;
+    }
+  }
+  aplica(agora());
+  function troca() {
+    var novo = agora() === 'escuro' ? 'claro' : 'escuro';
+    try { localStorage.setItem(GUARDA, novo); } catch (e) {}
+    aplica(novo);
+  }
+  /* ninguém escolheu ainda: acompanha o aparelho quando ele troca de modo */
+  try {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var ouve = function () { if (!escolhido()) aplica(doAparelho()); };
+    if (mq.addEventListener) mq.addEventListener('change', ouve);
+    else if (mq.addListener) mq.addListener(ouve);
+  } catch (e) {}
+  /* trocou numa tela com outra aberta ao lado: a outra acompanha na hora */
+  try { window.addEventListener('storage', function (ev) { if (ev.key === GUARDA) aplica(agora()); }); } catch (e) {}
+  function poeBotao() {
+    if (document.getElementById('btn-tema')) return;
+    var b = document.createElement('button');
+    b.id = 'btn-tema'; b.type = 'button'; b.className = 'botao-tema';
+    b.addEventListener('click', troca);
+    document.body.appendChild(b);
+    aplica(agora());
+  }
+  if (document.body) poeBotao();
+  else document.addEventListener('DOMContentLoaded', poeBotao);
+})();
+</script>
+</head>
+<body>
+<div class="top"><a href="../">← Página inicial</a><div class="passo">Acompanhamento dos relatórios</div></div>
+<div class="wrap" id="app"><div class="card">Carregando…</div></div>
+<script>
+/* ═════════ ACOMPANHAMENTO DOS RELATÓRIOS (pedido do Raphael em 15/10/2026) ═════════
+   Lista os relatórios da pesquisa com a equipe enviados por e-mail, com as respostas (planos de melhoria e prazos)
+   que chegaram, e deixa responder direto pelo app: a resposta sai na mesma conversa do e-mail, para todos,
+   com o histórico, e fica guardada no servidor. Abre pela página inicial (crachá #a=...). */
+const VERSAO = '1.0.0';
+const SERVIDOR_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } } };
+const ESCOPO = (() => {
+  try {
+    const m = /[#&]a=([A-Za-z0-9\-_]+)/.exec(location.hash || ''); if (!m) return null;
+    let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+    const j = JSON.parse(decodeURIComponent(escape(atob(b)))); if (!j || !j.e) return null;
+    return { nome: j.n || j.e, email: j.e, papel: j.p || 'total', unidades: (!j.u || j.u === 'todas') ? null : (Array.isArray(j.u) ? j.u : [j.u]) };
+  } catch (e) { return null; }
+})();
+const podeResponder = () => !!ESCOPO && (ESCOPO.papel === 'admin' || ESCOPO.papel === 'total');
+function conexao(){
+  const proprio = LS.get('mpa_settings', {}) || {};
+  if (proprio.webhook && proprio.chave) return proprio;
+  const outro = ['mpp_settings', 'mp_settings', 'mpc_settings', 'mpco_settings'].map(k => LS.get(k, null)).find(s => s && s.webhook && s.chave);
+  return outro ? { webhook: outro.webhook, chave: outro.chave } : { webhook: SERVIDOR_PADRAO, chave: '' };
+}
+function dh(iso){ const d = new Date(iso); return isNaN(d) ? String(iso || '') : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function dataCurta(v){ const s = String(v || ''); const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m && s.length <= 10) return m[3] + '/' + m[2] + '/' + m[1]; const d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }); }
+function rodadaTxt(r){ const m = /^R(\d+)$/.exec(r || ''); return m ? 'Rodada ' + m[1] : (r || ''); }
+const est = { dados: null, erro: '', carregando: false, busca: '', filtro: 'todos', abertos: {}, rascunhos: {}, msgs: {}, enviando: {} };
+
+async function carregar(){
+  const c = conexao(); if (!c.chave) { render(); return; }
+  est.carregando = true; est.erro = ''; render();
+  try {
+    const u = new URL(c.webhook); u.searchParams.set('op', 'respostas-relatorio'); u.searchParams.set('chave', c.chave);
+    const j = await (await fetch(u.toString())).json();
+    if (!j || !j.ok) throw new Error(j && j.erro === 'chave' ? 'A chave de sincronização não confere.' : 'O servidor não respondeu como esperado.');
+    est.dados = j;
+  } catch (e) { est.erro = (e && e.message) || 'Sem conexão com o servidor.'; }
+  est.carregando = false; render();
+}
+async function responder(id){
+  const c = conexao(), texto = (est.rascunhos[id] || '').trim();
+  if (!texto) { est.msgs[id] = { tipo: 'erro', t: 'Escreva a resposta antes de enviar.' }; render(); return; }
+  est.enviando[id] = true; est.msgs[id] = null; render();
+  try {
+    const r = await (await fetch(c.webhook, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ chave: c.chave, op: 'responder-relatorio', id, texto, autor: ESCOPO ? ESCOPO.nome : '', email: ESCOPO ? ESCOPO.email : '' }) })).json();
+    if (r && r.ok) { est.rascunhos[id] = ''; est.msgs[id] = { tipo: 'ok', t: '✓ Resposta enviada por e-mail para todos da conversa, com o histórico, às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '.' }; est.enviando[id] = false; await carregar(); return; }
+    const nomes = { 'conversa-nao-encontrada': 'não achei a conversa desse relatório no e-mail', 'relatorio-nao-encontrado': 'relatório não encontrado', 'texto-grande': 'texto muito longo' };
+    est.msgs[id] = { tipo: 'erro', t: '✕ A resposta não foi enviada (' + (nomes[r && r.erro] || (r && r.erro) || 'erro') + ').' };
+  } catch (e) { est.msgs[id] = { tipo: 'erro', t: '✕ Sem conexão com o servidor. A resposta não foi enviada.' }; }
+  est.enviando[id] = false; render();
+}
+
+function render(){
+  const app = $('app'), c = conexao();
+  if (!ESCOPO) { app.innerHTML = `<div class="card vazio"><h1>Acompanhamento dos relatórios</h1><p class="muted">Abra esta tela pelo botão <b>Acompanhamento</b> na página inicial, depois de entrar com o seu e-mail.</p><p><a class="btn" href="../">Ir para a página inicial</a></p></div>`; return; }
+  if (!c.chave) { app.innerHTML = `<div class="card"><h1>Acompanhamento dos relatórios</h1><p class="muted">Este aparelho ainda não está ligado ao servidor. Digite a chave de sincronização (a mesma das pesquisas).</p><div class="filtros"><input id="i-chave" type="password" placeholder="chave de sincronização" autocomplete="off"><button class="btn" data-acao="salvachave">Ligar</button></div></div>`; return; }
+  const D = est.dados;
+  let rels = D ? D.relatorios.slice() : [], resp = D ? D.respostas : [];
+  if (ESCOPO.unidades) { const ok = ESCOPO.unidades.map(x => String(x).toUpperCase()); rels = rels.filter(r => ok.includes(String(r.unidade).toUpperCase())); }
+  const porRel = {}; resp.forEach(x => { (porRel[x.relatorio_id] = porRel[x.relatorio_id] || []).push(x); });
+  Object.values(porRel).forEach(l => l.sort((a, b) => String(a.recebido_em).localeCompare(String(b.recebido_em))));
+  const recebidas = id => (porRel[id] || []).filter(x => !String(x.msg_id).startsWith('app-'));
+  const total = rels.length, respondidos = rels.filter(r => recebidas(r.id).length).length;
+  const q = est.busca.trim().toLowerCase();
+  const lista = rels.filter(r => (!q || (r.unidade + ' ' + r.para + ' ' + r.id).toLowerCase().includes(q)) && (est.filtro === 'todos' || (est.filtro === 'pend' ? !recebidas(r.id).length : recebidas(r.id).length)))
+    .sort((a, b) => String(b.enviado_em).localeCompare(String(a.enviado_em)));
+  const topo = `<div class="card"><h1>Acompanhamento dos relatórios</h1>
+    <p class="muted small" style="margin:0">Relatórios das visitas enviados por e-mail, as respostas com os planos de melhoria e prazos, e a sua resposta direto por aqui.</p>
+    <div class="kpis"><div class="kpi"><b>${total}</b><span>relatórios enviados</span></div><div class="kpi"><b>${respondidos}</b><span>com resposta</span></div><div class="kpi"><b>${total - respondidos}</b><span>aguardando resposta</span></div><div class="kpi"><b>${resp.filter(x => !String(x.msg_id).startsWith('app-')).length}</b><span>respostas recebidas</span></div></div>
+    <div class="filtros"><input id="i-busca" type="search" placeholder="Buscar unidade, e-mail ou código" value="${esc(est.busca)}" autocomplete="off">
+      <select id="i-filtro"><option value="todos"${est.filtro === 'todos' ? ' selected' : ''}>Todos</option><option value="pend"${est.filtro === 'pend' ? ' selected' : ''}>Aguardando resposta</option><option value="resp"${est.filtro === 'resp' ? ' selected' : ''}>Com resposta</option></select>
+      <button class="btn light" data-acao="atualizar"${est.carregando ? ' disabled' : ''}>${est.carregando ? 'Atualizando…' : 'Atualizar'}</button></div>
+    ${est.erro ? `<div class="msg erro">${esc(est.erro)}</div>` : ''}</div>`;
+  let corpo;
+  if (!D) corpo = `<div class="card vazio muted">${est.carregando ? 'Buscando os relatórios e as respostas…' : 'Toque em Atualizar.'}</div>`;
+  else if (!lista.length) corpo = `<div class="card vazio muted">${total ? 'Nenhum relatório com esse filtro.' : 'Nenhum relatório foi enviado por e-mail ainda.'}</div>`;
+  else corpo = lista.map(r => {
+    const hs = porRel[r.id] || [], nRec = recebidas(r.id).length, ult = hs.length ? hs[hs.length - 1] : null;
+    const itens = [`<div class="item env"><div class="cab">📤 <b>Relatório enviado</b> para ${esc(r.para)} · ${esc(dh(r.enviado_em))}</div><div class="txt small muted">${esc(r.assunto)}</div></div>`]
+      .concat(hs.map(x => { const app = String(x.msg_id).startsWith('app-'); return `<div class="item ${app ? 'app' : 'rec'}"><div class="cab">${app ? '📤' : '📥'} <b>${esc(x.de)}</b> · ${esc(dh(x.recebido_em))}</div><div class="txt">${esc(x.texto)}</div></div>`; }));
+    const m = est.msgs[r.id];
+    const form = podeResponder() ? `<div style="margin-top:14px"><label class="small" for="t-${esc(r.id)}"><b>Responder pelo app</b> — vai por e-mail para todos da conversa, com todo o histórico, e fica guardado aqui.</label>
+        <textarea id="t-${esc(r.id)}" data-rel="${esc(r.id)}" placeholder="Escreva a resposta (ex.: confirmar os prazos, cobrar uma ação, agradecer).">${esc(est.rascunhos[r.id] || '')}</textarea>
+        ${m ? `<div class="msg ${m.tipo}">${esc(m.t)}</div>` : ''}
+        <div style="margin-top:8px"><button class="btn" data-acao="responder" data-rel="${esc(r.id)}"${est.enviando[r.id] ? ' disabled' : ''}>${est.enviando[r.id] ? 'Enviando…' : 'Enviar resposta'}</button></div></div>` : '';
+    return `<details class="rel" data-rel="${esc(r.id)}"${est.abertos[r.id] ? ' open' : ''}><summary>
+        <div><h2>${esc(r.unidade)} · ${esc(rodadaTxt(r.rodada))} · ${esc(dataCurta(r.data))}</h2>
+          <div class="small muted">Enviado em ${esc(dh(r.enviado_em))} para ${esc(r.para)}${ult ? ' · último movimento ' + esc(dh(ult.recebido_em)) : ''}</div></div>
+        <span class="tag ${nRec ? 'ok' : 'pend'}">${nRec ? nRec + (nRec === 1 ? ' resposta' : ' respostas') : 'Aguardando resposta'}</span></summary>
+      <div class="corpo">${itens.join('')}${form}<div class="small muted" style="margin-top:10px">Código ${esc(r.id)}</div></div></details>`;
+  }).join('');
+  const foco = document.activeElement && document.activeElement.id; const pos = document.activeElement && document.activeElement.selectionStart;
+  app.innerHTML = topo + corpo + `<p class="small muted" style="text-align:center">Acompanhamento v${VERSAO} · ${esc(ESCOPO.nome)}${podeResponder() ? '' : ' · somente visualização'}</p>`;
+  if (foco) { const el = $(foco); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} } }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-acao]'); if (!b || b.disabled) return;
+  const a = b.dataset.acao;
+  if (a === 'atualizar') carregar();
+  else if (a === 'responder') responder(b.dataset.rel);
+  else if (a === 'salvachave') { const v = ($('i-chave') || {}).value || ''; if (v.trim()) { LS.set('mpa_settings', { webhook: SERVIDOR_PADRAO, chave: v.trim() }); carregar(); } }
+});
+document.addEventListener('toggle', e => { const d = e.target; if (d && d.matches && d.matches('details.rel')) est.abertos[d.dataset.rel] = d.open; }, true);
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.id === 'i-busca') { est.busca = el.value; render(); }
+  else if (el.dataset && el.dataset.rel && el.tagName === 'TEXTAREA') est.rascunhos[el.dataset.rel] = el.value;   // guarda sem redesenhar
+});
+document.addEventListener('change', e => { if (e.target.id === 'i-filtro') { est.filtro = e.target.value; render(); } });
+render(); carregar();
+</script>
+<script>
+/* ---- aviso de versão nova (pedido do Raphael em 15/10/2026) ----------------
+   Ao abrir o app (ou voltar para ele), compara a versão publicada (sw.js) com a
+   deste aparelho. Se houver versão nova, aparece um card solto na tela com o
+   botão "Atualizar app", que faz a atualização completa: atualiza o service
+   worker, apaga todas as cópias guardadas, baixa de novo as páginas e recarrega. */
+(() => {
+  if (!/^https?:/.test(location.protocol)) return;
+  const RAIZ = '../';
+  const CHAVE = 'mp_app_versao';
+  const PAGINAS = ['', 'index.html', 'equipe/', 'cliente/', 'painel/', 'conselho/', 'sw.js'];
+  let mostrando = false;
+  async function versaoPublicada() {
+    const t = await (await fetch(RAIZ + 'sw.js?v=' + Date.now(), { cache: 'no-store' })).text();
+    const m = /VERSAO\s*=\s*'([0-9.]+)'/.exec(t); return m ? m[1] : '';
+  }
+  async function versaoAqui() {
+    let v = ''; try { v = localStorage.getItem(CHAVE) || ''; } catch (e) {}
+    if (v) return v;
+    try { const k = (await caches.keys()).find(x => /^pesquisa-maxipark-/.test(x)); if (k) return k.replace('pesquisa-maxipark-', ''); } catch (e) {}
+    return '';
+  }
+  async function atualizarTudo(nova) {
+    try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.update().catch(() => {}))); } } catch (e) {}
+    try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } } catch (e) {}
+    try { await Promise.all(PAGINAS.map(p => fetch(RAIZ + p, { cache: 'reload' }).catch(() => {}))); } catch (e) {}
+    try { localStorage.setItem(CHAVE, nova); } catch (e) {}
+    const u = new URL(location.href); u.searchParams.set('v', nova); location.replace(u.toString());
+  }
+  function card(nova, atual) {
+    if (mostrando || document.getElementById('card-atualizar')) return; mostrando = true;
+    const fundo = document.createElement('div');
+    fundo.id = 'card-atualizar';
+    fundo.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,10,30,.55)';
+    fundo.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="ca-tit" style="max-width:420px;width:100%;background:var(--card,var(--branco,#fff));color:var(--texto,var(--text,#1f1a33));border-radius:18px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.35);text-align:center;font-family:inherit">'
+      + '<div style="font-size:40px;line-height:1">🔄</div>'
+      + '<h2 id="ca-tit" style="margin:10px 0 6px;font-size:21px">Tem atualização do app</h2>'
+      + '<p style="margin:0 0 16px;font-size:16px;opacity:.85">Versão nova: <b>' + nova + '</b>' + (atual ? ' (neste aparelho: ' + atual + ')' : '') + '. Toque em atualizar — leva poucos segundos e nenhuma resposta é perdida.</p>'
+      + '<button type="button" id="ca-sim" style="width:100%;padding:14px 16px;border:0;border-radius:12px;background:#6d28d9;color:#fff;font-size:18px;font-weight:700;cursor:pointer">Atualizar app</button>'
+      + '<button type="button" id="ca-nao" style="width:100%;margin-top:10px;padding:10px;border:0;background:transparent;color:inherit;opacity:.75;font-size:15px;cursor:pointer">Agora não</button></div>';
+    document.body.appendChild(fundo);
+    const sim = document.getElementById('ca-sim');
+    sim.addEventListener('click', () => { sim.disabled = true; sim.textContent = 'Atualizando…'; atualizarTudo(nova); });
+    document.getElementById('ca-nao').addEventListener('click', () => { fundo.remove(); mostrando = false; try { sessionStorage.setItem('mp_adiou_' + nova, '1'); } catch (e) {} });
+  }
+  async function conferir() {
+    if (!navigator.onLine || document.hidden) return;
+    try {
+      const nova = await versaoPublicada(); if (!nova) return;
+      const atual = await versaoAqui();
+      if (!atual) { try { localStorage.setItem(CHAVE, nova); } catch (e) {} return; }   // primeira vez neste aparelho: já veio da rede
+      let manual = false; try { manual = sessionStorage.getItem('mp_atualizou_agora') === '1'; sessionStorage.removeItem('mp_atualizou_agora'); } catch (e) {}
+      if (manual) { try { localStorage.setItem(CHAVE, nova); } catch (e) {} return; }   // acabou de usar o botão de atualizar da tela
+      if (atual === nova) return;
+      try { if (sessionStorage.getItem('mp_adiou_' + nova)) return; } catch (e) {}
+      card(nova, atual);
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', conferir); else conferir();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) conferir(); });
+  document.addEventListener('click', e => {   // os botões de atualizar que já existiam também contam como "atualizado"
+    const b = e.target && e.target.closest && e.target.closest('#btn-atualizar-app, #btn-atualizar-tudo');
+    if (b) { try { sessionStorage.setItem('mp_atualizou_agora', '1'); } catch (x) {} }
+  }, true);
+  window.__aviso = { conferir, atualizarTudo };
+})();
+</script>
+</body>
+</html>
