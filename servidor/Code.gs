@@ -271,38 +271,11 @@ function limpaResposta(t) {   // guarda a resposta inteira com a assinatura e o 
   }
   return out.join('\n').trim().slice(0, 5000);
 }
-function coletaRespostasRelatorios() {   // junta as respostas do Outlook (caixa pesquisa@) e do Gmail antigo
+function coletaRespostasRelatorios() {   // respostas que chegam na caixa pesquisa@ (Outlook). O Gmail pessoal não é mais usado (16/10/2026)
   let n = 0;
   if (outlookConectado()) { try { n += coletaRespostasOutlook(); } catch (e) { Logger.log(e); } }
-  try { n += coletaRespostasGmail(); } catch (e) { Logger.log(e); }
   return n;
 }
-function coletaRespostasGmail() {
-  const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return 0;
-  try {
-    const rels = {};
-    lerAba(ABA_RELATORIOS, COLS_REL).forEach(function (r) { rels[r.id] = r; });
-    if (!Object.keys(rels).length) return 0;
-    const wsA = abaSimples(ABA_RESP_REL, COLS_RESP), vistos = {};
-    lerAba(ABA_RESP_REL, COLS_RESP).forEach(function (r) { vistos[r.msg_id] = true; });
-    const eu = REMETENTE_RELATORIO;   // a conta dona do servidor: o próprio envio não é resposta
-    const novas = [];
-    GmailApp.search('subject:"Relatório da visita" newer_than:365d', 0, 200).forEach(function (th) {
-      const m = /\[(REL-\d{6}-[A-Z0-9]{5})\]/.exec(th.getFirstMessageSubject() || ''); if (!m || !rels[m[1]]) return;
-      const rel = rels[m[1]];
-      th.getMessages().forEach(function (msg) {
-        const id = msg.getId(); if (vistos[id]) return;
-        const de = String(msg.getFrom() || ''); if (eu && de.toLowerCase().indexOf(eu) >= 0) return;
-        vistos[id] = true;
-        novas.push([id, m[1], rel.unidade, rel.rodada, rel.data, semFormula(soEmail(de)), msg.getDate(), semFormula(limpaResposta(msg.getPlainBody()))]);
-      });
-    });
-    if (novas.length) wsA.getRange(wsA.getLastRow() + 1, 1, novas.length, COLS_RESP.length).setValues(novas);
-    return novas.length;
-  } finally { lock.releaseLock(); }
-}
-/* Rode UMA vez pelo editor para o Google pedir a permissão de ler as respostas no Gmail. */
-function autorizarRespostas() { const n = GmailApp.search('subject:"Relatório da visita"', 0, 1).length; Logger.log('Acesso ao Gmail OK (' + n + ')'); return coletaRespostasRelatorios(); }
 /* Rode UMA vez pelo editor para o Google pedir a permissão de enviar e-mail. Não envia nada. */
 function autorizarEmail() { const resta = MailApp.getRemainingDailyQuota(); Logger.log('Permissão de e-mail OK. E-mails que ainda podem sair hoje: ' + resta); return resta; }
 
@@ -336,17 +309,12 @@ function responderRelatorio(b) {
   if (rel.canal === 'outlook') {                       // conversa da caixa pesquisa@ (Outlook)
     if (!outlookConectado()) return { ok: false, erro: 'outlook-desconectado' };
     if (!outlookResponder(id, html)) return { ok: false, erro: 'conversa-nao-encontrada' };
-  } else {                                             // relatórios antigos, enviados pelo Gmail
-    const ths = GmailApp.search('subject:"' + id + '"', 0, 10).filter(function (t) { return (t.getFirstMessageSubject() || '').indexOf(id) >= 0; });
-    if (!ths.length) return { ok: false, erro: 'conversa-nao-encontrada' };
-    const msgs = ths[0].getMessages();
-    msgs[msgs.length - 1].replyAll(texto + '\n\n' + autor, { htmlBody: html, name: 'Pesquisas Maxipark' });
-  }
+  } else return { ok: false, erro: 'relatorio-antigo-gmail' };   // só os testes antigos saíram pelo Gmail pessoal, que não é mais usado
   abaSimples(ABA_RESP_REL, COLS_RESP).appendRow(['app-' + Utilities.getUuid(), id, rel.unidade, rel.rodada, "'" + String(rel.data || '').slice(0, 10), semFormula(email || autor), new Date(), semFormula(texto)]);
   return { ok: true };
 }
 
-/* ---------- Caixa pesquisa@maxipark.com.br (Outlook / Microsoft 365, servidor v19, 16/10/2026) ----------
+/* ---------- Caixa pesquisa@maxipark.com.br (Outlook / Microsoft 365, servidor v22, 16/10/2026: dono pesquisa@, sem Gmail) ----------
    O servidor envia os relatórios, lê as respostas e responde pela caixa pesquisa@ usando o Microsoft Graph,
    com o aplicativo "Pesquisas Maxipark" registrado no Entra (delegado: só age na caixa que entrou nele; sem segredo).
    Para conectar (ou reconectar): rode conectarOutlook() pelo editor, abra o endereço do registro e entre com
