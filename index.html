@@ -447,10 +447,8 @@
       desc: 'Satisfa\u00e7\u00e3o, NPS, os sete pontos do servi\u00e7o e problemas \u2014 por unidade e por m\u00eas.' },
     { id: 'equipe',      nome: 'Resultados \u00b7 EQUIPE', curto: 'EQUIPE', tag: 'Cliente interno', icone: '\ud83d\udc77',
       desc: 'As quinze frases, % Sim ponderado e eNPS \u2014 por unidade e por m\u00eas.' },
-    { id: 'conselho',    nome: 'Resultados \u00b7 CONSELHO', curto: 'CONSELHO', tag: 'Governan\u00e7a', icone: '\ud83c\udfdb\ufe0f',
-      desc: '\u00cdndice da reuni\u00e3o, blocos por conselheiro e itens avaliados.' },
     { id: 'consolidado', nome: 'Painel CONSOLIDADO', curto: 'CONSOLIDADO', tag: 'Vis\u00e3o geral', icone: '\ud83d\udcca',
-      desc: 'As tr\u00eas pesquisas numa visão s\u00f3: indicadores lado a lado, unidades e tend\u00eancia.' }
+      desc: 'Clientes e equipe numa visão s\u00f3: indicadores lado a lado, unidades e tend\u00eancia.' }
   ];
   const UNIDADES_PADRAO = [['AC.CAST','Aclimação'],['AC.PIRES MOTA','Aclimação'],['AC.TAMAN','Aclimação'],['ALTA.PIN','Alto de Pinheiros'],['DEL.PINHEIROS','Alto de Pinheiros'],['FL.VILLA','Alto de Pinheiros'],['SAL. LAPA','Alto de Pinheiros'],['ALTA.AFRAN','Anália Franco'],['ALSANT','Bela Vista'],['FIESP','Bela Vista'],['FL.PARA','Bela Vista'],['GAZETA','Bela Vista'],['A+CBEL','Campo Belo'],['ALTA.CBEL','Campo Belo'],['DEL. BROOKLIN','Campo Belo'],['PET.CBEL','Campo Belo'],['A+BRAZ','Casa Verde'],['FL.OSCAR','Cidade Jardim'],['SAL. TATUAPÉ','Cidade Mãe do Céu'],['HABITAT','Consolação'],['LAV. ANGÉLICA I','Consolação'],['SAL. ANGÉLICA','Consolação'],['YAMAMURA / CLIENTES','Consolação'],['ALTA.HIGI','Higienópolis'],['FL.IBIRA (REP II)','Ibirapuera'],['FL.REPUB (REP I)','Ibirapuera'],['VITA.REP','Ibirapuera'],['A+MOEMA','Indianopólis'],['VET.MOE','Indianopólis'],['FL.MOEMA','Indianópolis'],['DEL.RICARDO JAFET','Ipiranga'],['FL.IPIRA','Ipiranga'],['LAV. LABATUT','Ipiranga'],['DEL. ITAIM BIBI','Itaim Bibi'],['A+NOVEJULHO','Jardim America'],['FL.JARD','Jardim America'],['NSB','Jardim America'],['A+CANT','Jardim Franca'],['AC.ITAIM','Jardim Paulista'],['FLEURY JAÚ','Jardim Paulista'],['INCOR','Jardim Paulista'],['SAL. SANTANA','Jardim São Paulo'],['A+LEON','Jardim São Paulo (Zona Norte)'],['DEL.DUMONT VILLARES','Jardim São Paulo (Zona Norte)'],['FL.KLAB','Jardim Vila Mariana'],['ALTA.JARD','Jardins'],['ENTREPOSTO','Jd. Europa'],['A+LAPA','Lapa'],['BR.LAPA','Lapa'],['DEL.LAPA','Lapa'],['LAV. LAPA LV','Lapa'],['AC.PRUDE','Liberdade'],['B.P MIRANTE','Liberdade'],['B.P PAULISTA','Liberdade'],['ABIMAQ','Mirandópolis'],['ALTA.MOE','Moema'],['FL.VNC (REP III)','Moema'],['LAV. MOEMA','Moema'],['MONTREAL','Moema'],['SAL. MOEMA','Moema'],['VITA.MOE','Moema'],['DEL. MOOCA','Mooca'],['FL.MORU','Morumbi'],['FL.CBEL','Parque Jabaquara'],['LAV. AMADOR BUENO','Penha de França'],['DEL.SUMARÉ','Perdizes'],['FL.SUMA','Perdizes'],['VITA.PER','Perdizes'],['A+PEDROSO','Pinheiros'],['ALTA.IBI','Pinheiros'],['LACERDA','Pinheiros'],['QUITANDA','Pinheiros'],['SAL. IBIRAPUERA','Planalto Paulista'],['BR.PAIS','República'],['LAV. ANGÉLICA II','Santa Cecilia'],['A+ AUGU','Santana'],['DEL. ALTO DE SANTANA','Santana'],['DEL. BRAZ LEME','Santana'],['FL.BRAZ','Santana'],['LAV. DARZAN','Santana'],['DEL. WASHINGTON LUIS','Santo Amaro'],['FL.POLARIS','Santo Amaro'],['A+HEIT','Sumarezinho'],['DEL.TATUAPÉ','Tatuapé'],['FL.AFRA','Tatuapé'],['LAV. TUCURUVI','Tucuruvi'],['ALTA.PAN','Vila Andrade'],['DEL. JARDIM SUL','Vila Andrade'],['SAL. PANAMBY','Vila Andrade'],['DEL.23 DE MAIO','Vila Clementino'],['FL.VMAR','Vila Clementino'],['GLOBO SP','Vila Cordeiro'],['VITA.FRAN','Vila Formosa'],['LAV. EUCLIDES PACHECO','Vila Gomes Cardim'],['A+QUEIROZ','Vila Hamburguesa'],['CVLOP','Vila Hamburguesa'],['FL.WEBER','Vila Leopoldina'],['S.SANTA','Vila Mariana'],['SAL. PARAÍSO','Vila Mariana'],['SAL. VILA MARIANA','Vila Mariana'],['FL.ITAIM','Vila Nova Conceição'],['LAV. JABAQUARA LV','Vila Parque Jabaquara'],['DEL.POMPEIA','Vila Pompéia'],['DEL. BUTANTÃ','Vila Progredior'],['SAL. PORTAL','Vila Suzana'],['PAINEIR','Vila da Saúde'],['LAV. BORBA GATO','Vila das Monções'],['A+ALPHA','18 Do Forte Empresarial / Barueri'],['DEL.ALPHAVILLE','Alphaville / Barueri'],['FL.ALPHA','Alphaville / Barueri'],['SEMEADOR','Alphaville / Barueri'],['ARAGUAI','Alphaville Industrial / Barueri'],['CLI.AXIAL','Funcionários / Belo Horizonte'],['HERMES PARTINI BH','Funcionários / Belo Horizonte'],['OCULARE','Santa Efigenia / Belo Horizonte'],['BETIM','Riacho de Areias / Betim'],['FL.CAMP','Vila Lídia / Campinas'],['VILLAGIO','Rio Branco / Cariacica'],['FL.VIANA','Vila Santo Antônio / Cotia'],['BLUE.CENTER','Centro / Florianópolis'],['CARL','Centro / Florianópolis'],['FERLIMA','Centro / Florianópolis'],['H. VALERIM','Centro / Florianópolis'],['HOTEL VALERIM','Centro / Florianópolis'],['NOVOTEL','Centro / Florianópolis'],['PETZ SC','Centro / Florianópolis'],['TROMP.MC','Centro / Florianópolis'],['BEIRAMAR','Estreito / Florianópolis'],['A+GUARULHOS','Macedo / Guarulhos'],['DEL. GUARULHOS','Vila das Palmeiras / Guarulhos'],['SHOPPING PAINEIRAS','Chácara Urbana / Jundiaí'],['SIEMENS','Distrito Indusrial / Jundiaí'],['FL.JUND','Jardim Brasil / Jundiaí'],['DEL.OSASCO','Centro / Osasco'],['SAL. OSASCO','Centro / Osasco'],['A+AGUIAR','Boa Viagem / Recife'],['A+CONSELHEIRO','Boa Viagem / Recife'],['JANETE','Boa Viagem / Recife'],['JANETE COSTA','Boa Viagem / Recife'],['TORREÃO','Encruzilhada / Recife'],['A+DAHORA','Espinheiro / Recife'],['TR.ESPI','Espinheiro / Recife'],['A+JAQUEIRA','Graças / Recife'],['GERALDÃO','Imbiribeira / Recife'],['FM - BARRA TIJUCA','Barra da tijuca / Rio de Janeiro'],['TOK.RIO','Barra da tijuca / Rio de Janeiro'],['Globo EG','Curicica / Rio de Janeiro'],['FM - JARDIM BOTANICO','Jardim Botanico / Rio de Janeiro'],['GLOBO RJ','Jardim Botanico / Rio de Janeiro'],['DIVINA','Jardim Botânico / Rio de Janeiro'],['Globo 695','Jardim Botânico / Rio de Janeiro'],['LQ303','Jardim Botânico / Rio de Janeiro'],['PL70','Jardim Botânico / Rio de Janeiro'],['A+MADU','Madureira / Rio de Janeiro'],['PUNTO','Vila da Penha / Rio de Janeiro'],['DEL.SANTO ANDRÉ I','Centro / Santo André'],['A+SAND','Jardim / Santo André'],['DEL.SANTO ANDRÉ II','Jardim / Santo André'],['FL.SAND','Jardim Santo André / Santo André'],['FL.SAND-II','Jardim Santo André / Santo André'],['DEL.SANTOS','Campo Grande / Santos'],['DEL.SÃO BERNARDO','Centro / São Bernardo do Campo'],['FL.SBC','Centro / São Bernardo do Campo'],['HERMES PARTINI','Centro / São Bernardo do Campo'],['FL.SCAE','Santo Antônio / São Caetano do Sul'],['A+SGON','Antonina / São Gonçalo'],['BR.SJOSE','Campinas / São José'],['BR.VVEL','Centro / Vila Velha'],['BR.JERO','Centro / Vitória']];
   function lerUnidades(){
@@ -525,7 +523,7 @@
       if (!s || !s.salt) return { erro: 'rede' };
       const hash = await derivar(senha, s.salt, s.iter);
       const r = await postServidor({ op: 'entrar', email, hash });
-      if (r && r.ok && r.conta) return { conta: r.conta, sairTodos: r.sairTodos };
+      if (r && r.ok && r.conta) return { conta: r.conta, sairTodos: r.sairTodos, chave: r.chave };
       return { erro: (r && r.erro) || 'nao-confere' };
     } catch (e) { return { erro: 'rede' }; }
   }
@@ -603,6 +601,19 @@
     }
   }, true);
 
+  /* liga o aparelho ao servidor sozinho, para qualquer usuário, sem ninguém precisar saber a chave (17/10/2026):
+     o servidor entrega a chave a quem prova a senha. */
+  async function ligaAparelho(c, k) {
+    if (chaveDoAparelho()) return;
+    try {
+      if (!k && c && c.hash) { const r = await postServidor({ op: 'entrar', email: c.email, hash: c.hash }); if (r && r.ok) k = r.chave || ''; }
+      if (!k) return;
+      guardaChave(k); try { localStorage.removeItem(GUARDA_DEPOIS); } catch (e) {}
+      reg('ligou o aparelho ao servidor', { detalhe: 'automático, ao entrar' });
+      sincronizaUsuarios(); pintaEstadoSync();
+    } catch (e) {}
+  }
+
   // ───────── entrar / sair ─────────
   async function entrar() {
     const email = norm($('i-email').value), senha = $('i-senha').value, err = $('erro-entrada');
@@ -610,7 +621,7 @@
     if (!email || !senha) { err.textContent = 'Preencha e-mail e senha.'; err.hidden = false; return; }
     let c = dados.contas.find(x => x.email === email);
     const b = $('btn-entrar'); b.disabled = true; b.textContent = 'Verificando…';
-    let ok = false, erroSrv = '';
+    let ok = false, erroSrv = '', chaveRecebida = '';
     try { ok = !!c && !!c.hash && (await derivar(senha, c.salt, c.iter)) === c.hash; } catch (e) { ok = false; }
     if (!ok) {   /* confere no servidor: vale para quem acabou de criar a senha ou entra num aparelho novo */
       const r = await entrarPeloServidor(email, senha);
@@ -618,7 +629,7 @@
         const i = dados.contas.findIndex(x => x.email === email);
         if (i >= 0) dados.contas[i] = r.conta; else dados.contas.push(r.conta);
         if (r.sairTodos) dados.sairTodos = r.sairTodos;
-        guardaUsuarios(dados); c = r.conta; ok = true;
+        guardaUsuarios(dados); c = r.conta; ok = true; chaveRecebida = r.chave || '';
       } else erroSrv = r.erro || '';
     }
     b.disabled = false; b.textContent = 'Entrar';
@@ -635,6 +646,7 @@
     try { if (window.__historico) window.__historico.defineQuem({ nome: c.nome, email: c.email }); } catch (e) {}
     reg('entrou', { detalhe: NOME_PAPEL[c.papel] || c.papel });
     try { if (window.__historico) window.__historico.envia(); } catch (e) {}
+    await ligaAparelho(c, chaveRecebida);   /* qualquer usuário: o aparelho se liga ao servidor sozinho */
     ir((!chaveDoAparelho() && !adiado()) ? 'chave' : 'inicio');
   }
   function sairDaConta() {
@@ -990,7 +1002,6 @@
         '<div class="caixas">' +
           '<label class="cx"><input type="checkbox" data-epq="clientes"' + marcado('clientes') + '> \ud83d\ude97 Clientes</label>' +
           '<label class="cx"><input type="checkbox" data-epq="equipe"' + marcado('equipe') + '> \ud83d\udc77 Equipe</label>' +
-          '<label class="cx"><input type="checkbox" data-epq="conselho"' + marcado('conselho') + '> \ud83c\udfdb\ufe0f Conselho</label>' +
           (papel === 'aplicar' ? '' : '<label class="cx"><input type="checkbox" data-epq="consolidado"' + marcado('consolidado') + '> \ud83d\udcca Consolidado</label>') +
         '</div>' +
         '<span class="rot">Quais unidades</span>' +
@@ -1010,7 +1021,7 @@
   function limpaEdicao() { editando = null; editPapel = null; editPq = null; editUn = null; }
   function leEditor() {
     const papel = (document.querySelector('input[name=e-papel]:checked') || {}).value || 'total';
-    if (papel === 'total' || papel === 'gestor') return { papel, pesquisas: ['clientes','equipe','conselho','consolidado'], unidades: 'todas' };
+    if (papel === 'total' || papel === 'gestor') return { papel, pesquisas: ['clientes','equipe','consolidado'], unidades: 'todas' };
     const pesquisas = Array.from(document.querySelectorAll('[data-epq]')).filter(i => i.checked).map(i => i.dataset.epq);
     const todas = (document.getElementById('e-un-todas') || {}).checked;
     const unidades = todas ? 'todas' : Array.from(document.querySelectorAll('[data-eun]')).filter(i => i.checked).map(i => i.dataset.eun);
@@ -1055,7 +1066,7 @@
       const selos = [
         '<span class="selo">' + NOME_PAPEL[c.papel] + '</span>',
         (c.papel === 'total' || c.papel === 'gestor' || c.papel === 'admin') ? '' :
-          '<span class="selo">' + (nomes.length === 4 ? 'Tudo' : (nomes.join(' · ') || 'Nada')) + '</span>' +
+          '<span class="selo">' + (['clientes','equipe','consolidado'].every(k => (c.pesquisas || []).includes(k)) ? 'Tudo' : (nomes.filter(x => x !== 'Conselho').join(' · ') || 'Nada')) + '</span>' +
           '<span class="selo">' + txtUn(c.unidades) + '</span>',
         c.bloqueado ? '<span class="selo no">Bloqueado</span>' : (c.pendente && !c.hash ? '<span class="selo">Aguardando criar a senha</span>' : '<span class="selo ok">Ativo</span>'),
         c.admin ? '<span class="selo adm">Administrador</span>' : ''
@@ -1149,7 +1160,7 @@
     const nome = $('c-nome').value.trim(), email = norm($('c-email').value);
     const papel = document.querySelector('input[name=papel]:checked').value;
     const completo = papel === 'total' || papel === 'gestor';
-    const pesquisas = completo ? ['clientes','equipe','conselho','consolidado'] : lePq();
+    const pesquisas = completo ? ['clientes','equipe','consolidado'] : lePq();
     const unidades = completo ? 'todas' : leUn();
     if (!nome) return falha('Escreva o nome da pessoa.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return falha('E-mail inválido.');
@@ -1187,7 +1198,7 @@
   document.addEventListener('change', ev => {
     if (ev.target.name === 'e-papel') {   /* so troca o papel: as marcacoes vem do que a pessoa ja tem */
       editPapel = ev.target.value;
-      if (editPapel === 'total' || editPapel === 'gestor') { editPq = ['clientes','equipe','conselho','consolidado']; editUn = 'todas'; }
+      if (editPapel === 'total' || editPapel === 'gestor') { editPq = ['clientes','equipe','consolidado']; editUn = 'todas'; }
       admin(); return; }
     if (ev.target.dataset && (ev.target.dataset.epq || ev.target.dataset.eun || ev.target.id === 'e-un-todas')) {
       if (ev.target.id === 'e-un-todas' && ev.target.checked) document.querySelectorAll('[data-eun]').forEach(i => { i.checked = false; });
@@ -1338,6 +1349,7 @@
   tela = sessao ? 'inicio' : 'entrada';
   pinta();
   if (modoSenha) abreTelaSenha();
+  if (sessao && !chaveDoAparelho()) ligaAparelho(sessao).then(() => { if (chaveDoAparelho() && tela === 'chave') ir('inicio'); });
 
   /* o cadastro vem do servidor: ao abrir, de 2 em 2 minutos, e ao voltar para a aba */
   sincronizaUsuarios();
