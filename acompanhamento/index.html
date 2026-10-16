@@ -143,7 +143,7 @@
    Lista os relatórios da pesquisa com a equipe enviados por e-mail, com as respostas (planos de melhoria e prazos)
    que chegaram, e deixa responder direto pelo app: a resposta sai na mesma conversa do e-mail, para todos,
    com o histórico, e fica guardada no servidor. Abre pela página inicial (crachá #a=...). */
-const VERSAO = '1.0.0';
+const VERSAO = '1.0.1';
 const SERVIDOR_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -163,6 +163,7 @@ function conexao(){
   const outro = ['mpp_settings', 'mp_settings', 'mpc_settings', 'mpco_settings'].map(k => LS.get(k, null)).find(s => s && s.webhook && s.chave);
   return outro ? { webhook: outro.webhook, chave: outro.chave } : { webhook: SERVIDOR_PADRAO, chave: '' };
 }
+function soEmail(de){ const m = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.exec(String(de || '')); return m ? m[0].toLowerCase() : String(de || '').trim(); }   // no histórico fica só o e-mail de quem respondeu
 function dh(iso){ const d = new Date(iso); return isNaN(d) ? String(iso || '') : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function dataCurta(v){ const s = String(v || ''); const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m && s.length <= 10) return m[3] + '/' + m[2] + '/' + m[1]; const d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }); }
 function rodadaTxt(r){ const m = /^R(\d+)$/.exec(r || ''); return m ? 'Rodada ' + m[1] : (r || ''); }
@@ -219,7 +220,7 @@ function render(){
   else corpo = lista.map(r => {
     const hs = porRel[r.id] || [], nRec = recebidas(r.id).length, ult = hs.length ? hs[hs.length - 1] : null;
     const itens = [`<div class="item env"><div class="cab">📤 <b>Relatório enviado</b> para ${esc(r.para)} · ${esc(dh(r.enviado_em))}</div><div class="txt small muted">${esc(r.assunto)}</div></div>`]
-      .concat(hs.map(x => { const app = String(x.msg_id).startsWith('app-'); return `<div class="item ${app ? 'app' : 'rec'}"><div class="cab">${app ? '📤' : '📥'} <b>${esc(x.de)}</b> · ${esc(dh(x.recebido_em))}</div><div class="txt">${esc(x.texto)}</div></div>`; }));
+      .concat(hs.map(x => { const app = String(x.msg_id).startsWith('app-'); return `<div class="item ${app ? 'app' : 'rec'}"><div class="cab">${app ? '📤' : '📥'} <b>${esc(soEmail(x.de))}</b>${app ? ' · enviado pelo app' : ''} · ${esc(dh(x.recebido_em))}</div><div class="txt">${esc(x.texto)}</div></div>`; }));
     const m = est.msgs[r.id];
     const form = podeResponder() ? `<div style="margin-top:14px"><label class="small" for="t-${esc(r.id)}"><b>Responder pelo app</b> — vai por e-mail para todos da conversa, com todo o histórico, e fica guardado aqui.</label>
         <textarea id="t-${esc(r.id)}" data-rel="${esc(r.id)}" placeholder="Escreva a resposta (ex.: confirmar os prazos, cobrar uma ação, agradecer).">${esc(est.rascunhos[r.id] || '')}</textarea>
