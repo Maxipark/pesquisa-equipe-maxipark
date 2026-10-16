@@ -254,7 +254,7 @@
       <button id="btn-enviar-link" class="leve" type="button">Enviar link por e-mail</button>
       <p id="msg-esqueci" class="aviso-ok" hidden></p>
     </div>
-    <p style="font-size:14px">Por segurança, o acesso expira depois de alguns dias sem entrar de novo (7 dias para administrador, 30 para os demais).</p>
+    <p style="font-size:14px">Este aparelho fica conectado até você tocar em “Sair da conta”.</p>
   </section>
 
   <!-- CRIAR / TROCAR SENHA (link recebido por e-mail) -->
@@ -611,13 +611,6 @@
       apaga();
       const err = $('erro-entrada');
       err.textContent = 'O acesso de ' + c.nome.split(' ')[0] + ' foi bloqueado. Entre com outro e-mail.';
-      err.hidden = false; return;
-    }
-    const limite = (c.papel === 'admin' ? 7 : 30) * 864e5;   /* o acesso expira: 7 dias para administrador, 30 para os demais */
-    if (horaDoLogin() > 0 && Date.now() - horaDoLogin() > limite) {
-      apaga();
-      const err = $('erro-entrada');
-      err.textContent = 'Por segurança, o seu acesso expirou. Entre de novo com o seu e-mail e a senha.';
       err.hidden = false; return;
     }
     sessao = c;
