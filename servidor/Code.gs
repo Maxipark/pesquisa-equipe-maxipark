@@ -515,7 +515,7 @@ function entrarPeloServidor(b) {   // público: confere a prova e devolve o perf
   if (!c || !c.hash || String(b.hash || '') !== c.hash) { cache.put(k, String(n + 1), 900); return { ok: false, erro: 'nao-confere' }; }
   if (c.bloqueado) return { ok: false, erro: 'bloqueado' };
   cache.remove(k);
-  return { ok: true, conta: c, sairTodos: d.sairTodos || 0 };
+  return { ok: true, conta: c, sairTodos: d.sairTodos || 0, chave: CHAVE };   // a chave liga o aparelho ao servidor sozinho (17/10/2026)
 }
 
 /* ---------- PIN de cada usuário que aplica pesquisa (17/10/2026) ----------
@@ -543,3 +543,6 @@ function protegeCredenciais(novo) {   // no "salvar usuários" do administrador,
   });
   return novo;
 }
+
+/* Conselho desativado (15/10/2026): rode UMA vez pelo editor para esconder a aba da planilha (nada é apagado). */
+function esconderAbaConselho() { const a = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Conselho'); if (a) a.hideSheet(); Logger.log(a ? 'Aba Conselho escondida' : 'Aba Conselho não existe'); }
