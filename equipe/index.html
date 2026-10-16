@@ -763,6 +763,7 @@ function viewFim(){
 
 /* Respostas dos e-mails do relatório (plano de melhoria e prazos): o servidor procura no Gmail as respostas
    ao código do relatório e devolve todas — pode haver várias por relatório. Ficam no histórico desta unidade e rodada. */
+function soEmail(de){ const m = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.exec(String(de || '')); return m ? m[0].toLowerCase() : String(de || '').trim(); }   // no histórico fica só o e-mail de quem respondeu
 function dhBR(iso){ const d = new Date(iso); return isNaN(d) ? String(iso || '') : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function carregaRespRel(){
   if (!syncOk() || state.relRespCarregando) return;
@@ -784,7 +785,7 @@ function blocoRespostasRel(){
     const rs = R.respostas.filter(x => x.relatorio_id === rel.id).sort((a, b) => String(a.recebido_em).localeCompare(String(b.recebido_em)));
     return `<div style="margin:10px 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px">
       <div class="small muted">Relatório ${esc(rel.id)} · enviado em ${esc(dhBR(rel.enviado_em))} para ${esc(rel.para)}</div>
-      ${rs.length ? rs.map(x => `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)"><b>${esc(x.de)}</b> <span class="small muted">· ${esc(dhBR(x.recebido_em))}</span><div style="white-space:pre-wrap;margin-top:4px">${esc(x.texto)}</div></div>`).join('') : '<p class="muted" style="margin:8px 0 0">Ainda sem resposta.</p>'}
+      ${rs.length ? rs.map(x => `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)"><b>${esc(soEmail(x.de))}</b> <span class="small muted">${String(x.msg_id || '').startsWith('app-') ? '· enviado pelo app ' : ''}· ${esc(dhBR(x.recebido_em))}</span><div style="white-space:pre-wrap;margin-top:4px">${esc(x.texto)}</div></div>`).join('') : '<p class="muted" style="margin:8px 0 0">Ainda sem resposta.</p>'}
     </div>`;
   }).join('');
   const n = R && R.ok ? R.respostas.length : 0;
