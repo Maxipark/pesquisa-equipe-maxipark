@@ -302,6 +302,31 @@ const PIN_MAX_FAILS = 5, PIN_LOCK_MS = 60000;
 // PIN programado pelo gestor (pedido de 2026-09-09): já vem definido, sem a etapa "Crie o PIN". Pode ser trocado em Configurações → Trocar PIN.
 // Atenção: este código é público (GitHub Pages); quem ler o arquivo conhece o PIN padrão.
 const PIN_PADRAO = '2819', PIN_PADRAO_MARCA = '2819-2026-09-09';
+
+/* ---------- PIN de quem abriu a pesquisa (17/10/2026) ----------
+   Cada usuário que aplica pesquisa tem o próprio PIN, criado na página inicial. Ele vem no crachá (#a=...)
+   como sal + impressão SHA-256 e fica guardado neste aparelho, para conferir sem internet.
+   Sem crachá (pesquisa aberta direto, sem entrar na página inicial), vale o PIN do tablet. */
+const PIN_USUARIO = (() => {
+  try {
+    const m = /[#&]a=([A-Za-z0-9\-_]+)/.exec(location.hash || '');
+    if (m) {
+      let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+      const j = JSON.parse(decodeURIComponent(escape(atob(b))));
+      if (j && j.k && /^[0-9a-f]{32}$/.test(j.k.s) && /^[0-9a-f]{64}$/.test(j.k.h)) {
+        const o = { nome: j.n || j.e, email: j.e, s: j.k.s, h: j.k.h };
+        localStorage.setItem('mp_pin_usuario', JSON.stringify(o)); return o;
+      }
+      if (j && j.e) { localStorage.removeItem('mp_pin_usuario'); return null; }
+    }
+    const g = JSON.parse(localStorage.getItem('mp_pin_usuario') || 'null');
+    return g && g.s && g.h ? g : null;
+  } catch (e) { return null; }
+})();
+async function confereComPinUsuario(pin) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PIN_USUARIO.s + ':' + pin));
+  return Array.from(new Uint8Array(d)).map(x => x.toString(16).padStart(2, '0')).join('') === PIN_USUARIO.h;
+}
 // Senha separada para "Zerar todo o histórico" (pedido do gestor): padrão 5541, trocável em Configurações → Trocar senha de zerar.
 const SENHA_ZERAR_PADRAO = '5541', SENHA_ZERAR_MARCA = '5541-2026-09-09';
 
@@ -801,7 +826,8 @@ function viewPin(){
   const keys = ['1','2','3','4','5','6','7','8','9','←','0','OK'];
   return header('Área do usuário', 0) + `<div class="wrap"><div class="card" style="max-width:520px">
     ${logoHero()}
-    <h2 style="text-align:center">${state.pinTarget === 'zerar' ? 'Confirmação final: digite a senha de zerar' : 'Digite o PIN do usuário'}</h2>
+    <h2 style="text-align:center">${state.pinTarget === 'zerar' ? 'Confirmação final: digite a senha de zerar' : (PIN_USUARIO ? 'Digite o seu PIN' : 'Digite o PIN do usuário')}</h2>
+    ${state.pinTarget !== 'zerar' && PIN_USUARIO ? `<p class="muted" style="text-align:center;margin:-6px 0 6px">PIN de ${esc(PIN_USUARIO.nome)}</p>` : ''}
     <input type="text" id="pin-input" class="pininput" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" enterkeyhint="done" placeholder="toque nos números ou digite aqui" value="${esc(state.pin)}" ${locked ? 'disabled' : ''}>
     ${state.pinTarget === 'zerar' ? '<div class="bad">A senha de zerar é diferente do PIN do usuário (troca em Configurações). Ao confirmar, todas as respostas, recusas, rodadas e importadas deste tablet são apagadas. Isso não tem volta.</div>' : ''}
     ${current ? '<div class="warn">Há uma pesquisa em andamento. Ao entrar, ela será descartada sem gravar.</div>' : ''}
@@ -1772,12 +1798,14 @@ function handle(action, el){
       else if (k === 'OK') {
         if (!state.pin) { toast(state.pinTarget === 'zerar' ? 'Digite a senha de zerar e toque em OK.' : 'Digite o PIN e toque em OK.'); return; }
         const alvo = state.pinTarget === 'zerar' ? (settings.senhaZerar || SENHA_ZERAR_PADRAO) : settings.pin;
-        if (state.pin === alvo) { state.pin = ''; settings.pinFails = 0; saveSettings(); const had = !!current; current = null; if (state.pinTarget === 'zerar') { zerarHistorico(); state.cf = null; toast('Histórico zerado. Tablet pronto para começar do zero.'); go('setup'); return; } go(state.pinTarget, { fin: state.pinFin, notice: had ? 'Uma pesquisa em andamento foi descartada sem gravar.' : '' }); }
+        (async () => { const okPin = (state.pinTarget !== 'zerar' && PIN_USUARIO) ? await confereComPinUsuario(state.pin) : state.pin === alvo;
+        if (okPin) { state.pin = ''; settings.pinFails = 0; saveSettings(); const had = !!current; current = null; if (state.pinTarget === 'zerar') { zerarHistorico(); state.cf = null; toast('Histórico zerado. Tablet pronto para começar do zero.'); go('setup'); return; } go(state.pinTarget, { fin: state.pinFin, notice: had ? 'Uma pesquisa em andamento foi descartada sem gravar.' : '' }); }
         else {
           state.pin = ''; settings.pinFails = (settings.pinFails || 0) + 1;
           if (settings.pinFails >= PIN_MAX_FAILS) { settings.lockUntil = Date.now() + PIN_LOCK_MS; settings.pinFails = 0; }
           saveSettings(); toast(state.pinTarget === 'zerar' ? 'Senha de zerar incorreta.' : 'PIN incorreto.'); render();
         }
+        })();
         return;
       } else if (state.pin.length < 8) state.pin += k;
       render(); break;
