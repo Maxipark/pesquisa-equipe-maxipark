@@ -359,7 +359,7 @@ function nuvem(){ const n = LS.get('mpp_nuvem', {}) || {}; return { equipe: n.eq
 let poolCache = null;
 function pool(){
   const P = poolBruto();
-  if (!ESCOPO || ESCOPO.papel === 'total' || ESCOPO.papel === 'admin') return P;
+  if (!ESCOPO || ESCOPO.papel === 'total' || ESCOPO.papel === 'gestor' || ESCOPO.papel === 'admin') return P;
   const ok = k => (ESCOPO.pesquisas || []).indexOf(k) >= 0;
   return { origem: P.origem,
     equipe:   ok('equipe')   ? P.equipe   : [],
@@ -460,7 +460,7 @@ function calc(cf){ travaUnidade(cf);
 /* ---------------- telas ---------------- */
 function abasLiberadas(){
   const todas = ['clientes', 'equipe', 'conselho', 'consolidado'];
-  if (!ESCOPO || ESCOPO.papel === 'admin' || ESCOPO.papel === 'total') return todas;
+  if (!ESCOPO || ESCOPO.papel === 'admin' || ESCOPO.papel === 'total' || ESCOPO.papel === 'gestor') return todas;
   const q = ESCOPO.pesquisas || [];
   const l = todas.filter(k => q.indexOf(k) >= 0);
   return l.length ? l : ['consolidado'];
