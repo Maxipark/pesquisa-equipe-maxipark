@@ -23,7 +23,11 @@ function verificaChave(chave) {   // devolve null se está tudo certo, ou a resp
 function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (body.op === 'recuperar-senha') return json(recuperarSenha(body));   // públicos: esqueci a senha, criar senha pelo link e entrar
+    if (body.op === 'definir-senha') return json(definirSenha(body));
+    if (body.op === 'entrar') return json(entrarPeloServidor(body));
     const erro = verificaChave(body.chave); if (erro) return erro;
+    if (body.op === 'convidar') return json(convidarUsuario(body));   // administrador: manda o e-mail de primeiro acesso
     if (body.op === 'relatorio-equipe') return json(enviaRelatorioEquipe(body.relatorio || {}));   // relatorio da visita (pesquisa com a equipe) por e-mail
     if (body.op === 'responder-relatorio') return json(responderRelatorio(body));   // resposta escrita no app: sai na mesma conversa do e-mail, com o histórico
     if (body.op === 'historico-add') {            // eventos novos vindos dos apps
@@ -107,6 +111,8 @@ function doGet(e) {
   try {
     const p = (e && e.parameter) || {};
     if (p.state && (p.code || p.error)) return outlookRetorno(e);   // volta do login da Microsoft (conectar a caixa pesquisa@)
+    if (p.op === 'token-info') return json(infoToken(p));   // públicos: dados do link de senha e sal para entrar
+    if (p.op === 'sal') return json(salDoUsuario(p));
     const erro = verificaChave(p.chave); if (erro) return erro;
     if (p.op === 'respostas-relatorio') {            // relatórios enviados + respostas recebidas por e-mail (filtra por unidade e rodada)
       let novas = 0, aviso = '';
@@ -420,4 +426,93 @@ function outlookResponder(id, html) {   // responde a todos na conversa do relat
   graph('patch', '/me/messages/' + rascunho.id, { body: { contentType: 'HTML', content: html } });
   graph('post', '/me/messages/' + rascunho.id + '/send', {});
   return true;
+}
+
+/* ---------- Acesso dos usuários (17/10/2026): convite por e-mail, primeiro acesso, "esqueci minha senha"
+   e entrada pelo servidor. O administrador cadastra só nome, e-mail e nível; a pessoa recebe um link
+   (válido por 3 dias) para criar a própria senha. "Esqueci minha senha" manda um link válido por 2 horas.
+   O servidor nunca recebe a senha: o aparelho calcula a prova (PBKDF2) e só ela é guardada e conferida. ---------- */
+const APP_URL = 'https://maxipark.github.io/pesquisa-equipe-maxipark/';
+function lerUsuarios() { const v = abaUsuarios().getRange(1, 1).getValue(); try { return JSON.parse(v || '{}') || {}; } catch (e) { return {}; } }
+function salvarUsuarios(d) { abaUsuarios().getRange(1, 1).setValue(JSON.stringify(d)); }
+function hexSha(t) { return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(t), Utilities.Charset.UTF_8).map(function (b) { return ('0' + ((b + 256) % 256).toString(16)).slice(-2); }).join(''); }
+function contaPorEmail(d, email) { email = String(email || '').trim().toLowerCase(); return ((d && d.contas) || []).filter(function (c) { return String(c.email || '').toLowerCase() === email; })[0]; }
+function criaToken(email, tipo, horas) {
+  const props = PropertiesService.getScriptProperties(), agora = Date.now(), todas = props.getProperties();
+  Object.keys(todas).forEach(function (k) { if (k.indexOf('tok_') === 0) { try { if (JSON.parse(todas[k]).exp < agora) props.deleteProperty(k); } catch (e) { props.deleteProperty(k); } } });
+  const t = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+  props.setProperty('tok_' + hexSha(t), JSON.stringify({ email: email, tipo: tipo, exp: agora + horas * 3600000 }));
+  return t;
+}
+function lerToken(t) {
+  if (!/^[0-9a-f]{64}$/.test(String(t || ''))) return null;
+  const v = PropertiesService.getScriptProperties().getProperty('tok_' + hexSha(t)); if (!v) return null;
+  const o = JSON.parse(v); return o.exp >= Date.now() ? o : null;
+}
+function enviaEmailSimples(para, assunto, html) {
+  if (outlookConectado()) outlookEnviar([para], assunto, html, null);
+  else MailApp.sendEmail({ to: para, subject: assunto, htmlBody: html, name: 'Pesquisas Maxipark' });
+}
+function emailLink(nome, texto, botao, url, validade) {
+  return '<div style="font-family:Arial,Helvetica,sans-serif;color:#1f1a33;max-width:560px;font-size:15px;line-height:1.5">'
+    + '<div style="background:#4E3572;color:#fff;border-radius:12px;padding:16px 20px;font-size:18px;font-weight:700">Maxipark · App de pesquisas</div>'
+    + '<p>Olá, ' + escHtml(String(nome || '').split(' ')[0]) + '!</p><p>' + texto + '</p>'
+    + '<p style="margin:24px 0"><a href="' + url + '" style="background:#6B4A98;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:700;display:inline-block">' + botao + '</a></p>'
+    + '<p style="font-size:13px;color:#6e6a7c">O link vale por ' + validade + ' e só funciona uma vez. Se o botão não abrir, copie este endereço no navegador:<br>' + url + '</p>'
+    + '<p style="font-size:13px;color:#6e6a7c">Se você não esperava este e-mail, pode ignorá-lo.</p></div>';
+}
+function convidarUsuario(b) {   // administrador (com a chave) pede o convite depois de cadastrar
+  const c = contaPorEmail(lerUsuarios(), b.email);
+  if (!c) return { ok: false, erro: 'usuario-nao-encontrado' };
+  if (c.bloqueado) return { ok: false, erro: 'usuario-bloqueado' };
+  const t = criaToken(c.email, 'convite', 72);
+  enviaEmailSimples(c.email, 'Seu acesso ao app de pesquisas Maxipark — crie sua senha',
+    emailLink(c.nome, 'Você foi cadastrado(a) no app de pesquisas da Maxipark. Para concluir o cadastro, toque no botão abaixo e crie a sua senha.', 'Criar minha senha', APP_URL + '#senha=' + t, '3 dias'));
+  return { ok: true };
+}
+function recuperarSenha(b) {   // público: responde sempre "ok", para não revelar quem está cadastrado
+  const email = String(b.email || '').trim().toLowerCase();
+  if (!email) return { ok: true };
+  const cache = CacheService.getScriptCache(), k = 'rec_' + hexSha(email);
+  if (cache.get(k)) return { ok: true };             // no máximo um e-mail a cada 5 minutos por pessoa
+  cache.put(k, '1', 300);
+  const c = contaPorEmail(lerUsuarios(), email);
+  if (!c || c.bloqueado) return { ok: true };
+  const t = criaToken(c.email, 'senha', 2);
+  enviaEmailSimples(c.email, 'App de pesquisas Maxipark — criar uma nova senha',
+    emailLink(c.nome, 'Recebemos um pedido para criar uma nova senha no app de pesquisas da Maxipark. Toque no botão abaixo para escolher a nova senha.', 'Criar nova senha', APP_URL + '#senha=' + t, '2 horas'));
+  return { ok: true };
+}
+function infoToken(p) {
+  const o = lerToken(p.token); if (!o) return { ok: false, erro: 'link-invalido' };
+  const c = contaPorEmail(lerUsuarios(), o.email); if (!c || c.bloqueado) return { ok: false, erro: 'link-invalido' };
+  return { ok: true, nome: c.nome, email: c.email, tipo: o.tipo };
+}
+function definirSenha(b) {   // público, mas só com um link válido
+  const o = lerToken(b.token); if (!o) return { ok: false, erro: 'link-invalido' };
+  if (!/^[A-Za-z0-9+/=]{16,64}$/.test(String(b.salt || '')) || !/^[A-Za-z0-9+/=]{40,64}$/.test(String(b.hash || '')) || !(Number(b.iter) >= 100000 && Number(b.iter) <= 1000000)) return { ok: false, erro: 'dados-invalidos' };
+  const lock = LockService.getScriptLock(); lock.waitLock(25000);
+  try {
+    const d = lerUsuarios(), c = contaPorEmail(d, o.email);
+    if (!c || c.bloqueado) return { ok: false, erro: 'link-invalido' };
+    c.salt = String(b.salt); c.iter = Number(b.iter); c.hash = String(b.hash); delete c.pendente;
+    d.versao = (d.versao || 0) + 1; salvarUsuarios(d);
+    PropertiesService.getScriptProperties().deleteProperty('tok_' + hexSha(b.token));
+  } finally { lock.releaseLock(); }
+  return { ok: true, email: o.email };
+}
+function salDoUsuario(p) {   // público: o sal para o aparelho calcular a prova da senha (sal falso para quem não existe)
+  const c = contaPorEmail(lerUsuarios(), p.email);
+  if (c && c.salt && c.hash) return { ok: true, salt: c.salt, iter: c.iter };
+  return { ok: true, salt: Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, 'maxipark-sal-' + String(p.email || '').toLowerCase())).slice(0, 24), iter: 150000 };
+}
+function entrarPeloServidor(b) {   // público: confere a prova e devolve o perfil, para entrar em qualquer aparelho
+  const email = String(b.email || '').trim().toLowerCase();
+  const cache = CacheService.getScriptCache(), k = 'ent_' + hexSha(email), n = Number(cache.get(k) || 0);
+  if (n >= 10) return { ok: false, erro: 'muitas-tentativas' };   // 10 erros seguidos: espera 15 minutos
+  const d = lerUsuarios(), c = contaPorEmail(d, email);
+  if (!c || !c.hash || String(b.hash || '') !== c.hash) { cache.put(k, String(n + 1), 900); return { ok: false, erro: 'nao-confere' }; }
+  if (c.bloqueado) return { ok: false, erro: 'bloqueado' };
+  cache.remove(k);
+  return { ok: true, conta: c, sairTodos: d.sairTodos || 0 };
 }
