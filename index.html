@@ -76,6 +76,8 @@
   input,select{font:inherit;font-size:17px;color:var(--texto);background:var(--superficie);
     border:2px solid var(--linha);border-radius:12px;padding:13px 14px;width:100%}
   .erro{background:var(--ruim-bg);color:var(--ruim);border-radius:12px;padding:11px 13px;font-size:15px;text-align:left}
+  .entrada .link-esqueci{background:none;border:0;color:var(--roxo);font-weight:600;font-size:15px;padding:6px;cursor:pointer;text-decoration:underline;justify-self:center}
+  .entrada .aviso-ok{background:var(--roxo-claro);color:var(--roxo-escuro);border-radius:12px;padding:11px 13px;font-size:15px;text-align:left}
 
   /* ---- início ---- */
   .saudacao{margin:4px 0 22px}
@@ -246,7 +248,29 @@
     <label for="i-senha"><span class="nm">Senha</span>
       <input id="i-senha" type="password" autocomplete="current-password" placeholder="••••"></label>
     <button id="btn-entrar" type="button">Entrar</button>
-    <p style="font-size:14px">Este aparelho fica conectado até você tocar em “Sair da conta”.</p>
+    <button id="btn-esqueci" class="link-esqueci" type="button">Esqueci minha senha</button>
+    <div id="bloco-esqueci" hidden style="display:grid;gap:12px">
+      <p style="font-size:15px">Digite o seu e-mail no campo acima e toque no botão. Se ele estiver cadastrado, você recebe um link para criar uma nova senha.</p>
+      <button id="btn-enviar-link" class="leve" type="button">Enviar link por e-mail</button>
+      <p id="msg-esqueci" class="aviso-ok" hidden></p>
+    </div>
+    <p style="font-size:14px">Por segurança, o acesso expira depois de alguns dias sem entrar de novo (7 dias para administrador, 30 para os demais).</p>
+  </section>
+
+  <!-- CRIAR / TROCAR SENHA (link recebido por e-mail) -->
+  <section id="tela-senha" class="entrada" hidden>
+    <h1 id="senha-titulo">Criar sua senha</h1>
+    <p id="senha-quem">Conferindo o link…</p>
+    <div id="erro-senha" class="erro" hidden></div>
+    <div id="form-senha" hidden style="display:grid;gap:14px">
+      <label for="s-nova"><span class="nm">Nova senha</span><input id="s-nova" type="password" autocomplete="new-password" placeholder="mínimo 8 caracteres"></label>
+      <label for="s-conf"><span class="nm">Repita a nova senha</span><input id="s-conf" type="password" autocomplete="new-password"></label>
+      <button id="btn-salvar-senha" type="button">Salvar senha</button>
+    </div>
+    <div id="ok-senha" hidden style="display:grid;gap:14px">
+      <p class="aviso-ok">✅ Senha salva! Agora é só entrar com o seu e-mail e a senha que você acabou de criar.</p>
+      <button id="btn-ir-entrar" type="button">Ir para a entrada</button>
+    </div>
   </section>
 
   <!-- INÍCIO -->
@@ -318,11 +342,10 @@
 
     <div class="cartao">
       <h2>Cadastrar usuário</h2>
-      <p class="dica">Defina o e-mail, a senha, o que a pessoa pode fazer e sobre o que.</p>
+      <p class="dica">Defina o nome, o e-mail, o que a pessoa pode fazer e sobre o que. Ela recebe um e-mail com um link para criar a própria senha.</p>
       <div class="grade">
         <label for="c-nome"><span class="nm">Nome</span><input id="c-nome" type="text" placeholder="Ana Ribeiro"></label>
         <label for="c-email"><span class="nm">E-mail</span><input id="c-email" type="email" inputmode="email" placeholder="ana@maxipark.com.br"></label>
-        <label for="c-senha"><span class="nm">Senha</span><input id="c-senha" type="text" placeholder="mínimo 4 caracteres"></label>
       </div>
 
       <span class="rot">O que pode fazer</span>
@@ -369,7 +392,7 @@
 </div>
 
 <script type="application/json" id="dados-acesso">
-/*DADOS_INICIO*/{"versao":3,"contas":[{"id":"adm-raphael","nome":"Raphael","email":"raphael@maxipark.com.br","papel":"admin","pesquisas":["clientes","equipe","conselho","consolidado"],"unidades":"todas","admin":true,"bloqueado":false,"iter":150000,"salt":"lA7qJrItN1wPb9IhV5tr1A==","hash":"K8A0kdT3goPdSq98K4pNONbyUknIRHZ0i/Zr3XS3H/w=","criadoEm":"2026-09-21"},{"id":"av-mub729ou","nome":"Paulo Frascino","email":"paulo@maxipark.com.br","papel":"total","pesquisas":["clientes","equipe","conselho"],"unidades":"todas","admin":false,"bloqueado":false,"criadoEm":"2026-09-21","iter":150000,"salt":"Lk1eEvx6euj6IrYn73nrNA==","hash":"RF+EGBAC7Au7Td3NqhQHA0q0imjvE4AyT07vN7OFHm8="},{"id":"av-mub736uc","nome":"Sandra Frascino","email":"sandra@maxipark.com.br","papel":"total","pesquisas":["clientes","equipe","conselho"],"unidades":"todas","admin":false,"bloqueado":false,"criadoEm":"2026-09-21","iter":150000,"salt":"O6IEqLhglBLxuD8ZHY5obA==","hash":"Dp5IfiJjOdTXPAkiep8GRpcDnJDBEXzbCpYSCHQzTcc="}],"atualizadoEm":"2026-09-21"}/*DADOS_FIM*/
+/*DADOS_INICIO*/{"versao":3,"contas":[{"id":"adm-raphael","nome":"Raphael","email":"raphael@maxipark.com.br","papel":"admin","pesquisas":["clientes","equipe","conselho","consolidado"],"unidades":"todas","admin":true,"bloqueado":false,"criadoEm":"2026-09-21"},{"id":"av-mub729ou","nome":"Paulo Frascino","email":"paulo@maxipark.com.br","papel":"total","pesquisas":["clientes","equipe","conselho"],"unidades":"todas","admin":false,"bloqueado":false,"criadoEm":"2026-09-21"},{"id":"av-mub736uc","nome":"Sandra Frascino","email":"sandra@maxipark.com.br","papel":"total","pesquisas":["clientes","equipe","conselho"],"unidades":"todas","admin":false,"bloqueado":false,"criadoEm":"2026-09-21"}],"atualizadoEm":"2026-09-21"}/*DADOS_FIM*/
 </script>
 
 <script>
@@ -476,17 +499,89 @@
     { n: c.nome, e: c.email, p: c.papel, q: c.pesquisas, u: c.unidades }))))
     .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 
+  /* ---------- acesso pelo servidor: entrar, esqueci a senha, convite e o link de criar senha (17/10/2026) ---------- */
+  const urlOp = (u, q) => u + (u.indexOf('?') >= 0 ? '&' : '?') + q;
+  async function postServidor(corpo) {
+    const r = await fetch(servidorDoAparelho(), { method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo) });
+    return r.json();
+  }
+  async function entrarPeloServidor(email, senha) {
+    try {
+      const s = await (await fetch(urlOp(servidorDoAparelho(), 'op=sal&email=' + encodeURIComponent(email)))).json();
+      if (!s || !s.salt) return { erro: 'rede' };
+      const hash = await derivar(senha, s.salt, s.iter);
+      const r = await postServidor({ op: 'entrar', email, hash });
+      if (r && r.ok && r.conta) return { conta: r.conta, sairTodos: r.sairTodos };
+      return { erro: (r && r.erro) || 'nao-confere' };
+    } catch (e) { return { erro: 'rede' }; }
+  }
+  async function enviaConvite(email) {
+    const k = chaveDoAparelho(); if (!k) return false;
+    try { const r = await postServidor({ op: 'convidar', chave: k, email }); return !!(r && r.ok); } catch (e) { return false; }
+  }
+  async function pedeLinkSenha(email) {
+    try { const r = await postServidor({ op: 'recuperar-senha', email }); return !!(r && r.ok); } catch (e) { return false; }
+  }
+  const tokenSenha = (/[#&]senha=([0-9a-f]{64})/.exec(location.hash || '') || [])[1] || '';
+  let modoSenha = !!tokenSenha;
+  async function abreTelaSenha() {
+    const quem = $('senha-quem'), err = $('erro-senha');
+    try {
+      const r = await (await fetch(urlOp(servidorDoAparelho(), 'op=token-info&token=' + tokenSenha))).json();
+      if (!r || !r.ok) { quem.textContent = ''; err.textContent = 'Este link não vale mais: ele já foi usado ou passou do prazo. Peça um novo em “Esqueci minha senha”, na tela de entrada.'; err.hidden = false;
+        $('ok-senha').hidden = false; $('ok-senha').querySelector('p').hidden = true; return; }
+      $('senha-titulo').textContent = r.tipo === 'convite' ? 'Criar sua senha' : 'Criar uma nova senha';
+      quem.textContent = r.nome + ' · ' + r.email;
+      $('form-senha').hidden = false; $('s-nova').focus();
+    } catch (e) { quem.textContent = ''; err.textContent = 'Não consegui conferir o link agora. Confira a internet e abra o link de novo.'; err.hidden = false; }
+  }
+  async function salvaSenhaDoLink() {
+    const err = $('erro-senha'), a = $('s-nova').value, b = $('s-conf').value; err.hidden = true;
+    if (a.length < 8) { err.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; err.hidden = false; return; }
+    if (a !== b) { err.textContent = 'As duas senhas não são iguais.'; err.hidden = false; return; }
+    const bt = $('btn-salvar-senha'); bt.disabled = true; bt.textContent = 'Salvando…';
+    try {
+      const seg = await segredo(a);
+      const r = await postServidor({ op: 'definir-senha', token: tokenSenha, salt: seg.salt, iter: seg.iter, hash: seg.hash });
+      if (r && r.ok) {
+        $('form-senha').hidden = true; $('ok-senha').hidden = false;
+        try { history.replaceState(null, '', location.pathname); } catch (e) {}
+        $('i-email').value = r.email || ''; return;
+      }
+      err.textContent = r && r.erro === 'link-invalido' ? 'Este link não vale mais. Peça um novo em “Esqueci minha senha”.' : 'Não consegui salvar agora. Tente de novo.';
+      err.hidden = false;
+    } catch (e) { err.textContent = 'Não consegui falar com o servidor. Confira a internet e tente de novo.'; err.hidden = false; }
+    finally { bt.disabled = false; bt.textContent = 'Salvar senha'; }
+  }
+
   // ───────── entrar / sair ─────────
   async function entrar() {
     const email = norm($('i-email').value), senha = $('i-senha').value, err = $('erro-entrada');
     err.hidden = true;
     if (!email || !senha) { err.textContent = 'Preencha e-mail e senha.'; err.hidden = false; return; }
-    const c = dados.contas.find(x => x.email === email);
+    let c = dados.contas.find(x => x.email === email);
     const b = $('btn-entrar'); b.disabled = true; b.textContent = 'Verificando…';
-    let ok = false;
-    try { ok = !!c && (await derivar(senha, c.salt, c.iter)) === c.hash; } catch (e) { ok = false; }
+    let ok = false, erroSrv = '';
+    try { ok = !!c && !!c.hash && (await derivar(senha, c.salt, c.iter)) === c.hash; } catch (e) { ok = false; }
+    if (!ok) {   /* confere no servidor: vale para quem acabou de criar a senha ou entra num aparelho novo */
+      const r = await entrarPeloServidor(email, senha);
+      if (r.conta) {
+        const i = dados.contas.findIndex(x => x.email === email);
+        if (i >= 0) dados.contas[i] = r.conta; else dados.contas.push(r.conta);
+        if (r.sairTodos) dados.sairTodos = r.sairTodos;
+        guardaUsuarios(dados); c = r.conta; ok = true;
+      } else erroSrv = r.erro || '';
+    }
     b.disabled = false; b.textContent = 'Entrar';
-    if (!ok) { err.textContent = 'E-mail ou senha não conferem.'; err.hidden = false; return; }
+    if (!ok) {
+      err.textContent = erroSrv === 'muitas-tentativas' ? 'Muitas tentativas erradas. Espere 15 minutos ou use “Esqueci minha senha”.'
+        : erroSrv === 'bloqueado' ? 'Este acesso está bloqueado. Fale com o administrador.'
+        : erroSrv === 'rede' ? 'Não consegui falar com o servidor agora. Confira a internet e tente de novo.'
+        : (c && c.pendente && !c.hash) ? 'Seu acesso ainda não foi ativado. Use o link que chegou no seu e-mail para criar a senha.'
+        : 'E-mail ou senha não conferem.';
+      err.hidden = false; return;
+    }
     if (c.bloqueado) { err.textContent = 'Este acesso está bloqueado. Fale com o administrador.'; err.hidden = false; return; }
     sessao = c; guarda(c.email); $('i-senha').value = '';
     try { if (window.__historico) window.__historico.defineQuem({ nome: c.nome, email: c.email }); } catch (e) {}
@@ -516,6 +611,13 @@
       apaga();
       const err = $('erro-entrada');
       err.textContent = 'O acesso de ' + c.nome.split(' ')[0] + ' foi bloqueado. Entre com outro e-mail.';
+      err.hidden = false; return;
+    }
+    const limite = (c.papel === 'admin' ? 7 : 30) * 864e5;   /* o acesso expira: 7 dias para administrador, 30 para os demais */
+    if (horaDoLogin() > 0 && Date.now() - horaDoLogin() > limite) {
+      apaga();
+      const err = $('erro-entrada');
+      err.textContent = 'Por segurança, o seu acesso expirou. Entre de novo com o seu e-mail e a senha.';
       err.hidden = false; return;
     }
     sessao = c;
@@ -600,6 +702,11 @@
   function ir(t) { tela = t; pinta(); window.scrollTo(0, 0); }
 
   function pinta() {
+    $('tela-senha').hidden = !modoSenha;
+    if (modoSenha) {   /* veio pelo link do e-mail: só a tela de criar a senha */
+      ['tela-entrada','tela-inicio','tela-chave','tela-admin','tela-hist'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
+      $('btn-sair').hidden = true; $('quem').hidden = true; return;
+    }
     const dentro = !!sessao;
     $('tela-entrada').hidden = dentro;
     $('tela-inicio').hidden = !(dentro && tela === 'inicio');
@@ -906,12 +1013,13 @@
         (c.papel === 'total' || c.papel === 'gestor' || c.papel === 'admin') ? '' :
           '<span class="selo">' + (nomes.length === 4 ? 'Tudo' : (nomes.join(' · ') || 'Nada')) + '</span>' +
           '<span class="selo">' + txtUn(c.unidades) + '</span>',
-        c.bloqueado ? '<span class="selo no">Bloqueado</span>' : '<span class="selo ok">Ativo</span>',
+        c.bloqueado ? '<span class="selo no">Bloqueado</span>' : (c.pendente && !c.hash ? '<span class="selo">Aguardando criar a senha</span>' : '<span class="selo ok">Ativo</span>'),
         c.admin ? '<span class="selo adm">Administrador</span>' : ''
       ].join('');
       const acoes = c.admin ? '<span class="selo">não pode ser removido</span>' : [
         '<button class="leve" type="button" data-b="' + c.id + '">' + (c.bloqueado ? 'Desbloquear' : 'Bloquear') + '</button>',
-        '<button class="leve" type="button" data-s="' + c.id + '">Trocar senha</button>',
+        (c.pendente && !c.hash) ? '<button class="leve" type="button" data-cv="' + c.id + '">Reenviar convite</button>'
+          : '<button class="leve" type="button" data-s="' + c.id + '">Enviar link de nova senha</button>',
         '<button class="leve" type="button" data-p="' + c.id + '">' + (editando === c.id ? 'Fechar perfil' : 'Mudar perfil') + '</button>',
         '<button class="perigo" type="button" data-r="' + c.id + '">Remover</button>'
       ].join('');
@@ -994,7 +1102,7 @@
   async function cadastrar() {
     const err = $('erro-cad'); err.hidden = true;
     const falha = t => { err.textContent = t; err.hidden = false; };
-    const nome = $('c-nome').value.trim(), email = norm($('c-email').value), senha = $('c-senha').value;
+    const nome = $('c-nome').value.trim(), email = norm($('c-email').value);
     const papel = document.querySelector('input[name=papel]:checked').value;
     const completo = papel === 'total' || papel === 'gestor';
     const pesquisas = completo ? ['clientes','equipe','conselho','consolidado'] : lePq();
@@ -1002,17 +1110,18 @@
     if (!nome) return falha('Escreva o nome da pessoa.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return falha('E-mail inválido.');
     if (dados.contas.some(c => c.email === email)) return falha('Esse e-mail já está cadastrado.');
-    if (senha.length < 4) return falha('A senha precisa de pelo menos 4 caracteres.');
     if (!pesquisas.length) return falha('Marque pelo menos uma pesquisa.');
     if (unidades !== 'todas' && !unidades.length) return falha('Marque “Todas” ou pelo menos uma unidade.');
     const b = $('btn-cad'); b.disabled = true; b.textContent = 'Cadastrando…';
-    const seg = await segredo(senha);
     dados.contas.push({ id:'av-' + Date.now().toString(36), nome, email, papel, pesquisas, unidades,
-      admin:false, bloqueado:false, criadoEm:hoje(), ...seg });
-    b.disabled = false; b.textContent = 'Cadastrar usuário';
-    $('c-nome').value = ''; $('c-email').value = ''; $('c-senha').value = '';
+      admin:false, bloqueado:false, pendente:true, criadoEm:hoje() });   /* sem senha: a pessoa cria pelo link do e-mail */
+    $('c-nome').value = ''; $('c-email').value = '';
     admin();
     await grava(nome.split(' ')[0] + ' cadastrado.');
+    const enviado = await enviaConvite(email);
+    b.disabled = false; b.textContent = 'Cadastrar usuário';
+    toast(enviado ? 'Convite enviado para ' + email + '.' : 'Cadastrado, mas o e-mail do convite não saiu. Use “Reenviar convite”.');
+    reg('convidou usuario', { detalhe: nome + ' (' + email + ')' + (enviado ? '' : ' - e-mail nao saiu') });
   }
 
   // ───────── eventos ─────────
@@ -1061,6 +1170,19 @@
     if (ak) { ev.preventDefault(); return ir('chave'); }
     const b = ev.target.closest('button'); if (!b) return;
     if (b.id === 'btn-entrar') return entrar();
+    if (b.id === 'btn-esqueci') { $('bloco-esqueci').hidden = !$('bloco-esqueci').hidden; return; }
+    if (b.id === 'btn-enviar-link') {
+      const email = norm($('i-email').value), msg = $('msg-esqueci');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = 'Digite o seu e-mail no campo “E-mail”, lá em cima.'; msg.hidden = false; return; }
+      b.disabled = true; b.textContent = 'Enviando…';
+      return pedeLinkSenha(email).then(ok => {
+        b.disabled = false; b.textContent = 'Enviar link por e-mail';
+        msg.textContent = ok ? 'Pronto. Se ' + email + ' estiver cadastrado, o link chega em instantes (olhe também o lixo eletrônico). Ele vale por 2 horas.'
+                             : 'Não consegui falar com o servidor agora. Confira a internet e tente de novo.';
+        msg.hidden = false; });
+    }
+    if (b.id === 'btn-salvar-senha') return salvaSenhaDoLink();
+    if (b.id === 'btn-ir-entrar') { modoSenha = false; try { history.replaceState(null, '', location.pathname); } catch (e) {} pinta(); return; }
     if (b.id === 'btn-sair') return sairDaConta();
     if (b.id === 'btn-cad') return cadastrar();
     if (b.id === 'btn-chave-ok') return ligarServidor();
@@ -1145,12 +1267,14 @@
       reg('removeu usuario', { detalhe: c.nome + ' (' + c.email + ')' });
       return grava(c.nome.split(' ')[0] + ' removido.'); }
     if (b.dataset.s) { const c = acha(b.dataset.s); if (!c) return;
-      const nova = prompt('Nova senha para ' + c.nome + ':');
-      if (nova === null) return;
-      if (nova.length < 4) return toast('A senha precisa de pelo menos 4 caracteres.');
-      Object.assign(c, await segredo(nova));
-      reg('trocou senha', { detalhe: c.nome + ' (' + c.email + ')' });
-      return grava('Senha de ' + c.nome.split(' ')[0] + ' trocada.'); }
+      if (!confirm('Enviar para ' + c.email + ' um link para criar uma nova senha?')) return;
+      const ok = await pedeLinkSenha(c.email);
+      reg('pediu nova senha', { detalhe: c.nome + ' (' + c.email + ')' });
+      return toast(ok ? 'Link de nova senha enviado para ' + c.email + '.' : 'Não consegui falar com o servidor agora.'); }
+    if (b.dataset.cv) { const c = acha(b.dataset.cv); if (!c) return;
+      const ok = await enviaConvite(c.email);
+      reg('reenviou convite', { detalhe: c.nome + ' (' + c.email + ')' });
+      return toast(ok ? 'Convite reenviado para ' + c.email + '.' : 'O convite não saiu. Confira se este aparelho está ligado ao servidor.'); }
   });
 
   document.addEventListener('keydown', ev => {
@@ -1158,12 +1282,14 @@
     const id = ev.target && ev.target.id;
     if (id === 'i-email' || id === 'i-senha') { ev.preventDefault(); entrar(); }
     if (id === 'k-chave') { ev.preventDefault(); ligarServidor(); }
-    if (id === 'c-nome' || id === 'c-email' || id === 'c-senha') { ev.preventDefault(); cadastrar(); }
+    if (id === 'c-nome' || id === 'c-email') { ev.preventDefault(); cadastrar(); }
+    if (id === 's-nova' || id === 's-conf') { ev.preventDefault(); salvaSenhaDoLink(); }
   });
 
   caixasForm(); ajustaQuais(); retomar();
   tela = sessao ? 'inicio' : 'entrada';
   pinta();
+  if (modoSenha) abreTelaSenha();
 
   /* o cadastro vem do servidor: ao abrir, de 2 em 2 minutos, e ao voltar para a aba */
   sincronizaUsuarios();
