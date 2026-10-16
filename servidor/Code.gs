@@ -106,6 +106,7 @@ function doPost(e) {
 function doGet(e) {
   try {
     const p = (e && e.parameter) || {};
+    if (p.state && (p.code || p.error)) return outlookRetorno(e);   // volta do login da Microsoft (conectar a caixa pesquisa@)
     const erro = verificaChave(p.chave); if (erro) return erro;
     if (p.op === 'respostas-relatorio') {            // relatórios enviados + respostas recebidas por e-mail (filtra por unidade e rodada)
       let novas = 0, aviso = '';
@@ -113,7 +114,7 @@ function doGet(e) {
       const filtro = o => (!p.unidade || o.unidade === p.unidade) && (!p.rodada || o.rodada === p.rodada);
       return json({ ok: true, novas: novas, aviso: aviso, relatorios: lerAba(ABA_RELATORIOS, COLS_REL).filter(filtro), respostas: lerAba(ABA_RESP_REL, COLS_RESP).filter(filtro) });
     }
-    if (p.op === 'ping') return json({ ok: true, servidor: 'apps-script', versao: 5, abas: Object.keys(ABAS), usuarios: true, historico: true, relatorio: true });
+    if (p.op === 'ping') return json({ ok: true, servidor: 'apps-script', versao: 5, abas: Object.keys(ABAS), usuarios: true, historico: true, relatorio: true, outlook: outlookConectado() });
     if (p.op === 'historico') {
       const ws = abaHistorico(); const last = ws.getLastRow();
       if (last < 2) return json({ ok: true, itens: [] });
@@ -225,8 +226,10 @@ function enviaRelatorioEquipe(r) {
   const aviso = '<div style="font-family:Arial,Helvetica,sans-serif;background:#efe9fb;border:1px solid #d9cdf3;border-radius:10px;padding:12px 14px;margin:0 auto 14px;max-width:720px;color:#1f1a33;font-size:14px;text-align:left">'
     + '<b>Responda a este e-mail</b> com o que vai ser feito em cada ponto de melhoria e o <b>prazo</b> de cada ação. '
     + 'Pode responder mais de uma vez: todas as respostas ficam guardadas no histórico desta pesquisa (código ' + rid + ').</div>';
-  MailApp.sendEmail({ to: para.join(','), subject: assuntoFinal, htmlBody: aviso + html, attachments: [pdf], name: 'Pesquisas Maxipark' });
-  try { abaSimples(ABA_RELATORIOS, COLS_REL).appendRow([rid, new Date(), semFormula(String(r.unidade || '')), String(r.rodada || ''), "'" + String(r.data || ''), para.join(', '), semFormula(assuntoFinal)]); } catch (e) {}
+  let canal = 'gmail';
+  if (outlookConectado()) { outlookEnviar(para, assuntoFinal, aviso + html, pdf); canal = 'outlook'; }   // sai da caixa pesquisa@maxipark.com.br
+  else MailApp.sendEmail({ to: para.join(','), subject: assuntoFinal, htmlBody: aviso + html, attachments: [pdf], name: 'Pesquisas Maxipark' });
+  try { abaSimples(ABA_RELATORIOS, COLS_REL).appendRow([rid, new Date(), semFormula(String(r.unidade || '')), String(r.rodada || ''), "'" + String(r.data || ''), para.join(', '), semFormula(assuntoFinal), canal]); } catch (e) {}
   return { ok: true, enviado: para.length, id: rid };
 }
 
@@ -238,7 +241,7 @@ function enviaRelatorioEquipe(r) {
    Precisa da permissão do Gmail (rodar autorizarRespostas pelo editor uma vez). */
 const ABA_RELATORIOS = 'Relatorios', ABA_RESP_REL = 'RespostasRelatorios';
 const REMETENTE_RELATORIO = 'raphaelfrascinofl@gmail.com';   // conta do Gmail de onde saem os relatórios (e onde chegam as respostas)
-const COLS_REL = ['id', 'enviado_em', 'unidade', 'rodada', 'data', 'para', 'assunto'];
+const COLS_REL = ['id', 'enviado_em', 'unidade', 'rodada', 'data', 'para', 'assunto', 'canal'];   // canal: outlook (caixa pesquisa@) ou gmail (antigo)
 const COLS_RESP = ['msg_id', 'relatorio_id', 'unidade', 'rodada', 'data', 'de', 'recebido_em', 'texto'];
 function abaSimples(nome, cols) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -268,7 +271,13 @@ function limpaResposta(t) {   // guarda a resposta inteira com a assinatura e o 
   }
   return out.join('\n').trim().slice(0, 5000);
 }
-function coletaRespostasRelatorios() {
+function coletaRespostasRelatorios() {   // junta as respostas do Outlook (caixa pesquisa@) e do Gmail antigo
+  let n = 0;
+  if (outlookConectado()) { try { n += coletaRespostasOutlook(); } catch (e) { Logger.log(e); } }
+  try { n += coletaRespostasGmail(); } catch (e) { Logger.log(e); }
+  return n;
+}
+function coletaRespostasGmail() {
   const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return 0;
   try {
     const rels = {};
@@ -313,9 +322,6 @@ function responderRelatorio(b) {
   const rel = lerAba(ABA_RELATORIOS, COLS_REL).filter(function (r) { return r.id === id; })[0];
   if (!rel) return { ok: false, erro: 'relatorio-nao-encontrado' };
   try { coletaRespostasRelatorios(); } catch (e) {}   // pega as respostas mais novas antes de montar o histórico
-  const ths = GmailApp.search('subject:"' + id + '"', 0, 10).filter(function (t) { return (t.getFirstMessageSubject() || '').indexOf(id) >= 0; });
-  if (!ths.length) return { ok: false, erro: 'conversa-nao-encontrada' };
-  const th = ths[0], msgs = th.getMessages(), ultima = msgs[msgs.length - 1];
   const autor = String(b.autor || '').trim().slice(0, 80) || 'Experiência do Cliente', email = String(b.email || '').trim().slice(0, 120);
   const hist = lerAba(ABA_RESP_REL, COLS_RESP).filter(function (r) { return r.relatorio_id === id; })
     .sort(function (a, c) { return String(a.recebido_em).localeCompare(String(c.recebido_em)); });
@@ -327,7 +333,123 @@ function responderRelatorio(b) {
     + bloco('Relatório enviado para ' + rel.para, rel.enviado_em, rel.assunto)
     + hist.map(function (r) { return bloco(soEmail(r.de), r.recebido_em, r.texto); }).join('')
     + '</div></div>';
-  ultima.replyAll(texto + '\n\n' + autor, { htmlBody: html, name: 'Pesquisas Maxipark' });
+  if (rel.canal === 'outlook') {                       // conversa da caixa pesquisa@ (Outlook)
+    if (!outlookConectado()) return { ok: false, erro: 'outlook-desconectado' };
+    if (!outlookResponder(id, html)) return { ok: false, erro: 'conversa-nao-encontrada' };
+  } else {                                             // relatórios antigos, enviados pelo Gmail
+    const ths = GmailApp.search('subject:"' + id + '"', 0, 10).filter(function (t) { return (t.getFirstMessageSubject() || '').indexOf(id) >= 0; });
+    if (!ths.length) return { ok: false, erro: 'conversa-nao-encontrada' };
+    const msgs = ths[0].getMessages();
+    msgs[msgs.length - 1].replyAll(texto + '\n\n' + autor, { htmlBody: html, name: 'Pesquisas Maxipark' });
+  }
   abaSimples(ABA_RESP_REL, COLS_RESP).appendRow(['app-' + Utilities.getUuid(), id, rel.unidade, rel.rodada, "'" + String(rel.data || '').slice(0, 10), semFormula(email || autor), new Date(), semFormula(texto)]);
   return { ok: true };
+}
+
+/* ---------- Caixa pesquisa@maxipark.com.br (Outlook / Microsoft 365, servidor v19, 16/10/2026) ----------
+   O servidor envia os relatórios, lê as respostas e responde pela caixa pesquisa@ usando o Microsoft Graph,
+   com o aplicativo "Pesquisas Maxipark" registrado no Entra (delegado: só age na caixa que entrou nele; sem segredo).
+   Para conectar (ou reconectar): rode conectarOutlook() pelo editor, abra o endereço do registro e entre com
+   pesquisa@maxipark.com.br. A Microsoft volta para o próprio servidor (doGet com code/state), que guarda o token
+   nas Propriedades do script (MS_REFRESH). Nenhuma senha fica guardada. */
+const MS_TENANT = 'e6f85d01-20ad-497d-bcb5-bf47461eba9e';
+const MS_CLIENTE = '9612dd11-1818-45d5-a803-9435c30036b9';
+const MS_CAIXA = 'pesquisa@maxipark.com.br';
+const MS_ESCOPOS = 'offline_access User.Read Mail.ReadWrite Mail.Send';
+function msRedirect() { return 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec'; }   // o próprio servidor (roda sempre como o dono)
+function outlookConectado() { return !!PropertiesService.getScriptProperties().getProperty('MS_REFRESH'); }
+function conectarOutlook() {
+  const verif = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+  PropertiesService.getScriptProperties().setProperty('MS_VERIF', verif);
+  const desafio = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, verif, Utilities.Charset.UTF_8)).replace(/=+$/, '');
+  const estado = Utilities.getUuid().replace(/-/g, '');
+  PropertiesService.getScriptProperties().setProperty('MS_ESTADO', estado);
+  UrlFetchApp.fetch('https://login.microsoftonline.com/' + MS_TENANT + '/v2.0/.well-known/openid-configuration', { muteHttpExceptions: true });   // garante a permissão de acessar a Microsoft
+  const url = 'https://login.microsoftonline.com/' + MS_TENANT + '/oauth2/v2.0/authorize?' + [
+    'client_id=' + MS_CLIENTE, 'response_type=code', 'response_mode=query', 'redirect_uri=' + encodeURIComponent(msRedirect()),
+    'scope=' + encodeURIComponent(MS_ESCOPOS), 'state=' + estado, 'code_challenge=' + desafio, 'code_challenge_method=S256',
+    'login_hint=' + encodeURIComponent(MS_CAIXA), 'prompt=select_account'].join('&');
+  Logger.log('Abra este endereço e entre com ' + MS_CAIXA + ':\n' + url);
+  return url;
+}
+function outlookRetorno(req) {
+  const p = (req && req.parameter) || {};
+  const pagina = function (t, ok) { return HtmlService.createHtmlOutput('<div style="font-family:Arial;padding:30px;font-size:18px">' + (ok ? '✅ ' : '❌ ') + t + '</div>'); };
+  if (p.error) return pagina('A Microsoft não autorizou: ' + escHtml(p.error_description || p.error), false);
+  const props = PropertiesService.getScriptProperties();
+  if (!p.state || p.state !== props.getProperty('MS_ESTADO')) return pagina('Pedido de conexão inválido ou vencido. Rode conectarOutlook de novo.', false);
+  const r = UrlFetchApp.fetch('https://login.microsoftonline.com/' + MS_TENANT + '/oauth2/v2.0/token', { method: 'post', muteHttpExceptions: true,
+    payload: { client_id: MS_CLIENTE, grant_type: 'authorization_code', code: p.code, redirect_uri: msRedirect(), code_verifier: props.getProperty('MS_VERIF') || '', scope: MS_ESCOPOS } });
+  const j = JSON.parse(r.getContentText() || '{}');
+  if (!j.refresh_token) return pagina('Não consegui conectar: ' + escHtml(j.error_description || j.error || r.getResponseCode()), false);
+  const eu = JSON.parse(UrlFetchApp.fetch('https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName', { headers: { Authorization: 'Bearer ' + j.access_token }, muteHttpExceptions: true }).getContentText() || '{}');
+  const conta = String(eu.mail || eu.userPrincipalName || '').toLowerCase();
+  if (conta !== MS_CAIXA) return pagina('Você entrou com ' + escHtml(conta) + '. É preciso entrar com ' + MS_CAIXA + '. Rode conectarOutlook de novo.', false);
+  props.setProperty('MS_REFRESH', j.refresh_token); props.setProperty('MS_CONTA', conta); props.deleteProperty('MS_VERIF'); props.deleteProperty('MS_ESTADO');
+  CacheService.getScriptCache().put('MS_ACESSO', j.access_token, Math.max(60, (j.expires_in || 3600) - 300));
+  return pagina('Caixa ' + MS_CAIXA + ' conectada ao servidor das pesquisas. Pode fechar esta aba.', true);
+}
+function msAcesso() {
+  const c = CacheService.getScriptCache(), a = c.get('MS_ACESSO'); if (a) return a;
+  const props = PropertiesService.getScriptProperties(), rt = props.getProperty('MS_REFRESH');
+  if (!rt) throw new Error('outlook-desconectado');
+  const r = UrlFetchApp.fetch('https://login.microsoftonline.com/' + MS_TENANT + '/oauth2/v2.0/token', { method: 'post', muteHttpExceptions: true,
+    payload: { client_id: MS_CLIENTE, grant_type: 'refresh_token', refresh_token: rt, scope: MS_ESCOPOS } });
+  const j = JSON.parse(r.getContentText() || '{}');
+  if (!j.access_token) throw new Error('outlook-token: ' + (j.error || r.getResponseCode()));
+  if (j.refresh_token) props.setProperty('MS_REFRESH', j.refresh_token);
+  c.put('MS_ACESSO', j.access_token, Math.max(60, (j.expires_in || 3600) - 300));
+  return j.access_token;
+}
+function graph(metodo, caminho, corpo, extras) {
+  const op = { method: metodo, muteHttpExceptions: true, headers: Object.assign({ Authorization: 'Bearer ' + msAcesso() }, extras || {}) };
+  if (corpo !== undefined) { op.contentType = 'application/json'; op.payload = JSON.stringify(corpo); }
+  const r = UrlFetchApp.fetch('https://graph.microsoft.com/v1.0' + caminho, op), cod = r.getResponseCode(), t = r.getContentText();
+  if (cod >= 300) throw new Error('graph ' + cod + ': ' + t.slice(0, 300));
+  return t ? JSON.parse(t) : {};
+}
+function outlookEnviar(para, assunto, html, pdf) {
+  graph('post', '/me/sendMail', { saveToSentItems: true, message: {
+    subject: assunto, body: { contentType: 'HTML', content: html },
+    toRecipients: para.map(function (e) { return { emailAddress: { address: e } }; }),
+    attachments: pdf ? [{ '@odata.type': '#microsoft.graph.fileAttachment', name: pdf.getName(), contentType: 'application/pdf', contentBytes: Utilities.base64Encode(pdf.getBytes()) }] : [] } });
+}
+function outlookMensagens() {   // mensagens da caixa pesquisa@ (todas as pastas) com "Relatório da visita" no assunto
+  let url = '/me/messages?$search=' + encodeURIComponent('"Relatório da visita"') + '&$top=100&$select=id,internetMessageId,subject,from,receivedDateTime,body';
+  const out = []; let voltas = 0;
+  while (url && voltas++ < 10) {
+    const j = graph('get', url, undefined, { Prefer: 'outlook.body-content-type="text"' });
+    (j.value || []).forEach(function (m) { out.push(m); });
+    url = j['@odata.nextLink'] ? j['@odata.nextLink'].replace('https://graph.microsoft.com/v1.0', '') : '';
+  }
+  return out;
+}
+function coletaRespostasOutlook() {
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return 0;
+  try {
+    const rels = {}; lerAba(ABA_RELATORIOS, COLS_REL).forEach(function (r) { rels[r.id] = r; });
+    if (!Object.keys(rels).length) return 0;
+    const wsA = abaSimples(ABA_RESP_REL, COLS_RESP), vistos = {};
+    lerAba(ABA_RESP_REL, COLS_RESP).forEach(function (r) { vistos[r.msg_id] = true; });
+    const novas = [];
+    outlookMensagens().forEach(function (msg) {
+      const m = /\[(REL-\d{6}-[A-Z0-9]{5})\]/.exec(msg.subject || ''); if (!m || !rels[m[1]]) return;
+      const de = String((msg.from && msg.from.emailAddress && msg.from.emailAddress.address) || '').toLowerCase();
+      if (!de || de === MS_CAIXA) return;               // o que a própria caixa enviou não é resposta
+      const id = msg.internetMessageId || msg.id; if (vistos[id]) return; vistos[id] = true;
+      const rel = rels[m[1]];
+      novas.push([id, m[1], rel.unidade, rel.rodada, rel.data, semFormula(de), new Date(msg.receivedDateTime), semFormula(limpaResposta((msg.body && msg.body.content) || ''))]);
+    });
+    if (novas.length) wsA.getRange(wsA.getLastRow() + 1, 1, novas.length, COLS_RESP.length).setValues(novas);
+    return novas.length;
+  } finally { lock.releaseLock(); }
+}
+function outlookResponder(id, html) {   // responde a todos na conversa do relatório, a partir da mensagem mais recente
+  const msgs = outlookMensagens().filter(function (m) { return (m.subject || '').indexOf(id) >= 0; })
+    .sort(function (a, b) { return String(b.receivedDateTime).localeCompare(String(a.receivedDateTime)); });
+  if (!msgs.length) return false;
+  const rascunho = graph('post', '/me/messages/' + msgs[0].id + '/createReplyAll', {});
+  graph('patch', '/me/messages/' + rascunho.id, { body: { contentType: 'HTML', content: html } });
+  graph('post', '/me/messages/' + rascunho.id + '/send', {});
+  return true;
 }
