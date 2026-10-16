@@ -459,7 +459,7 @@ function calc(cf){ travaUnidade(cf);
 
 /* ---------------- telas ---------------- */
 function abasLiberadas(){
-  const todas = ['clientes', 'equipe', 'conselho', 'consolidado'];
+  const todas = ['clientes', 'equipe', 'consolidado'];   /* conselho desativado em 15/10/2026: sai do painel também */
   if (!ESCOPO || ESCOPO.papel === 'admin' || ESCOPO.papel === 'total' || ESCOPO.papel === 'gestor') return todas;
   const q = ESCOPO.pesquisas || [];
   const l = todas.filter(k => q.indexOf(k) >= 0);
@@ -496,7 +496,7 @@ function viewPin(){
 function viewPinAntigo(){
   const bloqueado = settings.lockUntil && Date.now() < settings.lockUntil;
   return header('Área do usuário') + `<div class="wrap"><div class="card" style="max-width:520px;margin:0 auto;text-align:center">${logoHero()}
-    <h2>Painel de resultados — digite o PIN</h2><p class="small muted">Junta as três pesquisas (equipe, clientes e conselho) deste aparelho e da nuvem.</p>
+    <h2>Painel de resultados — digite o PIN</h2><p class="small muted">Junta as pesquisas com clientes e com a equipe, deste aparelho e da nuvem.</p>
     ${bloqueado ? `<div class="ruim">Muitas tentativas. Aguarde ${Math.ceil((settings.lockUntil - Date.now()) / 1000)} s.</div>` : ''}
     <input class="pininput" id="pin-input" type="text" inputmode="numeric" autocomplete="off" value="${esc(state.pin)}" ${bloqueado ? 'disabled' : ''} aria-label="PIN">
     <div class="pinpad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button data-action="pinkey" data-k="${k}" ${bloqueado ? 'disabled' : ''}>${k}</button>`).join('')}<button data-action="pinkey" data-k="del" ${bloqueado ? 'disabled' : ''}>⌫</button><button data-action="pinkey" data-k="0" ${bloqueado ? 'disabled' : ''}>0</button><button data-action="pinok" ${bloqueado ? 'disabled' : ''} style="background:var(--roxo);color:#fff">OK</button></div>
@@ -545,11 +545,11 @@ function filtrosCard(C, comUnidade){
       <div><label>Mês</label><select data-cf="mes"><option value="">Todos</option>${opt(C.mesesOpt, cf.mes, m => mesLabel('0000-' + m).slice(0, 3))}</select></div>
       ${comUnidade ? `<div><label>Unidade</label><select data-cf="unidade"><option value="">Todas</option>${opt(C.unidadesOpt, cf.unidade, u => u + (nomeU(u) ? ' · ' + nomeU(u) : ''))}</select></div>` : ''}
     </div>
-    <p class="small muted">Mostrando: ${esc(C.filtroTxt)}.${comUnidade ? '' : ' A avaliação do conselho não tem unidade: entra pelos filtros de ano e mês.'}</p>`;
+    <p class="small muted">Mostrando: ${esc(C.filtroTxt)}.</p>`;
 }
 function cabecalhoPainel(C, titulo, vazio){
   const semNada = !C.totais.equipe && !C.totais.clientes && !C.totais.conselho;
-  const fontes = DEMO ? '<div class="aviso"><b>Dados de exemplo</b> (demonstração): números inventados só para mostrar o painel.</div>' : (C.origem ? `<p class="small muted">Fontes: ${['equipe', 'clientes', 'conselho'].map(k => `${k} ${C.origem[k].aparelho} deste aparelho + ${C.origem[k].nuvem} da nuvem`).join(' · ')}.</p>` : '');
+  const fontes = DEMO ? '<div class="aviso"><b>Dados de exemplo</b> (demonstração): números inventados só para mostrar o painel.</div>' : (C.origem ? `<p class="small muted">Fontes: ${['equipe', 'clientes'].map(k => `${k} ${C.origem[k].aparelho} deste aparelho + ${C.origem[k].nuvem} da nuvem`).join(' · ')}.</p>` : '');
   return `<div class="espaco"><h1 style="margin:0">${esc(titulo)}</h1><div class="linha" style="margin:0"><button class="btn" data-action="xlsx" ${vazio ? 'disabled' : ''}>Baixar Excel único</button><button class="btn" data-action="pdf" ${vazio ? 'disabled' : ''}>Baixar PDF único</button><button class="btn ghost" data-action="config">Configurações</button></div></div>
     <div class="linha" style="margin-top:8px">${syncOk() ? `<button class="btn light mini" data-action="sync">Atualizar da nuvem</button><span class="small muted">${settings.ultimaSync ? 'Última atualização: ' + esc(syncLabel(settings.ultimaSync)) : 'Ainda não atualizado da nuvem'} · <button class="btn ghost mini" data-action="syncfull">baixar tudo de novo</button></span>` : '<span class="small muted">Sincronização online desligada: mostrando só o que está neste aparelho. Ligue o servidor em <b>Configurações</b>.</span>'}</div>
     ${fontes}
@@ -626,8 +626,8 @@ function viewPainel(){
       <div class="card"><h2>Detalhes</h2>${detalhesConselho(gCo, C)}${rodapePainel(vazio)}</div></div>`;
   }
   return header('Painel consolidado') + `<div class="wrap">${abasBarra()}
-  <div class="card">${cabecalhoPainel(C, 'Consolidado — as três pesquisas', vazio)}${filtrosCard(C, true)}
-    <div class="grade">${blocoEquipe(gEq, C)}${blocoClientes(gCl)}${blocoConselho(gCo)}</div>
+  <div class="card">${cabecalhoPainel(C, 'Consolidado — clientes e equipe', vazio)}${filtrosCard(C, true)}
+    <div class="grade">${blocoEquipe(gEq, C)}${blocoClientes(gCl)}</div>
   </div>
   <div class="card"><h2>Por unidade — equipe × clientes</h2>
     <div class="tabela-wrap"><table><tr><th class="l">Unidade</th><th class="l">Local</th><th>Equipe: resp.</th><th>% Sim pond.</th><th>eNPS</th><th>Clientes: resp.</th><th>CSAT %</th><th>NPS</th><th>% c/ problema</th><th>Aviso</th></tr>
@@ -635,12 +635,12 @@ function viewPainel(){
     <p class="legenda">Barra roxa = % Sim ponderado da equipe; barra violeta = CSAT (% positivo) dos clientes. "identificável" = menos de 3 respostas da equipe na unidade (uso restrito); "poucas" = menos de 5.</p>
   </div>
   <div class="card"><h2>Tendência mensal</h2>
-    ${graficoLinhas(C.tendencia.map(t => t.mes), [{ nome: 'Equipe · % Sim ponderado', cor: 'var(--serie-e)', pts: C.tendencia.map(t => t.eq.pctSimPond) }, { nome: 'Clientes · CSAT % positivo', cor: 'var(--serie-c)', pts: C.tendencia.map(t => t.cl.csat) }, { nome: 'Conselho · índice da reunião', cor: 'var(--serie-n)', pts: C.tendencia.map(t => t.co.blocos.reuniao == null ? null : t.co.blocos.reuniao) }])}
-    <div class="tabela-wrap"><table><tr><th class="l">Mês</th><th>Equipe resp.</th><th>% Sim pond.</th><th>eNPS</th><th>Clientes resp.</th><th>CSAT %</th><th>NPS</th><th>% c/ problema</th><th>Conselho resp.</th><th>Índice reunião</th><th>Aviso</th></tr>
-    ${C.tendencia.map(t => `<tr><td class="l"><b>${esc(mesLabel(t.mes))}</b></td><td>${t.eq.n || '—'}</td><td>${pct(t.eq.pctSimPond)}</td><td>${t.eq.enpsVal == null ? '—' : t.eq.enpsVal}</td><td>${t.cl.n || '—'}</td><td>${pct(t.cl.csat)}</td><td>${t.cl.nps == null ? '—' : t.cl.nps}</td><td>${pct(t.cl.pctProblema)}</td><td>${t.co.n || '—'}</td><td>${pct(t.co.blocos.reuniao)}</td><td>${avisoEq(t.eq)}${t.co.identificavel ? ' <span class="tag ruim">conselho identificável</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="11" class="muted">Sem dados no filtro.</td></tr>'}</table></div>
+    ${graficoLinhas(C.tendencia.map(t => t.mes), [{ nome: 'Equipe · % Sim ponderado', cor: 'var(--serie-e)', pts: C.tendencia.map(t => t.eq.pctSimPond) }, { nome: 'Clientes · CSAT % positivo', cor: 'var(--serie-c)', pts: C.tendencia.map(t => t.cl.csat) }])}
+    <div class="tabela-wrap"><table><tr><th class="l">Mês</th><th>Equipe resp.</th><th>% Sim pond.</th><th>eNPS</th><th>Clientes resp.</th><th>CSAT %</th><th>NPS</th><th>% c/ problema</th><th>Aviso</th></tr>
+    ${C.tendencia.map(t => `<tr><td class="l"><b>${esc(mesLabel(t.mes))}</b></td><td>${t.eq.n || '—'}</td><td>${pct(t.eq.pctSimPond)}</td><td>${t.eq.enpsVal == null ? '—' : t.eq.enpsVal}</td><td>${t.cl.n || '—'}</td><td>${pct(t.cl.csat)}</td><td>${t.cl.nps == null ? '—' : t.cl.nps}</td><td>${pct(t.cl.pctProblema)}</td><td>${avisoEq(t.eq)}</td></tr>`).join('') || '<tr><td colspan="9" class="muted">Sem dados no filtro.</td></tr>'}</table></div>
   </div>
   <div class="card"><h2>Detalhes por pesquisa</h2>
-    ${detalhesEquipe(gEq)}${detalhesClientes(gCl)}${detalhesConselho(gCo, C)}
+    ${detalhesEquipe(gEq)}${detalhesClientes(gCl)}
     ${rodapePainel(vazio)}
   </div></div>`;
 }
@@ -651,11 +651,11 @@ function viewConfig(){
     <label>URL do servidor (Apps Script — LEIA-ME, seção 11)</label><input type="url" id="s-webhook" value="${esc(settings.webhook)}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
     <label>Chave de sincronização</label><input type="text" id="s-chave" value="${esc(settings.chave || '')}" placeholder="a mesma digitada no servidor" autocomplete="off" spellcheck="false">
     <div class="linha"><button class="btn light" data-action="testarservidor">Testar ligação</button></div>
-    <p class="legenda">O painel só lê da nuvem (nunca envia). Ele baixa as três abas (Equipe, Clientes, Conselho) e guarda uma cópia neste aparelho; contatos de clientes nunca são baixados aqui.</p>
+    <p class="legenda">O painel só lê da nuvem (nunca envia). Ele baixa as respostas de Equipe e de Clientes e guarda uma cópia neste aparelho; contatos de clientes nunca são baixados aqui.</p>
     <label>Trocar PIN (4 a 8 dígitos; vazio = manter)</label><input type="text" id="s-pin" inputmode="numeric" autocomplete="off" placeholder="novo PIN" style="-webkit-text-security:disc">
     <div class="linha"><button class="btn" data-action="saveconfig">Salvar</button><button class="btn ghost" data-action="painel">Voltar ao painel</button></div>
     <h3>Cópia da nuvem neste aparelho</h3>
-    <p class="small muted">${(() => { const n = nuvem(); return `${n.equipe.length} da equipe · ${n.clientes.length} de clientes · ${n.conselho.length} do conselho${settings.ultimaSync ? ' · última atualização ' + syncLabel(settings.ultimaSync) : ''}`; })()}</p>
+    <p class="small muted">${(() => { const n = nuvem(); return `${n.equipe.length} da equipe · ${n.clientes.length} de clientes${settings.ultimaSync ? ' · última atualização ' + syncLabel(settings.ultimaSync) : ''}`; })()}</p>
     <div class="linha"><button class="btn perigo" data-action="wipenuvem">Apagar a cópia da nuvem deste aparelho</button></div>
     <p class="legenda">Apagar a cópia não apaga nada no servidor nem nas pesquisas; na próxima atualização o painel baixa tudo de novo.</p>
   </div></div>`;
@@ -711,12 +711,10 @@ function dadosExport(){
     ['Indicador', 'Valor', 'Observação'],
     ['EQUIPE — respostas', gEq.n, `${gEq.nUnid} unidade(s)${C.legado ? ` · ${C.legado} de versão antiga (escala 1-5) fora das contas` : ''}${gEq.identificavel ? ' · menos de 3: identifica quem respondeu, uso restrito' : ''}`],
     ['EQUIPE — % Sim ponderado', pct(gEq.pctSimPond), 'melhor resposta das 15 frases × peso (1 a 3)'], ['EQUIPE — % Sim', pct(gEq.pctSim), ''], ['EQUIPE — eNPS', gEq.enpsVal == null ? '' : gEq.enpsVal, `${gEq.enps.n} nota(s); % promotores (9-10) − % detratores (0-6)`], ['EQUIPE — % fácil com o escritório', pct(gEq.cesFacil), `${gEq.ces.n} que precisaram do escritório`],
-    ['CLIENTES — respostas', gCl.n, `${gCl.nUnid} unidade(s)${gCl.n && gCl.n < 50 ? ' · abaixo de 50: leia como indicação' : ''}`], ['CLIENTES — CSAT (% positivo)', pct(gCl.csat), `${gCl.csatN} nota(s)`], ['CLIENTES — NPS', gCl.nps == null ? '' : gCl.nps, `${gCl.npsN} nota(s)`], ['CLIENTES — % positivo ponderado (7 fatores)', pct(gCl.pond), 'fatores × peso (1 a 3)'], ['CLIENTES — % com problema', pct(gCl.pctProblema), `${gCl.comProblema} relataram problema`], ['CLIENTES — % resolvido na hora', pct(gCl.resolvidoHora), 'entre quem teve problema'], ['CLIENTES — % fácil pedir ajuda (CES)', pct(gCl.ces), `${gCl.cesN} na base`], ['CLIENTES — pediram retorno', gCl.pediramRetorno, 'contatos ficam só na pesquisa com clientes'],
-    ['CONSELHO — reuniões', gCo.nReunioes, ''], ['CONSELHO — respostas', gCo.n, gCo.identTotal ? 'menos de 3: identifica quem respondeu, uso restrito' : ''], ['CONSELHO — índice da reunião', pct(gCo.blocos.reuniao), 'itens da reunião × peso']].concat(gCo.conselheiros.map(cs => [`CONSELHO — índice · ${cs.nome}`, pct(gCo.blocos[cs.c]), `avaliado em ${gCo.nBloco[cs.c]} de ${gCo.n} resposta(s)${gCo.identBloco[cs.c] ? ' — menos de 3 avaliações: identifica quem respondeu' : ''}`])).concat([
-    ['CONSELHO — nota média "valeu o tempo" (0-10)', gCo.nota == null ? '' : gCo.nota, gCo.notaN ? `${gCo.notaN} nota(s) · ${pct(gCo.nota9)} deram 9 ou 10` : ''], [],
-    ['Uso restrito da área de Experiência do Cliente e da governança da Maxipark. Unidades com menos de 3 respostas da equipe e reuniões (ou blocos de conselheiro) com menos de 3 avaliações identificam quem respondeu: não discutir individualmente.']]);
+    ['CLIENTES — respostas', gCl.n, `${gCl.nUnid} unidade(s)${gCl.n && gCl.n < 50 ? ' · abaixo de 50: leia como indicação' : ''}`], ['CLIENTES — CSAT (% positivo)', pct(gCl.csat), `${gCl.csatN} nota(s)`], ['CLIENTES — NPS', gCl.nps == null ? '' : gCl.nps, `${gCl.npsN} nota(s)`], ['CLIENTES — % positivo ponderado (7 fatores)', pct(gCl.pond), 'fatores × peso (1 a 3)'], ['CLIENTES — % com problema', pct(gCl.pctProblema), `${gCl.comProblema} relataram problema`], ['CLIENTES — % resolvido na hora', pct(gCl.resolvidoHora), 'entre quem teve problema'], ['CLIENTES — % fácil pedir ajuda (CES)', pct(gCl.ces), `${gCl.cesN} na base`], ['CLIENTES — pediram retorno', gCl.pediramRetorno, 'contatos ficam só na pesquisa com clientes'], [],
+    ['Uso restrito da área de Experiência do Cliente e da governança da Maxipark. Unidades com menos de 3 respostas da equipe e reuniões (ou blocos de conselheiro) com menos de 3 avaliações identificam quem respondeu: não discutir individualmente.']];
   const porUnidade = [['Unidade', 'Local', 'Equipe: respostas', '% Sim', '% Sim ponderado', 'eNPS', '% fácil c/ escritório', 'Clientes: respostas', 'CSAT %', 'NPS', '% positivo ponderado', '% com problema', '% resolvido na hora', 'Aviso']].concat(C.porUnidade.map(u => [u.unidade, u.nome, u.eq.n, pct2(u.eq.pctSim), pct2(u.eq.pctSimPond), u.eq.enpsVal == null ? '' : u.eq.enpsVal, pct2(u.eq.cesFacil), u.cl.n, pct2(u.cl.csat), u.cl.nps == null ? '' : u.cl.nps, pct2(u.cl.pond), pct2(u.cl.pctProblema), pct2(u.cl.resolvidoHora), u.eq.identificavel ? 'equipe: menos de 3 respostas (identificável, uso restrito)' : (u.eq.poucas ? 'equipe: menos de 5 respostas (eNPS e CES não divulgar por unidade)' : '')]));
-  const tendencia = [['Mês', 'Equipe: respostas', '% Sim ponderado', 'eNPS', 'Clientes: respostas', 'CSAT %', 'NPS', '% com problema', 'Conselho: respostas', 'Índice da reunião'].concat(gCo.conselheiros.map(cs => 'Índice · ' + cs.nome), ['Aviso'])].concat(C.tendencia.map(t => [mesLabel(t.mes), t.eq.n, pct2(t.eq.pctSimPond), t.eq.enpsVal == null ? '' : t.eq.enpsVal, t.cl.n, pct2(t.cl.csat), t.cl.nps == null ? '' : t.cl.nps, pct2(t.cl.pctProblema), t.co.n, pct2(t.co.blocos.reuniao)].concat(gCo.conselheiros.map(cs => pct2(t.co.blocos[cs.c])), [[t.eq.identificavel ? 'equipe: menos de 3 respostas (identificável, uso restrito)' : (t.eq.poucas ? 'equipe: menos de 5 respostas' : ''), t.co.identificavel ? 'conselho: menos de 3 avaliações (identificável)' : ''].filter(Boolean).join(' · ')])));
+  const tendencia = [['Mês', 'Equipe: respostas', '% Sim ponderado', 'eNPS', 'Clientes: respostas', 'CSAT %', 'NPS', '% com problema', 'Aviso']].concat(C.tendencia.map(t => [mesLabel(t.mes), t.eq.n, pct2(t.eq.pctSimPond), t.eq.enpsVal == null ? '' : t.eq.enpsVal, t.cl.n, pct2(t.cl.csat), t.cl.nps == null ? '' : t.cl.nps, pct2(t.cl.pctProblema), t.eq.identificavel ? 'equipe: menos de 3 respostas (identificável, uso restrito)' : (t.eq.poucas ? 'equipe: menos de 5 respostas' : '')]));
   const eqFrases = [['#', 'Dimensão', 'Frase', 'Peso', 'Responderam', 'N/A', '% Sim', '% Não', 'Sim', 'Meio', 'Não']].concat(gEq.itens.map((it, i) => [i + 1, it.dim, it.t, it.p, it.n, it.na, pct2(it.pctSim), pct2(it.pctNao), it.c[2], it.c[1], it.c[0]]));
   const clFat = [['Código', 'Fator', 'Peso', 'Responderam', 'N/A', '% positivo', '% negativo']].concat(gCl.fatores.map(f => [f.c, f.f, f.p, f.n, f.na, pct2(f.pct), pct2(f.neg)])).concat([[], ['Problema principal', 'Respostas', '% das respostas']], Object.keys(CL.problemas).map(k => [CL.problemas[k], gCl.problemas[k] || 0, gCl.n ? Math.round((gCl.problemas[k] || 0) / gCl.n * 100) + '%' : '']), [[], ['Como foi resolvido', 'Respostas', '']], Object.keys(CL.resolv).map(k => [CL.resolv[k], gCl.resolv[k] || 0, '']), [[], ['Tipo de cliente', 'Respostas', '']], Object.keys(CL.tipos).map(k => [CL.tipos[k], gCl.tipos[k] || 0, '']));
   const coReunioes = [['Reunião', 'Nome', 'Respostas', 'Índice da reunião'].concat(gCo.conselheiros.map(cs => 'Índice · ' + cs.nome), ['Nota média (0-10)', '% 9-10', 'Aviso'])].concat(C.reunioes.map(u => [dataLabel(u.unidade), u.nome, u.n, pct2(u.blocos.reuniao)].concat(gCo.conselheiros.map(cs => pct2(u.blocos[cs.c]) + (u.nBloco[cs.c] !== u.n ? ` (${u.nBloco[cs.c]} aval.)` : '')), [u.nota == null ? '' : u.nota, pct2(u.nota9), u.identTotal ? 'identificável (menos de 3 respostas)' : (u.blocosIdent.length ? 'identificável: ' + u.blocosIdent.join(', ') + ' com menos de 3 avaliações' : '')])));
@@ -726,15 +724,15 @@ function dadosExport(){
   const respEq = [['versao', 'escala', 'id', 'unidade', 'mes', 'data', 'rodada'].concat(Array.from({ length: 15 }, (_, i) => 'B' + (i + 1)), ['eNPS', 'CES', 'aberta1', 'aberta2'])].concat(shuffle(eqF).map(r => [r.versao, r.escala, r.id, r.unidade, r.mes, r.data, r.rodada || 'R1'].concat(Array.from({ length: 15 }, (_, i) => v((r.r || [])[i])), [v(r.enps), v(r.ces), v(r.a1), v(r.a2)]).map(v)));
   const clCols = CL.cols.filter(c => c !== 'contato'); const respCl = [['versao', 'ver', 'esc', 'id', 'unidade', 'ponto', 'data', 'hora'].concat(clCols)].concat(shuffle(clF).map(r => [r.versao, r.ver, escDeCl(r), r.id, r.unidade, r.ponto, r.data, r.hora].concat(clCols.map(c => v((r.r || {})[c]))).map(v)));
   const respCo = [['versao', 'ver', 'esc', 'id', 'unidade', 'reuniao', 'presentes', 'avaliados', 'data'].concat(CO.cols)].concat(shuffle(coF).map(r => [r.versao, r.ver, escDeCo(r), r.id, r.unidade, r.reuniao || nomeReuniao(r.unidade), r.presentes, coAvaliados(r, gCo.conselheiros).join(' '), r.data].concat(CO.cols.map(c => v((r.r || {})[c]))).map(v)));
-  const legenda = [['Campo / regra', 'Significado'], ['% Sim / % positivo', 'melhor resposta com escala de 3 (as duas melhores com escala de 5); NA = não sei / não se aplica, fora das contas'], ['ponderado', 'cada frase, fator ou item entra com o peso 1 a 3 em uso neste aparelho (Configurações → Editar perguntas de cada app)'], ['eNPS / NPS', '% de notas 9-10 menos % de notas 0-6 (0 a 10)'], ['CES', 'equipe: % que achou fácil resolver com o escritório (NP = nunca precisou, fora da base); clientes: % que achou fácil pedir ajuda, entre quem teve problema e pediu'], ['Aviso identificável', 'menos de 3 respostas (ou 3 avaliações num bloco de conselheiro): o resultado identifica quem respondeu — uso restrito'], ['Respostas (abas)', 'uma linha por pessoa, ordem embaralhada; sem comentários por frase da equipe e sem contato de clientes (estão nas exportações de cada pesquisa)'], ['Fontes', 'respostas guardadas neste aparelho pelos três apps + cópia da nuvem (servidor/Code.gs). Filtros de ano/mês valem para as três; unidade só para equipe e clientes']];
+  const legenda = [['Campo / regra', 'Significado'], ['% Sim / % positivo', 'melhor resposta com escala de 3 (as duas melhores com escala de 5); NA = não sei / não se aplica, fora das contas'], ['ponderado', 'cada frase, fator ou item entra com o peso 1 a 3 em uso neste aparelho (Configurações → Editar perguntas de cada app)'], ['eNPS / NPS', '% de notas 9-10 menos % de notas 0-6 (0 a 10)'], ['CES', 'equipe: % que achou fácil resolver com o escritório (NP = nunca precisou, fora da base); clientes: % que achou fácil pedir ajuda, entre quem teve problema e pediu'], ['Aviso identificável', 'menos de 3 respostas (ou 3 avaliações num bloco de conselheiro): o resultado identifica quem respondeu — uso restrito'], ['Respostas (abas)', 'uma linha por pessoa, ordem embaralhada; sem comentários por frase da equipe e sem contato de clientes (estão nas exportações de cada pesquisa)'], ['Fontes', 'respostas guardadas neste aparelho pelos apps de equipe e clientes + cópia da nuvem (servidor/Code.gs). Filtros de ano, mês e unidade valem para as duas']];
   const nome = `painel_maxipark_${cf.ano || 'todos'}_${cf.mes || 'todos-meses'}_${cf.unidade || 'todas'}_${hojeISO()}`;
   return { titulo, escopo, C, resumo, porUnidade, tendencia, eqFrases, clFat, coReunioes, coItens, respEq, respCl, respCo, legenda, nome };
 }
 function pct2(v){ return v == null ? '' : v + '%'; }
 function folhasExcel(D){
-  return [{ nome: 'Resumo', aoa: D.resumo, larguras: [48, 14, 70], semCab: true }, { nome: 'Por unidade', aoa: D.porUnidade, larguras: [14, 22, 10, 9, 12, 8, 12, 10, 9, 8, 12, 12, 12, 44] }, { nome: 'Tendência', aoa: D.tendencia, larguras: [12, 10, 12, 8, 10, 9, 8, 12, 10, 12].concat(D.C.gCo.conselheiros.map(() => 16), [44]) },
-    { nome: 'Equipe por frase', aoa: D.eqFrases, larguras: [5, 30, 70, 6, 12, 6, 8, 8, 6, 6, 6] }, { nome: 'Clientes', aoa: D.clFat, larguras: [40, 12, 12, 12, 6, 12, 12] }, { nome: 'Conselho reuniões', aoa: D.coReunioes, larguras: [12, 28, 10, 14].concat(D.C.gCo.conselheiros.map(() => 22), [12, 8, 44]) }, { nome: 'Conselho itens', aoa: D.coItens, larguras: [8, 22, 40, 6, 12, 12, 12, 12] },
-    { nome: 'Resp. equipe', aoa: D.respEq, larguras: [7, 6, 14, 12, 8, 11, 7].concat(Array.from({ length: 15 }, () => 5), [6, 6, 40, 40]) }, { nome: 'Resp. clientes', aoa: D.respCl, larguras: [7, 5, 4, 14, 12, 8, 11, 6].concat(D.respCl[0].slice(8).map(c => c === 'coment' ? 50 : 6)) }, { nome: 'Resp. conselho', aoa: D.respCo, larguras: [7, 5, 4, 14, 12, 26, 11, 11, 11].concat(CO.cols.map(c => (c === 'mais' || c === 'mudar') ? 50 : 6)) }, { nome: 'Legenda', aoa: D.legenda, larguras: [24, 110] }];
+  return [{ nome: 'Resumo', aoa: D.resumo, larguras: [48, 14, 70], semCab: true }, { nome: 'Por unidade', aoa: D.porUnidade, larguras: [14, 22, 10, 9, 12, 8, 12, 10, 9, 8, 12, 12, 12, 44] }, { nome: 'Tendência', aoa: D.tendencia, larguras: [12, 10, 12, 8, 10, 9, 8, 12, 44] },
+    { nome: 'Equipe por frase', aoa: D.eqFrases, larguras: [5, 30, 70, 6, 12, 6, 8, 8, 6, 6, 6] }, { nome: 'Clientes', aoa: D.clFat, larguras: [40, 12, 12, 12, 6, 12, 12] },
+    { nome: 'Resp. equipe', aoa: D.respEq, larguras: [7, 6, 14, 12, 8, 11, 7].concat(Array.from({ length: 15 }, () => 5), [6, 6, 40, 40]) }, { nome: 'Resp. clientes', aoa: D.respCl, larguras: [7, 5, 4, 14, 12, 8, 11, 6].concat(D.respCl[0].slice(8).map(c => c === 'coment' ? 50 : 6)) }, { nome: 'Legenda', aoa: D.legenda, larguras: [24, 110] }];
 }
 const PCT_RE = /^-?\d+%$/;
 const AVISO_EXPORT = 'Uso restrito da área de Experiência do Cliente e da governança da Maxipark. Unidades com menos de 3 respostas da equipe e reuniões (ou blocos de conselheiro) com menos de 3 avaliações identificam quem respondeu: não discutir individualmente.';
@@ -799,7 +797,7 @@ async function _exportarPdf(){
     doc.setFontSize(9.5); doc.text(pdfTxt(`Gerado em ${dataLabel(hojeISO())} - ${D.escopo} - Painel v${VERSAO}`), 12, 40 + dy, { maxWidth: W - 24 });
     doc.setFontSize(8.5); doc.setTextColor(155, 28, 28); const av = doc.splitTextToSize(pdfTxt(AVISO_EXPORT), W - 24); doc.text(av, 12, 47 + dy); doc.setTextColor(0, 0, 0);
     doc.lastAutoTable = { finalY: 47 + dy + (av.length - 1) * 3.6 };
-    tabela('Resumo — as três pesquisas', D.resumo.slice(D.resumo.findIndex(r => r[0] === 'Indicador')).filter(r => r.length === 3), { columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 30 } } });
+    tabela('Resumo', D.resumo.slice(D.resumo.findIndex(r => r[0] === 'Indicador')).filter(r => r.length === 3), { columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 30 } } });
     doc.addPage(); doc.lastAutoTable = { finalY: 14 };
     tabela('Por unidade — equipe x clientes', D.porUnidade, { styles: { fontSize: 7, cellPadding: 1.2, overflow: 'linebreak' }, columnStyles: { 13: { cellWidth: 48 } } });
     tabela('Tendência mensal', D.tendencia);
@@ -807,9 +805,6 @@ async function _exportarPdf(){
     tabela('Equipe — as 15 frases', D.eqFrases, { columnStyles: { 2: { cellWidth: 110 } } });
     doc.addPage(); doc.lastAutoTable = { finalY: 14 };
     tabela('Clientes — fatores, problemas, resolução e tipo de cliente', D.clFat.filter(r => r.length), { columnStyles: { 0: { cellWidth: 90 } } });
-    doc.addPage(); doc.lastAutoTable = { finalY: 14 };
-    tabela('Conselho — evolução por reunião', D.coReunioes);
-    tabela('Conselho — por item', D.coItens, { columnStyles: { 2: { cellWidth: 90 } } });
     doc.addPage(); doc.lastAutoTable = { finalY: 14 };
     tabela('Legenda', D.legenda, { columnStyles: { 0: { cellWidth: 45 } } });
     const total = doc.internal.getNumberOfPages(); const rodape = pdfTxt(`${D.titulo} - ${D.escopo} - gerado em ${dataLabel(hojeISO())} - uso restrito`); const tituloFaixa = doc.splitTextToSize(pdfTxt(D.titulo), W - 72)[0];
