@@ -643,7 +643,7 @@
 
     /* ORDEM FIXA DOS CARDS — nao alterar:
        1) Pesquisa com CLIENTES  2) Pesquisa com a EQUIPE  3) Avaliação do CONSELHO  (desativada em 15/10/2026: nao aparece)
-       4) Painel de RESULTADOS (usuário)  5) Cadastro de USUÁRIOS */
+       4) Painel de RESULTADOS (usuário)  5) ACOMPANHAMENTO dos relatórios  6) Cadastro de USUÁRIOS */
     if (podeAplicar) PESQUISAS.filter(p => p.ativa !== false && (c.pesquisas || []).includes(p.id)).forEach(p =>
       cards.push({ cls:'opcao', icone:p.icone, tag:p.tag, h:p.nome, p:p.desc, vai:'Abrir pesquisa →',
         url: p.url + '#a=' + passe(c) }));   /* o cracha diz ao app quem abriu, para o historico */
@@ -670,6 +670,11 @@
            + soUn,
         vai:'Ver resultados \u2192', url: URL_PAINEL + '#a=' + passe(c) });
     }
+
+    /* ACOMPANHAMENTO dos relatórios por e-mail (15/10/2026): logo depois do painel, para quem vê resultados */
+    if (podePainel) cards.push({ cls:'opcao', icone:'\ud83d\udcec', tag:'Acompanhamento', h:'ACOMPANHAMENTO DOS RELATÓRIOS',
+      p:'Relatórios das visitas enviados por e-mail, as respostas com os planos de melhoria e prazos, e a sua resposta direto pelo app.',
+      vai:'Abrir acompanhamento \u2192', url:'acompanhamento/#a=' + passe(c) });
 
     if (c.papel === 'admin') cards.push({ cls:'opcao', icone:'🔑', tag:'Administração', h:'USUÁRIOS',
       p:'Cadastre quem pode entrar, defina o que cada um enxerga e bloqueie o acesso quando precisar.',
