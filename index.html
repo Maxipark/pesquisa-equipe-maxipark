@@ -273,10 +273,22 @@
     </div>
   </section>
 
+  <!-- MEU PIN (quem aplica pesquisa) -->
+  <section id="tela-pin" class="entrada" hidden>
+    <h1 id="pin-titulo">Seu PIN para os tablets</h1>
+    <p>Nos tablets, as áreas do usuário (finalizar a pesquisa, ver contagens, configurar) pedem um PIN. Escolha um PIN só seu, de 4 a 6 números. Os tablets vão pedir o PIN de quem abriu a pesquisa.</p>
+    <div id="erro-pin" class="erro" hidden></div>
+    <label for="p-novo"><span class="nm">Novo PIN</span><input id="p-novo" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="4 a 6 números"></label>
+    <label for="p-conf"><span class="nm">Repita o PIN</span><input id="p-conf" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off"></label>
+    <button id="btn-salvar-pin" type="button">Salvar PIN</button>
+    <button id="btn-pin-voltar" class="leve" type="button">Voltar</button>
+  </section>
+
   <!-- INÍCIO -->
   <section id="tela-inicio" hidden>
     <div class="saudacao"><h1 id="ola">Olá</h1><p id="resumo-acesso">—</p></div>
     <div class="escolhas" id="cards"></div>
+    <p id="linha-pin" class="rodape" hidden><button class="leve" type="button" id="btn-meu-pin">🔢 Meu PIN dos tablets</button></p>
     <div class="atualizar-tudo">
       <button class="leve" type="button" id="btn-atualizar-tudo">🔄 Atualizar app e pesquisas</button>
       <p id="msg-atualizar" class="rodape" style="margin-top:8px" aria-live="polite"></p>
@@ -496,7 +508,8 @@
   }
   const reg = (ev, ex) => { try { if (window.__historico) window.__historico.registra(ev, ex); } catch (e) {} };
   const passe = c => btoa(unescape(encodeURIComponent(JSON.stringify(
-    { n: c.nome, e: c.email, p: c.papel, q: c.pesquisas, u: c.unidades }))))
+    { n: c.nome, e: c.email, p: c.papel, q: c.pesquisas, u: c.unidades,
+      k: c.pinHash ? { s: c.pinSalt, h: c.pinHash } : undefined }))))   /* k = PIN do usuário, para o tablet conferir sem internet */
     .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 
   /* ---------- acesso pelo servidor: entrar, esqueci a senha, convite e o link de criar senha (17/10/2026) ---------- */
@@ -554,6 +567,41 @@
     } catch (e) { err.textContent = 'Não consegui falar com o servidor. Confira a internet e tente de novo.'; err.hidden = false; }
     finally { bt.disabled = false; bt.textContent = 'Salvar senha'; }
   }
+
+  /* ---------- PIN de cada usuário que aplica pesquisa (17/10/2026) ---------- */
+  const hexDe = b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
+  let pinDepois = '';
+  async function salvaMeuPin() {
+    const err = $('erro-pin'), a = $('p-novo').value.trim(), b = $('p-conf').value.trim(); err.hidden = true;
+    if (!/^\d{4,6}$/.test(a)) { err.textContent = 'O PIN precisa ter de 4 a 6 números.'; err.hidden = false; return; }
+    if (a !== b) { err.textContent = 'Os dois PINs não são iguais.'; err.hidden = false; return; }
+    if (!sessao || !sessao.hash) { err.textContent = 'Saia da conta e entre de novo para criar o PIN.'; err.hidden = false; return; }
+    const bt = $('btn-salvar-pin'); bt.disabled = true; bt.textContent = 'Salvando…';
+    try {
+      const sal = hexDe(crypto.getRandomValues(new Uint8Array(16)));
+      const h = hexDe(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sal + ':' + a)));
+      const r = await postServidor({ op: 'definir-pin', email: sessao.email, prova: sessao.hash, pinSalt: sal, pinHash: h });
+      if (!r || !r.ok) { err.textContent = r && r.erro === 'nao-confere' ? 'Sua senha mudou. Saia da conta e entre de novo.' : 'Não consegui salvar agora. Tente de novo.'; err.hidden = false; return; }
+      sessao.pinSalt = sal; sessao.pinHash = h;
+      const i = dados.contas.findIndex(x => x.email === sessao.email); if (i >= 0) dados.contas[i] = sessao;
+      if (r.versao) dados.versao = Math.max(dados.versao || 0, r.versao);
+      guardaUsuarios(dados);
+      reg('definiu PIN', { detalhe: sessao.nome });
+      $('p-novo').value = ''; $('p-conf').value = '';
+      ir('inicio'); inicio();
+      toast(pinDepois ? 'PIN salvo. Agora é só abrir a pesquisa.' : 'PIN salvo. Os tablets vão pedir este PIN quando você abrir a pesquisa.');
+      pinDepois = '';
+    } catch (e) { err.textContent = 'Não consegui falar com o servidor. Confira a internet e tente de novo.'; err.hidden = false; }
+    finally { bt.disabled = false; bt.textContent = 'Salvar PIN'; }
+  }
+  /* quem aplica pesquisa e ainda não tem PIN cria antes de abrir a pesquisa */
+  document.addEventListener('click', ev => {
+    const a = ev.target && ev.target.closest && ev.target.closest('#cards a'); if (!a || !sessao) return;
+    const href = a.getAttribute('href') || '';
+    if (/^(equipe|cliente|conselho)\//.test(href) && ['admin','total','aplicar'].includes(sessao.papel) && !sessao.pinHash) {
+      ev.preventDefault(); pinDepois = href; ir('pin'); $('p-novo').focus();
+    }
+  }, true);
 
   // ───────── entrar / sair ─────────
   async function entrar() {
@@ -703,6 +751,7 @@
     const dentro = !!sessao;
     $('tela-entrada').hidden = dentro;
     $('tela-inicio').hidden = !(dentro && tela === 'inicio');
+    $('tela-pin').hidden = !(dentro && tela === 'pin');
     $('tela-chave').hidden = !(dentro && tela === 'chave');
     $('tela-admin').hidden = !(dentro && tela === 'admin');
     $('tela-hist').hidden = !(dentro && tela === 'hist' && sessao && sessao.admin);   /* so o administrador */
@@ -744,6 +793,8 @@
     const cards = [];
     const podePainel = ['admin','total','gestor','respostas'].includes(c.papel);
     const podeAplicar = ['admin','total','aplicar'].includes(c.papel);   /* o usuário tambem aplica as pesquisas */
+    $('linha-pin').hidden = !podeAplicar;
+    $('btn-meu-pin').textContent = c.pinHash ? '🔢 Trocar meu PIN dos tablets' : '🔢 Criar meu PIN dos tablets';
 
     /* ORDEM FIXA DOS CARDS — nao alterar:
        1) Pesquisa com CLIENTES  2) Pesquisa com a EQUIPE  3) Avaliação do CONSELHO  (desativada em 15/10/2026: nao aparece)
@@ -1067,7 +1118,7 @@
           if (err) { err.textContent = 'O administrador desconectou todos os acessos. Entre de novo com seu e-mail e senha.'; err.hidden = false; }
           return;
         }
-        if (sessao) { const a = dados.contas.find(c => c.id === sessao.id); if (!a || a.bloqueado) sairDaConta(); }
+        if (sessao) { const a = dados.contas.find(c => c.id === sessao.id); if (!a || a.bloqueado) sairDaConta(); else { sessao = a; if (tela === 'inicio') inicio(); } }
         if ($('tela-admin') && !$('tela-admin').hidden) admin();
       } else {
         await mandaUsuariosAoServidor();            /* este aparelho tem algo mais novo: sobe */
@@ -1175,6 +1226,9 @@
         msg.hidden = false; });
     }
     if (b.id === 'btn-salvar-senha') return salvaSenhaDoLink();
+    if (b.id === 'btn-meu-pin') { pinDepois = ''; ir('pin'); $('p-novo').focus(); return; }
+    if (b.id === 'btn-salvar-pin') return salvaMeuPin();
+    if (b.id === 'btn-pin-voltar') { $('erro-pin').hidden = true; return ir('inicio'); }
     if (b.id === 'btn-ir-entrar') { modoSenha = false; try { history.replaceState(null, '', location.pathname); } catch (e) {} pinta(); return; }
     if (b.id === 'btn-sair') return sairDaConta();
     if (b.id === 'btn-cad') return cadastrar();
@@ -1277,6 +1331,7 @@
     if (id === 'k-chave') { ev.preventDefault(); ligarServidor(); }
     if (id === 'c-nome' || id === 'c-email') { ev.preventDefault(); cadastrar(); }
     if (id === 's-nova' || id === 's-conf') { ev.preventDefault(); salvaSenhaDoLink(); }
+    if (id === 'p-novo' || id === 'p-conf') { ev.preventDefault(); salvaMeuPin(); }
   });
 
   caixasForm(); ajustaQuais(); retomar();
