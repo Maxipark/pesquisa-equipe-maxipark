@@ -253,14 +253,19 @@ function lerAba(nome, cols) {
   });
 }
 function idRelatorio() { return 'REL-' + Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyMMdd') + '-' + Utilities.getUuid().replace(/-/g, '').slice(0, 5).toUpperCase(); }
-function limpaResposta(t) {
-  t = String(t || '').replace(/\r/g, '');
-  const corte = t.search(/\n[^\n]*(Em .{0,250}escreveu:|On .{0,250}wrote:|-{2,}\s*(Original Message|Mensagem original)|^De:\s)/im);
-  if (corte > 0) t = t.slice(0, corte);
-  const sublinhado = t.search(/\n\s*_{5,}/); if (sublinhado > 0) t = t.slice(0, sublinhado);   // separador do Outlook antes do e-mail original
-  t = t.split('\n').filter(function (l) { return !/^\s*>/.test(l); }).join('\n').trim();
-  t = t.replace(/\n+\S{1,3}$/, '').trim();   // sobra de uma linha de cabeçalho cortada
-  return t.slice(0, 5000);
+function limpaResposta(t) {   // guarda a resposta inteira com a assinatura e o cabeçalho (quem respondeu a quem); só tira o relatório citado que vem embaixo
+  const linhas = String(t || '').replace(/\r/g, '').split('\n'), out = [];
+  for (let i = 0; i < linhas.length; i++) {
+    const l = linhas[i];
+    if (/^\s*>/.test(l)) break;                                                     // começo do e-mail citado (estilo Gmail)
+    if (/(Em .{0,250}escreveu:|On .{0,250}wrote:)\s*$/.test(l)) { out.push(l.trim()); break; }   // mantém a linha "Fulano escreveu:"
+    if (/^\s*\*?(De|From):\s/.test(l)) {                                          // cabeçalho do Outlook: mantém De/Enviado/Para/Cc/Assunto
+      for (let k = i; k < linhas.length && k - i < 8 && linhas[k].trim() !== ''; k++) out.push(linhas[k]);
+      break;
+    }
+    out.push(l);
+  }
+  return out.join('\n').trim().slice(0, 5000);
 }
 function coletaRespostasRelatorios() {
   const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return 0;
