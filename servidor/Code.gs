@@ -285,7 +285,7 @@ function coletaRespostasRelatorios() {
         const id = msg.getId(); if (vistos[id]) return;
         const de = String(msg.getFrom() || ''); if (eu && de.toLowerCase().indexOf(eu) >= 0) return;
         vistos[id] = true;
-        novas.push([id, m[1], rel.unidade, rel.rodada, rel.data, semFormula(de), msg.getDate(), semFormula(limpaResposta(msg.getPlainBody()))]);
+        novas.push([id, m[1], rel.unidade, rel.rodada, rel.data, semFormula(soEmail(de)), msg.getDate(), semFormula(limpaResposta(msg.getPlainBody()))]);
       });
     });
     if (novas.length) wsA.getRange(wsA.getLastRow() + 1, 1, novas.length, COLS_RESP.length).setValues(novas);
@@ -297,10 +297,12 @@ function autorizarRespostas() { const n = GmailApp.search('subject:"Relatório d
 /* Rode UMA vez pelo editor para o Google pedir a permissão de enviar e-mail. Não envia nada. */
 function autorizarEmail() { const resta = MailApp.getRemainingDailyQuota(); Logger.log('Permissão de e-mail OK. E-mails que ainda podem sair hoje: ' + resta); return resta; }
 
-/* ---------- Responder pelo app (servidor v16, 15/10/2026) ----------
+/* ---------- Responder pelo app (servidor v17, 15/10/2026) ----------
    O app manda { id do relatório, texto, autor, email }. O servidor acha a conversa no Gmail pelo código do relatório,
    responde para todos da conversa com o texto + o histórico (relatório e todas as respostas) e guarda a resposta
    na aba "RespostasRelatorios" (msg_id começa com "app-"), para aparecer no histórico do app. */
+/* No histórico fica só o e-mail de quem respondeu (pedido do Raphael em 15/10/2026). */
+function soEmail(de) { const m = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.exec(String(de || '')); return m ? m[0].toLowerCase() : String(de || '').trim(); }
 function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function quandoBR(d) { const x = d instanceof Date ? d : new Date(d); return isNaN(x) ? String(d || '') : Utilities.formatDate(x, 'America/Sao_Paulo', 'dd/MM/yyyy HH:mm'); }
 function responderRelatorio(b) {
@@ -323,9 +325,9 @@ function responderRelatorio(b) {
     + '<p style="margin:10px 0 0">' + escHtml(autor) + (email ? ' · ' + escHtml(email) : '') + '<br><span style="color:#6e6a7c;font-size:12px">Enviado pelo app de pesquisas Maxipark</span></p>'
     + '<div style="margin-top:22px;padding-top:12px;border-top:1px solid #e3dff0"><div style="font-size:13px;font-weight:700;color:#4e3572">Histórico desta pesquisa · ' + escHtml(rel.unidade) + ' · ' + escHtml(rel.rodada) + ' · código ' + escHtml(id) + '</div>'
     + bloco('Relatório enviado para ' + rel.para, rel.enviado_em, rel.assunto)
-    + hist.map(function (r) { return bloco(r.de, r.recebido_em, r.texto); }).join('')
+    + hist.map(function (r) { return bloco(soEmail(r.de), r.recebido_em, r.texto); }).join('')
     + '</div></div>';
   ultima.replyAll(texto + '\n\n' + autor, { htmlBody: html, name: 'Pesquisas Maxipark' });
-  abaSimples(ABA_RESP_REL, COLS_RESP).appendRow(['app-' + Utilities.getUuid(), id, rel.unidade, rel.rodada, "'" + String(rel.data || '').slice(0, 10), semFormula(autor + (email ? ' <' + email + '>' : '') + ' · enviado pelo app'), new Date(), semFormula(texto)]);
+  abaSimples(ABA_RESP_REL, COLS_RESP).appendRow(['app-' + Utilities.getUuid(), id, rel.unidade, rel.rodada, "'" + String(rel.data || '').slice(0, 10), semFormula(email || autor), new Date(), semFormula(texto)]);
   return { ok: true };
 }
