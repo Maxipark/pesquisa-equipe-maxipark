@@ -539,7 +539,8 @@ function definirPin(b) {
 function protegeCredenciais(novo) {   // no "salvar usuários" do administrador, senha e PIN sempre vêm do servidor
   const atual = lerUsuarios();
   ((novo && novo.contas) || []).forEach(function (c) {
-    const a = contaPorEmail(atual, c.email); if (!a) return;
+    const a = contaPorEmail(atual, c.email) || (c.id && ((atual && atual.contas) || []).filter(function (x) { return x.id === c.id; })[0]);   // casa pelo e-mail ou, se o e-mail foi corrigido, pelo id (21/10/2026)
+    if (!a) return;
     ['salt', 'iter', 'hash', 'pinSalt', 'pinHash'].forEach(function (k) { if (a[k] !== undefined) c[k] = a[k]; else delete c[k]; });
     if (a.hash) delete c.pendente;
   });
