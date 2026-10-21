@@ -374,6 +374,9 @@
         <label class="papel"><input type="radio" name="papel" value="aplicar">
           <span><span class="t">Usuário de campo — aplica as pesquisas, não vê respostas</span>
           <span class="d">Abre as pesquisas no tablet para as pessoas responderem. Não enxerga nenhum resultado.</span></span></label>
+        <label class="papel"><input type="radio" name="papel" value="revisor">
+          <span><span class="t">Só revisão das perguntas — marca manter, mudar ou tirar e comenta</span>
+          <span class="d">Vê apenas a Revisão das perguntas. Não vê resultados, não aplica pesquisas e não faz acompanhamento.</span></span></label>
       </div>
 
       <div id="quais">
@@ -460,13 +463,14 @@
   }
   const UNS = lerUnidades();
   const nomeU = c => { const u = UNS.find(x => x.codigo === c); return u && u.nome ? u.nome : ''; };
-  const NOME_PAPEL = { admin:'Administrador', total:'Aplica e acompanha', gestor:'Visualização completa', respostas:'Visualização restrita', aplicar:'Usuário de campo · não vê respostas' };
+  const NOME_PAPEL = { admin:'Administrador', total:'Aplica e acompanha', gestor:'Visualização completa', respostas:'Visualização restrita', aplicar:'Usuário de campo · não vê respostas', revisor:'Só revisão das perguntas' };
   const FRASE = {
     admin: 'Você administra os acessos e enxerga tudo.',
     total: 'Aplica e acompanha: você vê as respostas de todas as pesquisas e unidades, aplica as pesquisas e faz o acompanhamento dos relatórios.',
     gestor: 'Visualização completa: você vê as respostas de todas as pesquisas e unidades e faz o acompanhamento dos relatórios. Não aplica pesquisas.',
     respostas: 'Visualização restrita: você vê apenas os resultados e as unidades liberados para o seu acesso.',
-    aplicar: 'Usuário de campo: você abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.'
+    aplicar: 'Usuário de campo: você abre as pesquisas para as pessoas responderem. Não vê resposta nenhuma.',
+    revisor: 'Só revisão das perguntas: você marca manter, mudar o texto ou tirar em cada pergunta e deixa a sua observação.'
   };
   const norm = e => (e || '').trim().toLowerCase();
   const hoje = () => new Date().toISOString().slice(0, 10);
@@ -844,7 +848,7 @@
       vai:'Abrir acompanhamento \u2192', url:'acompanhamento/#a=' + passe(c) });
 
     /* REVISÃO DAS PERGUNTAS (21/10/2026): cada pessoa marca manter / mudar / tirar e comenta; todos veem o que os outros marcaram */
-    if (podePainel) cards.push({ cls:'opcao', icone:'\ud83d\udcdd', tag:'Revis\u00e3o', h:'REVIS\u00c3O DAS PERGUNTAS',
+    if (podePainel || c.papel === 'revisor') cards.push({ cls:'opcao', icone:'\ud83d\udcdd', tag:'Revis\u00e3o', h:'REVIS\u00c3O DAS PERGUNTAS',
       p:'As perguntas das pesquisas com clientes e com a equipe, como est\u00e3o no ar. Marque manter, mudar o texto ou tirar, deixe sua observa\u00e7\u00e3o e veja o que os outros marcaram.',
       vai:'Abrir revis\u00e3o \u2192', url:'revisao/#a=' + passe(c) });
 
@@ -1001,8 +1005,9 @@
         rad('gestor', 'Visualização completa — vê tudo e faz o acompanhamento, não aplica', 'Todas as pesquisas e unidades: resultados e respostas do acompanhamento. Não aplica pesquisas.') +
         rad('respostas', 'Visualização restrita — você escolhe o que ele vê', 'Vê apenas os ícones e as unidades marcados abaixo.') +
         rad('aplicar', 'Usuário de campo — aplica as pesquisas, não vê respostas', 'Abre as pesquisas no tablet. Não enxerga nenhum resultado.') +
+        rad('revisor', 'Só revisão das perguntas — marca manter, mudar ou tirar e comenta', 'Vê apenas a Revisão das perguntas. Não vê resultados, não aplica e não faz acompanhamento.') +
       '</div>' +
-      ((papel === 'total' || papel === 'gestor') ? '' :
+      ((papel === 'total' || papel === 'gestor' || papel === 'revisor') ? '' :
         '<span class="rot">' + (papel === 'aplicar' ? 'Quais pesquisas ele pode aplicar' : 'Quais ícones aparecem na página inicial') + '</span>' +
         '<div class="caixas">' +
           '<label class="cx"><input type="checkbox" data-epq="clientes"' + marcado('clientes') + '> \ud83d\ude97 Clientes</label>' +
@@ -1027,6 +1032,7 @@
   function leEditor() {
     const papel = (document.querySelector('input[name=e-papel]:checked') || {}).value || 'total';
     if (papel === 'total' || papel === 'gestor') return { papel, pesquisas: ['clientes','equipe','consolidado'], unidades: 'todas' };
+    if (papel === 'revisor') return { papel, pesquisas: [], unidades: 'todas' };   /* só a revisão das perguntas: nenhum resultado, nenhuma pesquisa */
     const pesquisas = Array.from(document.querySelectorAll('[data-epq]')).filter(i => i.checked).map(i => i.dataset.epq);
     const todas = (document.getElementById('e-un-todas') || {}).checked;
     const unidades = todas ? 'todas' : Array.from(document.querySelectorAll('[data-eun]')).filter(i => i.checked).map(i => i.dataset.eun);
@@ -1052,7 +1058,7 @@
     : Array.from(document.querySelectorAll('[data-un]')).filter(i => i.checked).map(i => i.dataset.un);
   function ajustaQuais() {
     const p = document.querySelector('input[name=papel]:checked').value;
-    $('quais').hidden = (p === 'total' || p === 'gestor');
+    $('quais').hidden = (p === 'total' || p === 'gestor' || p === 'revisor');
     /* quem so aplica pesquisa nao tem "consolidado": isso e coisa de resultado */
     const cons = document.querySelector('#cx-pq [data-pq="consolidado"]');
     if (cons) { const cx = cons.closest('label'); cx.hidden = (p === 'aplicar'); if (p === 'aplicar') cons.checked = false; }
@@ -1070,7 +1076,7 @@
       const nomes = (c.pesquisas || []).map(i => ({ clientes:'Clientes', equipe:'Equipe', conselho:'Conselho', consolidado:'Consolidado' })[i]).filter(Boolean);
       const selos = [
         '<span class="selo">' + NOME_PAPEL[c.papel] + '</span>',
-        (c.papel === 'total' || c.papel === 'gestor' || c.papel === 'admin') ? '' :
+        (c.papel === 'total' || c.papel === 'gestor' || c.papel === 'admin' || c.papel === 'revisor') ? '' :
           '<span class="selo">' + (['clientes','equipe','consolidado'].every(k => (c.pesquisas || []).includes(k)) ? 'Tudo' : (nomes.filter(x => x !== 'Conselho').join(' · ') || 'Nada')) + '</span>' +
           '<span class="selo">' + txtUn(c.unidades) + '</span>',
         c.bloqueado ? '<span class="selo no">Bloqueado</span>' : (c.pendente && !c.hash ? '<span class="selo">Aguardando criar a senha</span>' : '<span class="selo ok">Ativo</span>'),
@@ -1164,13 +1170,13 @@
     const falha = t => { err.textContent = t; err.hidden = false; };
     const nome = $('c-nome').value.trim(), email = norm($('c-email').value);
     const papel = document.querySelector('input[name=papel]:checked').value;
-    const completo = papel === 'total' || papel === 'gestor';
-    const pesquisas = completo ? ['clientes','equipe','consolidado'] : lePq();
-    const unidades = completo ? 'todas' : leUn();
+    const completo = papel === 'total' || papel === 'gestor', revisor = papel === 'revisor';
+    const pesquisas = completo ? ['clientes','equipe','consolidado'] : (revisor ? [] : lePq());
+    const unidades = (completo || revisor) ? 'todas' : leUn();
     if (!nome) return falha('Escreva o nome da pessoa.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return falha('E-mail inválido.');
     if (dados.contas.some(c => c.email === email)) return falha('Esse e-mail já está cadastrado.');
-    if (!pesquisas.length) return falha('Marque pelo menos uma pesquisa.');
+    if (!pesquisas.length && !revisor) return falha('Marque pelo menos uma pesquisa.');
     if (unidades !== 'todas' && !unidades.length) return falha('Marque “Todas” ou pelo menos uma unidade.');
     const b = $('btn-cad'); b.disabled = true; b.textContent = 'Cadastrando…';
     dados.contas.push({ id:'av-' + Date.now().toString(36), nome, email, papel, pesquisas, unidades,
@@ -1314,7 +1320,7 @@
     if (b.dataset.esalvar) { const c = acha(b.dataset.esalvar); if (!c) return;
       const v = leEditor(); const err = document.getElementById('e-erro');
       const falha = t => { if (err) { err.textContent = t; err.hidden = false; } };
-      if (!v.pesquisas.length) return falha('Marque pelo menos uma pesquisa.');
+      if (!v.pesquisas.length && v.papel !== 'revisor') return falha('Marque pelo menos uma pesquisa.');
       if (v.unidades !== 'todas' && !v.unidades.length) return falha('Marque “Todas as unidades” ou pelo menos uma unidade.');
       c.papel = v.papel; c.pesquisas = v.pesquisas; c.unidades = v.unidades;
       limpaEdicao(); admin();
