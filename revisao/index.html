@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Revisão das perguntas · Maxipark</title>
+<meta name="theme-color" content="#6B4A98">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Revisão Maxipark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{
+    --roxo:#6B4A98; --roxo-escuro:#4E3572; --roxo-claro:#EEE8F5; --bg:#F5F3F9; --card:#FFFFFF;
+    --texto:#221C2E; --cinza:#5E5670; --linha:#DED8EA; --perigo:#B23A3A; --raio:18px;
+    --branco:#FFFFFF; --sombra:0 2px 10px rgba(34,28,46,.06);
+    --aviso-bg:#FFF4D6; --aviso-br:#E0B400; --aviso-tx:#3D3000;
+    --ruim-bg:#FBE3E3; --ruim-tx:#7A1F1F; --bom-bg:#E6F4EA; --bom-br:#9CCFA9; --bom-tx:#1B3D26;
+    --toast-bg:#221C2E; --toast-tx:#FFFFFF; --sobre-roxo:#FFFFFF;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"]{
+    --roxo:#B18BE0; --roxo-escuro:#D3BCEF; --roxo-claro:#2E2340; --acento:#C08BFF;
+    --bg:#17111E; --card:#211A2B; --texto:#F2EDF8; --cinza:#B3A8C2; --linha:#382C48;
+    --perigo:#F0A0A8; --ok:#3F8F63;
+    --branco:#2A2136; --suave:#241D30; --sobre-roxo:#1B1226; --sobre-ok:#F2EDF8;
+    --sombra:0 2px 10px rgba(0,0,0,.45);
+    --aviso-bg:#3A3117; --aviso-br:#8A6D1F; --aviso-tx:#F0E2BC;
+    --ruim-bg:#3C2027; --ruim-tx:#F6C9CE;
+    --bom-bg:#1C3A2C; --bom-br:#2F6B4C; --bom-tx:#CFEEDD;
+    --tag-ok-bg:#1C3A2C; --tag-ok-tx:#8FE0B6; --tag-pend-bg:#3A3117; --tag-pend-tx:#EBD08A;
+    --toast-bg:#E9E2F3; --toast-tx:#1B1226;
+    --ok-tx:#6FD3A4; --ok-bg:#1C3A2C; --neutro-bg:#2A2136;
+    --grade:#3E3152; --serie-c:#C08BFF; --serie-e:#B18BE0; --serie-n:#6FD3A4;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:17px;line-height:1.4}
+  button,input,select,textarea{font-family:inherit;font-size:16px;color:var(--texto)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:var(--card);border-bottom:3px solid var(--roxo)}
+  .top a{color:var(--roxo-escuro);font-weight:700;text-decoration:none}
+  .top .passo{font-size:15px;color:var(--roxo-escuro);font-weight:600;text-align:right}
+  .wrap{max-width:980px;margin:0 auto;padding:16px 16px 70px}
+  .card{background:var(--card);border-radius:var(--raio);padding:18px 20px;box-shadow:var(--sombra);margin-bottom:14px}
+  h1{font-size:24px;margin:0 0 6px;color:var(--roxo-escuro)} h2{font-size:19px;margin:0;color:var(--roxo-escuro)}
+  .muted{color:var(--cinza)} .small{font-size:14px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0 4px}
+  .kpi{background:var(--roxo-claro);border-radius:14px;padding:12px;text-align:center}
+  .kpi b{display:block;font-size:26px;color:var(--roxo-escuro)} .kpi span{font-size:13px;color:var(--cinza)}
+  .filtros{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .filtros input,.filtros select{flex:1 1 200px;padding:10px 12px;border:2px solid var(--linha);border-radius:12px;background:var(--branco)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 18px;border-radius:12px;border:0;background:var(--roxo);color:var(--sobre-roxo);font-weight:700;cursor:pointer}
+  .btn.light{background:var(--roxo-claro);color:var(--roxo-escuro)} .btn:disabled{opacity:.55;cursor:default}
+  details.rel{background:var(--card);border-radius:var(--raio);box-shadow:var(--sombra);margin-bottom:12px;overflow:hidden}
+  details.rel > summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+  details.rel > summary::-webkit-details-marker{display:none}
+  .tag{display:inline-block;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .tag.ok{background:var(--bom-bg);color:var(--bom-tx)} .tag.pend{background:var(--aviso-bg);color:var(--aviso-tx)}
+  .corpo{padding:0 18px 18px}
+  .item{border-left:4px solid var(--linha);padding:8px 0 8px 12px;margin:12px 0}
+  .item.env{border-color:var(--roxo)} .item.rec{border-color:#2E7D32} .item.app{border-color:#9935F4}
+  .item .cab{font-size:13px;color:var(--cinza)} .item .txt{white-space:pre-wrap;margin-top:4px;word-break:break-word}
+  textarea{width:100%;min-height:120px;padding:12px;border:2px solid var(--linha);border-radius:12px;background:var(--branco);resize:vertical}
+  .msg{border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+  .msg.ok{background:var(--bom-bg);color:var(--bom-tx)} .msg.erro{background:var(--ruim-bg);color:var(--ruim-tx)}
+  .vazio{text-align:center;padding:30px 10px}
+    .botao-tema{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom,0px));
+    width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;
+    border:1px solid var(--linha);background:var(--card);color:var(--texto);
+    font-size:21px;line-height:1;cursor:pointer;z-index:30;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);-webkit-appearance:none;appearance:none}
+  /* o botao nao herda a cor dos outros botoes: no escuro ficaria invisivel */
+  :root[data-theme="dark"] .botao-tema,
+  :root[data-theme="light"] .botao-tema{background:var(--card);color:var(--texto)}
+  .botao-tema:active{transform:scale(.94)}
+  .botao-tema:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+  @media print{ .botao-tema{display:none!important} }
+
+  .banner{background:var(--roxo);color:var(--sobre-roxo);border-radius:var(--raio);padding:16px 20px;margin:18px 0 10px}
+  .banner h2{color:var(--sobre-roxo);font-size:20px} .banner p{margin:4px 0 0;font-size:14px;opacity:.9}
+  .secao{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--roxo-escuro);margin:16px 2px 8px;border-bottom:1px solid var(--linha);padding-bottom:6px}
+  .card.q{border-left:5px solid var(--linha)} .card.q.feito{border-left-color:var(--roxo)}
+  .card.q .cab{display:flex;gap:10px;align-items:flex-start} .card.q .cab h2{font-size:17px;line-height:1.35}
+  .cod{flex:none;background:var(--roxo-claro);color:var(--roxo-escuro);font-weight:700;font-size:12px;padding:3px 8px;border-radius:8px;margin-top:3px}
+  .meta{margin:6px 0 8px;color:var(--cinza)} .meta b{color:var(--roxo-escuro)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .chip{font-size:13px;padding:4px 10px;border-radius:999px;background:var(--roxo-claro);color:var(--texto);border:1px solid var(--linha)}
+  .chip.na{background:var(--branco)} .chip.livre{background:var(--branco);border-style:dashed;font-style:italic;color:var(--cinza)}
+  .minha{border-top:1px dashed var(--linha);padding-top:12px}
+  .decs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+  button.dec{min-height:42px;padding:8px 14px;border-radius:12px;border:2px solid var(--linha);background:var(--branco);font-weight:700;cursor:pointer}
+  button.dec.sel.d-manter{background:var(--bom-bg);border-color:var(--bom-br);color:var(--bom-tx)}
+  button.dec.sel.d-mudar{background:var(--aviso-bg);border-color:var(--aviso-br);color:var(--aviso-tx)}
+  button.dec.sel.d-tirar{background:var(--ruim-bg);border-color:#D08A8A;color:var(--ruim-tx)}
+  .card.q textarea{min-height:64px}
+  .rodape-q{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-top:6px;font-size:14px}
+  .ok{color:var(--bom-tx)} .erro{color:var(--ruim-tx)} .placar b{font-weight:700} .placar .d-manter{color:var(--bom-tx)} .placar .d-mudar{color:#7A5A00} .placar .d-tirar{color:var(--ruim-tx)}
+  :root[data-theme="dark"] .placar .d-manter{color:#8FE0B6} :root[data-theme="dark"] .placar .d-mudar{color:#EBD08A} :root[data-theme="dark"] .placar .d-tirar{color:#F6C9CE}
+  .outros{margin-top:12px;border-top:1px dashed var(--linha);padding-top:10px}
+  .outro{margin-top:8px} .outro .obs{white-space:pre-wrap;margin-top:3px;font-size:15px}
+  .dec-tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--roxo-claro)}
+  .dec-tag.d-manter{background:var(--bom-bg);color:var(--bom-tx)} .dec-tag.d-mudar{background:var(--aviso-bg);color:var(--aviso-tx)} .dec-tag.d-tirar{background:var(--ruim-bg);color:var(--ruim-tx)}
+  .pessoas{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-size:15px}
+  .chk{display:flex;align-items:center;gap:6px;font-size:15px;padding:8px 4px}
+</style>
+<script>
+/* ═════════ BOTÃO CLARO / ESCURO  (🌙 escurece · ☀ clareia) ═════════════════
+   Fica no canto de baixo à direita de todas as telas.
+   A escolha é guardada NO APARELHO e vale para as CINCO telas de uma vez,
+   porque todas moram no mesmo endereço de site.
+   Enquanto ninguém escolher, o app segue o modo claro/escuro do aparelho.
+   Roda antes de a tela ser desenhada: no escuro, não pisca branco.          */
+(function () {
+  'use strict';
+  var GUARDA = 'maxipark_tema', raiz = document.documentElement;
+  function escolhido() { try { return localStorage.getItem(GUARDA); } catch (e) { return null; } }
+  function doAparelho() {
+    try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro'; }
+    catch (e) { return 'claro'; }
+  }
+  function agora() { var e = escolhido(); return (e === 'escuro' || e === 'claro') ? e : doAparelho(); }
+  function aplica(t) {
+    raiz.setAttribute('data-theme', t === 'escuro' ? 'dark' : 'light');
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', t === 'escuro' ? '#17111E' : '#6B4A98');
+    var b = document.getElementById('btn-tema');
+    if (b) {
+      b.textContent = t === 'escuro' ? '\u2600' : '\uD83C\uDF19';
+      var r = t === 'escuro' ? 'Clarear a tela' : 'Escurecer a tela';
+      b.setAttribute('aria-label', r); b.title = r;
+    }
+  }
+  aplica(agora());
+  function troca() {
+    var novo = agora() === 'escuro' ? 'claro' : 'escuro';
+    try { localStorage.setItem(GUARDA, novo); } catch (e) {}
+    aplica(novo);
+  }
+  /* ninguém escolheu ainda: acompanha o aparelho quando ele troca de modo */
+  try {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var ouve = function () { if (!escolhido()) aplica(doAparelho()); };
+    if (mq.addEventListener) mq.addEventListener('change', ouve);
+    else if (mq.addListener) mq.addListener(ouve);
+  } catch (e) {}
+  /* trocou numa tela com outra aberta ao lado: a outra acompanha na hora */
+  try { window.addEventListener('storage', function (ev) { if (ev.key === GUARDA) aplica(agora()); }); } catch (e) {}
+  function poeBotao() {
+    if (document.getElementById('btn-tema')) return;
+    var b = document.createElement('button');
+    b.id = 'btn-tema'; b.type = 'button'; b.className = 'botao-tema';
+    b.addEventListener('click', troca);
+    document.body.appendChild(b);
+    aplica(agora());
+  }
+  if (document.body) poeBotao();
+  else document.addEventListener('DOMContentLoaded', poeBotao);
+})();
+</script>
+</head>
+<body>
+<div class="top"><a href="../">← Página inicial</a><div class="passo">Revisão das perguntas</div></div>
+<div class="wrap" id="app"><div class="card">Carregando…</div></div>
+<script>
+/* ═════════ REVISÃO DAS PERGUNTAS (pedido do Raphael em 21/10/2026) ═════════
+   Cada pessoa com acesso marca, para cada pergunta das pesquisas, "manter", "mudar o texto" ou "tirar"
+   e escreve uma observação. Tudo fica no servidor (aba RevisaoPerguntas da planilha) e todo mundo vê
+   o que os outros marcaram. As perguntas abaixo são as mesmas que estão no ar no app (versão 1.51.0). */
+const VERSAO = '1.0.0';
+const SERVIDOR_PADRAO = 'https://script.google.com/macros/s/AKfycbyDp_t-Nbpa2Ikjg2_MB--sEyGJzbR_eV3dMmfdtlk4IA0IBvEKF6hkQVQHQT5I_Gtz/exec';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } } };
+const ESCOPO = (() => {
+  try {
+    const m = /[#&]a=([A-Za-z0-9\-_]+)/.exec(location.hash || ''); if (!m) return null;
+    let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+    const j = JSON.parse(decodeURIComponent(escape(atob(b)))); if (!j || !j.e) return null;
+    return { nome: j.n || j.e, email: String(j.e).toLowerCase(), papel: j.p || 'total' };
+  } catch (e) { return null; }
+})();
+function conexao(){
+  const proprio = LS.get('mpr_settings', {}) || {};
+  if (proprio.webhook && proprio.chave) return proprio;
+  const outro = ['mpa_settings', 'mpp_settings', 'mp_settings', 'mpc_settings', 'mpco_settings'].map(k => LS.get(k, null)).find(s => s && s.webhook && s.chave);
+  return outro ? { webhook: outro.webhook, chave: outro.chave } : { webhook: SERVIDOR_PADRAO, chave: '' };
+}
+const DECISOES = [['manter', 'Manter', '✓'], ['mudar', 'Mudar o texto', '✎'], ['tirar', 'Tirar', '✕']];
+const NOME_DEC = { manter: 'Manter', mudar: 'Mudar o texto', tirar: 'Tirar' };
+
+/* ---- as perguntas, como estão no ar (iguais ao PDF "As perguntas das nossas pesquisas") ---- */
+const E3 = 'Escala de 3 pontos';
+const PESQUISAS = [
+  { id: 'clientes', nome: 'Pesquisa com clientes', desc: 'Quem estaciona responde sozinho no tablet da unidade, sem se identificar. Leva cerca de 1 minuto.', secoes: [
+    { nome: 'As perguntas, na ordem em que aparecem', itens: [
+      { c: 'csat', t: 'No geral, como foi sua experiência no estacionamento hoje?', tipo: E3 + ' com carinhas', o: ['Insatisfeito', 'Mais ou menos', 'Satisfeito'] },
+      { c: 'nps', t: 'De 0 a 10, o quanto você recomendaria este estacionamento a um amigo ou colega?', tipo: 'Nota de 0 a 10', o: ['0 a 10 — Nada provável … Muito provável'] },
+      { c: 'e1', t: 'Entrada e saída (cancelas, filas, tempo de espera)', tipo: E3, f: 'Entrada e saída', p: 3, o: ['Ruim', 'Regular', 'Bom'] },
+      { c: 'e2', t: 'Pagamento (máquinas, caixa, cartão, Pix)', tipo: E3, f: 'Pagamento', p: 3, o: ['Ruim', 'Regular', 'Bom'], na: 'Não paguei aqui / não usei' },
+      { c: 'e3', t: 'Atendimento da equipe (educação, agilidade, ajuda)', tipo: E3, f: 'Atendimento', p: 3, o: ['Ruim', 'Regular', 'Bom'], na: 'Não falei com ninguém da equipe' },
+      { c: 'e4', t: 'Segurança (do carro e de você: iluminação, câmeras, vigilância)', tipo: E3, f: 'Segurança', p: 3, o: ['Ruim', 'Regular', 'Bom'], na: 'Não sei avaliar' },
+      { c: 'e5', t: 'Limpeza e conservação (piso, paredes, pintura, manutenção)', tipo: E3, f: 'Limpeza e conservação', p: 2, o: ['Ruim', 'Regular', 'Bom'], na: 'Não sei avaliar' },
+      { c: 'e6', t: 'Achar vaga e se orientar (sinalização, placas, vagas livres)', tipo: E3, f: 'Vagas e sinalização', p: 2, o: ['Ruim', 'Regular', 'Bom'] },
+      { c: 'e7', t: 'Preço (o que você pagou valeu o que recebeu?)', tipo: E3, f: 'Preço', p: 2, o: ['Ruim', 'Regular', 'Bom'], na: 'Não paguei (cortesia, convênio ou validação)' },
+      { c: 'prob', t: 'Aconteceu algum problema hoje? Se foi mais de um, marque o principal.', tipo: 'Escolha uma', o: ['Não, deu tudo certo', 'Fila ou demora para entrar ou sair', 'Cancela, ticket ou tag não funcionou', 'Máquina de pagamento com defeito ou não aceitou meu pagamento', 'Cobrança errada ou valor que não entendi', 'Não achei vaga ou a sinalização confundiu', 'Faltou alguém para me ajudar ou fui mal atendido', 'Dano no carro, furto ou me senti inseguro', 'Local sujo, escuro ou mal conservado', 'Outro problema (conte no final)'] },
+      { c: 'resolv', t: 'E esse problema foi resolvido?', tipo: 'Escolha uma', cond: 'só aparece se houve algum problema', o: ['Sim, resolveram na hora', 'Resolveram, mas demorou ou ficou pela metade', 'Não foi resolvido', 'Procurei ajuda, mas não encontrei ninguém', 'Não pedi ajuda / não avisei ninguém'] },
+      { c: 'ces', t: 'Foi fácil pedir ajuda para esse problema?', tipo: E3, cond: 'só aparece se houve problema e a pessoa pediu ajuda', o: ['Difícil', 'Mais ou menos', 'Fácil'] },
+      { c: 'tipo', t: 'Hoje você usou o estacionamento como:', tipo: 'Escolha uma', o: ['Mensalista (plano mensal)', 'Avulso (paguei por hora ou diária)', 'Visitante de evento (show, feira, jogo)', 'Convênio, cortesia ou validação (outra pessoa pagou)'] },
+      { c: 'freq', t: 'Com que frequência você estaciona aqui?', tipo: 'Escolha uma', cond: 'só aparece para avulso e convênio/cortesia', o: ['Hoje foi a primeira vez', 'Poucas vezes por ano', 'Algumas vezes por mês', 'Toda semana', 'Quase todo dia'] },
+      { c: 'fim', t: 'Quer contar mais alguma coisa? (opcional)', tipo: 'Texto livre · opcional', o: [], livre: ['Campo livre para escrever', 'Quer que a Maxipark retorne sobre sua resposta? Se quiser, deixe seu WhatsApp ou e-mail (opcional)', 'Caixa de consentimento (LGPD) para o contato'] },
+    ] } ] },
+  { id: 'equipe', nome: 'Pesquisa com a equipe', desc: 'Colaboradores respondem sozinhos, sem nome, sem cargo e sem horário. O chefe direto não vê as respostas individuais.', secoes: [
+    { nome: 'As 15 frases (concorda?)', itens: [
+      { c: 'B1', t: 'Os equipamentos que uso no posto (cancela, máquina de cartão, sistema, rádio) funcionam bem.', f: 'Condições no posto', p: 3, o: ['Sim', 'Às vezes', 'Não'] },
+      { c: 'B2', t: 'Consigo parar para comer durante o meu turno.', f: 'Condições no posto', p: 2, o: ['Sim', 'Às vezes', 'Não'] },
+      { c: 'B3', t: 'No meu turno tem gente suficiente para atender bem.', f: 'Condições no posto', p: 2, o: ['Sim', 'Às vezes', 'Não'] },
+      { c: 'B4', t: 'Minhas folgas são respeitadas como estão na escala.', f: 'Escala, pagamento e apoio do escritório', p: 2, o: ['Sim', 'Às vezes', 'Não'] },
+      { c: 'B5', t: 'Meu pagamento (salário, vales, horas extras) vem certo.', f: 'Escala, pagamento e apoio do escritório', p: 3, o: ['Sim', 'Às vezes tem erro', 'Não'] },
+      { c: 'B6', t: 'Quando peço algo ao escritório da Maxipark (holerite, uniforme, ponto), resolvem em poucos dias.', f: 'Escala, pagamento e apoio do escritório', p: 3, o: ['Sim', 'Às vezes', 'Não'], na: 'Não se aplica — nunca precisei pedir' },
+      { c: 'B7', t: 'Recebi treinamento suficiente para fazer meu trabalho neste posto.', f: 'Escala, pagamento e apoio do escritório', p: 2, o: ['Sim', 'Em parte', 'Não'] },
+      { c: 'B8', t: 'Fico sabendo, com antecedência, das mudanças que afetam meu trabalho (posto, horário, regras).', f: 'Escala, pagamento e apoio do escritório', p: 2, o: ['Sim', 'Às vezes', 'Não'] },
+      { c: 'B9', t: 'Meu chefe direto me trata com respeito.', f: 'Chefia e reconhecimento', p: 3, o: ['Sim', 'Às vezes', 'Não'] },
+      { c: 'B10', t: 'Meu chefe direto é justo com todos da equipe.', f: 'Chefia e reconhecimento', p: 2, o: ['Sim', 'Em parte', 'Não'] },
+      { c: 'B11', t: 'Meu chefe direto me ouve quando aviso um problema ou dou uma ideia.', f: 'Chefia e reconhecimento', p: 2, o: ['Sim', 'Às vezes', 'Não'] },
+      { c: 'B12', t: 'Nos últimos 30 dias, meu chefe direto ou o supervisor elogiou meu trabalho.', f: 'Chefia e reconhecimento', p: 2, o: ['Sim', 'Não lembro', 'Não'] },
+      { c: 'B13', t: 'Me sinto seguro(a) no meu posto (risco de atropelamento, assalto, escuro à noite).', f: 'Segurança e apoio', p: 3, o: ['Sim', 'Em parte', 'Não'] },
+      { c: 'B14', t: 'Se um motorista ou alguém do local me trata mal, a Maxipark me apoia.', f: 'Segurança e apoio', p: 2, o: ['Sim', 'Em parte', 'Não'], na: 'Não se aplica — não aconteceu comigo' },
+      { c: 'B15', t: 'Vejo chance de crescer na Maxipark.', f: 'Futuro', p: 1, o: ['Sim', 'Talvez', 'Não'] },
+    ] },
+    { nome: 'Nota, esforço e comentários', itens: [
+      { c: 'eNPS', t: 'De 0 a 10, quanto você recomendaria a Maxipark a um amigo como um bom lugar para trabalhar?', tipo: 'Nota de 0 a 10', f: 'Recomendação como lugar para trabalhar', o: ['0 a 10 — Nada provável … Muito provável'] },
+      { c: 'CES', t: 'Pense na última vez que você precisou resolver algo seu com o escritório da Maxipark (holerite, ponto, uniforme, sistema). Foi fácil resolver?', tipo: 'Escolha uma', f: 'Esforço para resolver com o escritório', o: ['Sim, foi fácil', 'Mais ou menos', 'Não, foi difícil'], na: 'Nunca precisei' },
+      { c: 'Aberta 1', t: 'O que mais atrapalha seu dia de trabalho nesta unidade hoje?', tipo: 'Texto livre · opcional', f: 'Comentários', o: [], livre: ['Campo livre para escrever'] },
+      { c: 'Aberta 2', t: 'Se você pudesse mudar uma coisa na Maxipark, o que seria?', tipo: 'Texto livre · opcional', f: 'Comentários', o: [], livre: ['Campo livre para escrever'] },
+    ] } ] },
+];
+PESQUISAS.forEach(p => p.secoes.forEach(s => s.itens.forEach(it => { it.chave = p.id + ':' + it.c; it.pesquisa = p.id; if (!it.tipo) it.tipo = E3; })));
+const TODOS = PESQUISAS.flatMap(p => p.secoes.flatMap(s => s.itens));
+
+const est = { rev: [], erro: '', carregando: false, filtro: 'todas', soFalta: false, consolidado: false, rasc: {}, msgs: {}, timers: {}, busca: '' };
+const minha = ch => est.rev.find(r => r.chave_item === ch && r.email === ESCOPO.email) || null;
+const dosOutros = ch => est.rev.filter(r => r.chave_item === ch && r.email !== ESCOPO.email).sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
+function dh(iso){ const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+
+async function carregar(){
+  const c = conexao(); if (!c.chave) { render(); return; }
+  est.carregando = true; est.erro = ''; render();
+  try {
+    const u = new URL(c.webhook); u.searchParams.set('op', 'revisao'); u.searchParams.set('chave', c.chave);
+    const j = await (await fetch(u.toString())).json();
+    if (!j || !j.ok) throw new Error(j && j.erro === 'chave' ? 'A chave de sincronização não confere.' : 'O servidor ainda não tem a revisão das perguntas. Atualize o servidor (Apps Script).');
+    est.rev = (j.itens || []).map(r => Object.assign({}, r, { email: String(r.email || '').toLowerCase() }));
+  } catch (e) { est.erro = (e && e.message) || 'Sem conexão com o servidor.'; }
+  est.carregando = false; render();
+}
+function agendar(ch){ clearTimeout(est.timers[ch]); est.timers[ch] = setTimeout(() => salvar(ch), 900); }
+async function salvar(ch, decisao){
+  const c = conexao(), it = TODOS.find(x => x.chave === ch), m = minha(ch);
+  const obs = (est.rasc[ch] !== undefined ? est.rasc[ch] : (m ? m.observacao : '')).trim();
+  const dec = decisao || (m ? m.decisao : '');
+  if (!dec && !obs) return;
+  const novo = { chave_item: ch, pesquisa: it.pesquisa, pergunta: it.c + ' — ' + it.t, email: ESCOPO.email, nome: ESCOPO.nome, decisao: dec, observacao: obs, atualizado_em: new Date().toISOString() };
+  const i = est.rev.findIndex(r => r.chave_item === ch && r.email === ESCOPO.email); if (i >= 0) est.rev[i] = novo; else est.rev.push(novo);
+  est.msgs[ch] = 'salvando'; render();
+  try {
+    const r = await (await fetch(c.webhook, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ chave: c.chave, op: 'revisao-salvar', item: novo }) })).json();
+    est.msgs[ch] = r && r.ok ? 'ok' : 'erro';
+  } catch (e) { est.msgs[ch] = 'erro'; }
+  render();
+}
+
+function csv(){
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const L = [['pesquisa', 'codigo', 'pergunta', 'quem', 'email', 'decisao', 'observacao', 'atualizado_em'].map(q).join(';')];
+  TODOS.forEach(it => est.rev.filter(r => r.chave_item === it.chave).forEach(r => L.push([it.pesquisa, it.c, it.t, r.nome, r.email, NOME_DEC[r.decisao] || r.decisao, r.observacao, r.atualizado_em].map(q).join(';'))));
+  const blob = new Blob(['\ufeff' + L.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'revisao-perguntas-maxipark.csv'; a.click();
+}
+
+function resumo(){
+  const pessoas = {}; est.rev.forEach(r => { const p = pessoas[r.email] || (pessoas[r.email] = { nome: r.nome, n: 0, manter: 0, mudar: 0, tirar: 0 }); p.n++; if (p[r.decisao] !== undefined) p[r.decisao]++; });
+  const minhas = est.rev.filter(r => r.email === ESCOPO.email && r.decisao).length;
+  return { pessoas, minhas, total: TODOS.length };
+}
+
+function cardItem(it){
+  const m = minha(it.chave), outros = dosOutros(it.chave), msg = est.msgs[it.chave];
+  const obs = est.rasc[it.chave] !== undefined ? est.rasc[it.chave] : (m ? m.observacao : '');
+  const chips = it.o.map(x => '<span class="chip">' + esc(x) + '</span>').join('') + (it.na ? '<span class="chip na">' + esc(it.na) + ' <i>(opção de escape)</i></span>' : '') + (it.livre || []).map(x => '<span class="chip livre">' + esc(x) + '</span>').join('');
+  const meta = '<b>' + esc(it.tipo) + '</b>' + (it.f ? ' · mede: <b>' + esc(it.f) + '</b>' : '') + (it.p ? ' · peso ' + it.p + ' na nota final' : '') + (it.cond ? ' · <i>' + esc(it.cond) + '</i>' : '');
+  const cont = { manter: 0, mudar: 0, tirar: 0 }; est.rev.filter(r => r.chave_item === it.chave).forEach(r => { if (cont[r.decisao] !== undefined) cont[r.decisao]++; });
+  const placar = Object.keys(cont).some(k => cont[k]) ? '<span class="placar">' + DECISOES.map(([k, n]) => cont[k] ? '<b class="d-' + k + '">' + cont[k] + ' ' + n.toLowerCase() + '</b>' : '').filter(Boolean).join(' · ') + '</span>' : '';
+  const botoes = DECISOES.map(([k, n, s]) => '<button class="dec d-' + k + (m && m.decisao === k ? ' sel' : '') + '" data-ch="' + it.chave + '" data-dec="' + k + '">' + s + ' ' + n + '</button>').join('');
+  const estado = msg === 'salvando' ? '<span class="small muted">salvando…</span>' : msg === 'ok' ? '<span class="small ok">✓ salvo' + (m ? ' ' + dh(m.atualizado_em) : '') + '</span>' : msg === 'erro' ? '<span class="small erro">✕ não salvou — tente de novo</span>' : (m ? '<span class="small muted">marcado em ' + dh(m.atualizado_em) + '</span>' : '');
+  const lista = outros.length ? '<div class="outros"><div class="small muted">O que os outros marcaram</div>' + outros.map(r => '<div class="outro"><span class="dec-tag d-' + esc(r.decisao) + '">' + esc(NOME_DEC[r.decisao] || '—') + '</span> <b>' + esc(r.nome) + '</b> <span class="small muted">' + dh(r.atualizado_em) + '</span>' + (r.observacao ? '<div class="obs">' + esc(r.observacao) + '</div>' : '') + '</div>').join('') + '</div>' : '<div class="small muted outros vazio-outros">Ninguém mais marcou esta pergunta ainda.</div>';
+  return '<div class="card q' + (m && m.decisao ? ' feito' : '') + '" id="q-' + it.chave.replace(':', '-') + '">' +
+    '<div class="cab"><span class="cod">' + esc(it.c) + '</span><h2>' + esc(it.t) + '</h2></div>' +
+    '<div class="meta small">' + meta + '</div><div class="chips">' + chips + '</div>' +
+    '<div class="minha"><div class="decs">' + botoes + '</div>' +
+    '<textarea placeholder="Observação (o que mudar, por quê…)" data-obs="' + it.chave + '">' + esc(obs) + '</textarea>' +
+    '<div class="rodape-q">' + estado + placar + '</div></div>' + lista + '</div>';
+}
+
+function render(){
+  const app = $('app'), c = conexao();
+  if (!ESCOPO) { app.innerHTML = '<div class="card vazio"><h1>Revisão das perguntas</h1><p class="muted">Abra esta tela pelo botão <b>Revisão das perguntas</b> na página inicial, depois de entrar com o seu e-mail.</p><p><a class="btn" href="../">Ir para a página inicial</a></p></div>'; return; }
+  if (!c.chave) { app.innerHTML = '<div class="card"><h1>Revisão das perguntas</h1><p class="muted">Este aparelho ainda não está ligado ao servidor. Saia da conta e entre de novo na página inicial, ou digite a chave de sincronização.</p><div class="filtros"><input id="i-chave" placeholder="Chave de sincronização"><button class="btn" id="b-chave">Ligar</button></div></div>';
+    $('b-chave').onclick = () => { const v = $('i-chave').value.trim(); if (v) { LS.set('mpr_settings', { webhook: SERVIDOR_PADRAO, chave: v }); carregar(); } }; return; }
+  const R = resumo();
+  const pessoas = Object.keys(R.pessoas).map(e => R.pessoas[e]).sort((a, b) => b.n - a.n);
+  let h = '<div class="card"><h1>Revisão das perguntas</h1><p class="muted">Para cada pergunta, marque <b>manter</b>, <b>mudar o texto</b> ou <b>tirar</b> e deixe a sua observação. Salva sozinho. Todo mundo vê o que os outros marcaram.</p>' +
+    '<div class="kpis"><div class="kpi"><b>' + R.minhas + '/' + R.total + '</b><span>perguntas que você já marcou</span></div><div class="kpi"><b>' + pessoas.length + '</b><span>pessoa' + (pessoas.length === 1 ? '' : 's') + ' revisando</span></div></div>' +
+    (pessoas.length ? '<div class="pessoas">' + pessoas.map(p => '<span class="pessoa"><b>' + esc(p.nome) + '</b> ' + p.n + '/' + R.total + ' <span class="small muted">(' + p.manter + ' manter · ' + p.mudar + ' mudar · ' + p.tirar + ' tirar)</span></span>').join('') + '</div>' : '') +
+    (est.erro ? '<div class="msg erro">' + esc(est.erro) + '</div>' : '') +
+    '<div class="filtros"><select id="f-pesq"><option value="todas">As duas pesquisas</option>' + PESQUISAS.map(p => '<option value="' + p.id + '"' + (est.filtro === p.id ? ' selected' : '') + '>' + esc(p.nome) + '</option>').join('') + '</select>' +
+    '<input id="f-busca" placeholder="Procurar na pergunta…" value="' + esc(est.busca) + '">' +
+    '<label class="chk"><input type="checkbox" id="f-falta"' + (est.soFalta ? ' checked' : '') + '> só o que me falta marcar</label>' +
+    '<button class="btn light" id="b-recarregar">' + (est.carregando ? 'Atualizando…' : 'Atualizar') + '</button>' +
+    '<button class="btn light" id="b-csv">Baixar planilha (CSV)</button></div></div>';
+  PESQUISAS.filter(p => est.filtro === 'todas' || est.filtro === p.id).forEach(p => {
+    const itens = p.secoes.flatMap(s => s.itens).filter(it => (!est.soFalta || !(minha(it.chave) && minha(it.chave).decisao)) && (!est.busca || (it.c + ' ' + it.t).toLowerCase().includes(est.busca.toLowerCase())));
+    if (!itens.length) return;
+    h += '<div class="banner"><h2>' + esc(p.nome) + '</h2><p>' + esc(p.desc) + '</p></div>';
+    p.secoes.forEach(s => { const its = s.itens.filter(it => itens.includes(it)); if (!its.length) return; h += '<h3 class="secao">' + esc(s.nome) + '</h3>' + its.map(cardItem).join(''); });
+  });
+  const foco = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.obs ? { ch: document.activeElement.dataset.obs, s: document.activeElement.selectionStart, e: document.activeElement.selectionEnd } : null;
+  app.innerHTML = h;
+  if (foco) { const t = app.querySelector('textarea[data-obs="' + foco.ch + '"]'); if (t) { t.focus(); try { t.setSelectionRange(foco.s, foco.e); } catch (e) {} } }
+  $('f-pesq').onchange = e => { est.filtro = e.target.value; render(); };
+  $('f-busca').oninput = e => { est.busca = e.target.value; render(); const i = $('f-busca'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); };
+  $('f-falta').onchange = e => { est.soFalta = e.target.checked; render(); };
+  $('b-recarregar').onclick = carregar; $('b-csv').onclick = csv;
+  app.querySelectorAll('button.dec').forEach(b => { b.onclick = () => salvar(b.dataset.ch, b.dataset.dec); });
+  app.querySelectorAll('textarea[data-obs]').forEach(t => { t.oninput = () => { est.rasc[t.dataset.obs] = t.value; agendar(t.dataset.obs); }; });
+}
+render(); carregar();
+setInterval(() => { const a = document.activeElement; if (!document.hidden && !(a && a.tagName === 'TEXTAREA') && est.msgs && !Object.values(est.msgs).includes('salvando')) carregar(); }, 60000);   // recarrega a cada minuto, sem atrapalhar quem está escrevendo
+</script>
+<script>
+/* ---- aviso de versão nova (pedido do Raphael em 15/10/2026) ----------------
+   Ao abrir o app (ou voltar para ele), compara a versão publicada (sw.js) com a
+   deste aparelho. Se houver versão nova, aparece um card solto na tela com o
+   botão "Atualizar app", que faz a atualização completa: atualiza o service
+   worker, apaga todas as cópias guardadas, baixa de novo as páginas e recarrega. */
+(() => {
+  if (!/^https?:/.test(location.protocol)) return;
+  const RAIZ = '../';
+  const CHAVE = 'mp_app_versao';
+  const PAGINAS = ['', 'index.html', 'equipe/', 'cliente/', 'painel/', 'acompanhamento/', 'revisao/', 'sw.js'];
+  let mostrando = false;
+  async function versaoPublicada() {
+    const t = await (await fetch(RAIZ + 'sw.js?v=' + Date.now(), { cache: 'no-store' })).text();
+    const m = /VERSAO\s*=\s*'([0-9.]+)'/.exec(t); return m ? m[1] : '';
+  }
+  async function versaoAqui() {
+    let v = ''; try { v = localStorage.getItem(CHAVE) || ''; } catch (e) {}
+    if (v) return v;
+    try { const k = (await caches.keys()).find(x => /^pesquisa-maxipark-/.test(x)); if (k) return k.replace('pesquisa-maxipark-', ''); } catch (e) {}
+    return '';
+  }
+  async function atualizarTudo(nova) {
+    try { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.update().catch(() => {}))); } } catch (e) {}
+    try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } } catch (e) {}
+    try { await Promise.all(PAGINAS.map(p => fetch(RAIZ + p, { cache: 'reload' }).catch(() => {}))); } catch (e) {}
+    try { localStorage.setItem(CHAVE, nova); } catch (e) {}
+    const u = new URL(location.href); u.searchParams.set('v', nova); location.replace(u.toString());
+  }
+  function card(nova, atual) {
+    if (mostrando || document.getElementById('card-atualizar')) return; mostrando = true;
+    const fundo = document.createElement('div');
+    fundo.id = 'card-atualizar';
+    fundo.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,10,30,.55)';
+    fundo.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="ca-tit" style="max-width:420px;width:100%;background:var(--card,var(--branco,#fff));color:var(--texto,var(--text,#1f1a33));border-radius:18px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.35);text-align:center;font-family:inherit">'
+      + '<div style="font-size:40px;line-height:1">🔄</div>'
+      + '<h2 id="ca-tit" style="margin:10px 0 6px;font-size:21px">Tem atualização do app</h2>'
+      + '<p style="margin:0 0 16px;font-size:16px;opacity:.85">Versão nova: <b>' + nova + '</b>' + (atual ? ' (neste aparelho: ' + atual + ')' : '') + '. Toque em atualizar — leva poucos segundos e nenhuma resposta é perdida.</p>'
+      + '<button type="button" id="ca-sim" style="width:100%;padding:14px 16px;border:0;border-radius:12px;background:#6d28d9;color:#fff;font-size:18px;font-weight:700;cursor:pointer">Atualizar app</button>'
+      + '<button type="button" id="ca-nao" style="width:100%;margin-top:10px;padding:10px;border:0;background:transparent;color:inherit;opacity:.75;font-size:15px;cursor:pointer">Agora não</button></div>';
+    document.body.appendChild(fundo);
+    const sim = document.getElementById('ca-sim');
+    sim.addEventListener('click', () => { sim.disabled = true; sim.textContent = 'Atualizando…'; atualizarTudo(nova); });
+    document.getElementById('ca-nao').addEventListener('click', () => { fundo.remove(); mostrando = false; try { sessionStorage.setItem('mp_adiou_' + nova, '1'); } catch (e) {} });
+  }
+  async function conferir() {
+    if (!navigator.onLine || document.hidden) return;
+    try {
+      const nova = await versaoPublicada(); if (!nova) return;
+      const atual = await versaoAqui();
+      if (!atual) { try { localStorage.setItem(CHAVE, nova); } catch (e) {} return; }   // primeira vez neste aparelho: já veio da rede
+      let manual = false; try { manual = sessionStorage.getItem('mp_atualizou_agora') === '1'; sessionStorage.removeItem('mp_atualizou_agora'); } catch (e) {}
+      if (manual) { try { localStorage.setItem(CHAVE, nova); } catch (e) {} return; }   // acabou de usar o botão de atualizar da tela
+      if (atual === nova) return;
+      try { if (sessionStorage.getItem('mp_adiou_' + nova)) return; } catch (e) {}
+      card(nova, atual);
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', conferir); else conferir();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) conferir(); });
+  document.addEventListener('click', e => {   // os botões de atualizar que já existiam também contam como "atualizado"
+    const b = e.target && e.target.closest && e.target.closest('#btn-atualizar-app, #btn-atualizar-tudo');
+    if (b) { try { sessionStorage.setItem('mp_atualizou_agora', '1'); } catch (x) {} }
+  }, true);
+  window.__aviso = { conferir, atualizarTudo };
+})();
+</script>
+</body>
+</html>
