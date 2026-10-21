@@ -843,6 +843,11 @@
       p:'Relatórios das visitas enviados por e-mail, as respostas com os planos de melhoria e prazos, e a sua resposta direto pelo app.',
       vai:'Abrir acompanhamento \u2192', url:'acompanhamento/#a=' + passe(c) });
 
+    /* REVISÃO DAS PERGUNTAS (21/10/2026): cada pessoa marca manter / mudar / tirar e comenta; todos veem o que os outros marcaram */
+    if (podePainel) cards.push({ cls:'opcao', icone:'\ud83d\udcdd', tag:'Revis\u00e3o', h:'REVIS\u00c3O DAS PERGUNTAS',
+      p:'As perguntas das pesquisas com clientes e com a equipe, como est\u00e3o no ar. Marque manter, mudar o texto ou tirar, deixe sua observa\u00e7\u00e3o e veja o que os outros marcaram.',
+      vai:'Abrir revis\u00e3o \u2192', url:'revisao/#a=' + passe(c) });
+
     if (c.papel === 'admin') cards.push({ cls:'opcao', icone:'🔑', tag:'Administração', h:'USUÁRIOS',
       p:'Cadastre quem pode entrar, defina o que cada um enxerga e bloqueie o acesso quando precisar.',
       vai:'Abrir cadastro →', url:'#admin' });
@@ -1570,7 +1575,7 @@
   if (!/^https?:/.test(location.protocol)) return;
   const RAIZ = /\/(equipe|cliente|painel|conselho)\/(index\.html)?$/.test(location.pathname) ? '../' : './';
   const CHAVE = 'mp_app_versao';
-  const PAGINAS = ['', 'index.html', 'equipe/', 'cliente/', 'painel/', 'conselho/', 'sw.js'];
+  const PAGINAS = ['', 'index.html', 'equipe/', 'cliente/', 'painel/', 'acompanhamento/', 'revisao/', 'sw.js'];
   let mostrando = false;
   async function versaoPublicada() {
     const t = await (await fetch(RAIZ + 'sw.js?v=' + Date.now(), { cache: 'no-store' })).text();

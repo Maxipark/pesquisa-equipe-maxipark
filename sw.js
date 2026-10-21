@@ -1,7 +1,7 @@
 // Service worker: o app abre sem internet e recebe atualizações quando houver rede.
-const VERSAO = '1.51.0';
+const VERSAO = '1.52.0';
 const CACHE = 'pesquisa-maxipark-' + VERSAO;
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './equipe/', './equipe/index.html', './equipe/manifest.webmanifest', './cliente/', './cliente/index.html', './cliente/manifest.webmanifest', './cliente/qr.html', './conselho/', './conselho/index.html', './conselho/manifest.webmanifest', './painel/', './painel/index.html', './painel/manifest.webmanifest', './acompanhamento/', './acompanhamento/index.html', './acompanhamento/manifest.webmanifest'];   // inclui a pesquisa com clientes (pasta cliente/)
+const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './equipe/', './equipe/index.html', './equipe/manifest.webmanifest', './cliente/', './cliente/index.html', './cliente/manifest.webmanifest', './cliente/qr.html', './conselho/', './conselho/index.html', './conselho/manifest.webmanifest', './painel/', './painel/index.html', './painel/manifest.webmanifest', './acompanhamento/', './acompanhamento/index.html', './acompanhamento/manifest.webmanifest', './revisao/', './revisao/index.html', './revisao/manifest.webmanifest'];   // inclui a pesquisa com clientes (pasta cliente/)
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
