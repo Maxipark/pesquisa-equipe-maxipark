@@ -11,7 +11,7 @@ function declara(n,add){const rec=q=>{if(!q)return;if(q.type==='Identifier')add(
 let total=0;
 const path=require('path');
 const RAIZ=path.resolve(__dirname,'..');
-const PADRAO=['index.html','cliente/index.html','equipe/index.html','conselho/index.html','painel/index.html','cliente/qr.html','acompanhamento/index.html']
+const PADRAO=['index.html','cliente/index.html','equipe/index.html','conselho/index.html','painel/index.html','cliente/qr.html','acompanhamento/index.html','revisao/index.html']
   .map(f=>path.join(RAIZ,f));
 const ALVOS = process.argv.length>2 ? process.argv.slice(2) : PADRAO;
 for(const f of ALVOS){
