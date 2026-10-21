@@ -461,6 +461,7 @@ function emailLink(nome, texto, botao, url, validade) {
     + '<div style="background:#4E3572;color:#fff;border-radius:12px;padding:16px 20px;font-size:18px;font-weight:700">Maxipark · App de pesquisas</div>'
     + '<p>Olá, ' + escHtml(String(nome || '').split(' ')[0]) + '!</p><p>' + texto + '</p>'
     + '<p style="margin:24px 0"><a href="' + url + '" style="background:#6B4A98;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:700;display:inline-block">' + botao + '</a></p>'
+    + blocoEnderecoDoApp()   // endereço do app e guias de instalação (aprovado em 21/10/2026)
     + '<p style="font-size:13px;color:#6e6a7c">O link vale por ' + validade + ' e só funciona uma vez. Se o botão não abrir, copie este endereço no navegador:<br>' + url + '</p>'
     + '<p style="font-size:13px;color:#6e6a7c">Se você não esperava este e-mail, pode ignorá-lo.</p></div>';
 }
@@ -572,4 +573,23 @@ function revisaoSalvar(it) {
     if (achou) ws.getRange(achou, 1, 1, COLS_REVISAO.length).setValues([linha]); else ws.appendRow(linha);
   } finally { lock.releaseLock(); }
   return { ok: true };
+}
+
+/* ---------------- endereço do app nos e-mails de convite e de nova senha (aprovado em 21/10/2026) ---------------- */
+function blocoEnderecoDoApp() {
+  const U = 'https://maxipark.github.io/pesquisa-equipe-maxipark/';
+  return '<div style="margin:22px 0 8px;padding:14px 16px;background:#EEE8F5;border-radius:12px">'
+    + '<p style="margin:0 0 6px"><b>Depois de criar a senha, entre no app por:</b><br><a href="' + U + '" style="color:#4E3572;font-weight:700">maxipark.github.io/pesquisa-equipe-maxipark</a></p>'
+    + '<p style="margin:0;font-size:14px">Dica: salve o app na tela inicial do celular ou nos favoritos do notebook, para não precisar digitar o endereço. Veja como fazer: '
+    + '<a href="' + U + 'ajuda/instalar-no-celular.png" style="color:#4E3572">Como instalar no celular</a> &nbsp;·&nbsp; '
+    + '<a href="' + U + 'ajuda/favoritos-no-notebook.png" style="color:#4E3572">Como salvar nos favoritos do notebook</a></p></div>';
+}
+/* Prévia do e-mail de convite (roda pelo editor: previaEmailConvite). Manda para o Raphael o e-mail como ele fica, com os guias embaixo. */
+function previaEmailConvite() {
+  const corpo = emailLink('Raphael', 'Você foi cadastrado(a) no app de pesquisas da Maxipark. Para concluir o cadastro, toque no botão abaixo e crie a sua senha.', 'Criar minha senha', 'https://maxipark.github.io/pesquisa-equipe-maxipark/', '3 dias');
+  const html = '<p style="font-family:Arial;background:#FFF4D6;padding:10px 14px;border-radius:8px;font-size:14px"><b>PRÉVIA</b> — assim fica o e-mail de convite.</p>' + corpo;
+  const U = 'https://maxipark.github.io/pesquisa-equipe-maxipark/ajuda/';
+  const guias = '<h3 style="font-family:Arial;color:#4E3572;margin-top:30px">Guia 1 — instalar no celular</h3><img src="' + U + 'instalar-no-celular.png" style="max-width:100%;border:1px solid #ddd">'
+    + '<h3 style="font-family:Arial;color:#4E3572;margin-top:30px">Guia 2 — favoritos no notebook</h3><img src="' + U + 'favoritos-no-notebook.png" style="max-width:100%;border:1px solid #ddd">';
+  enviaEmailSimples('raphael@maxipark.com.br', '[PRÉVIA] Seu acesso ao app de pesquisas Maxipark — crie sua senha', html + guias);
 }
