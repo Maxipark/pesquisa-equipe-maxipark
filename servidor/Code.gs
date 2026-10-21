@@ -28,6 +28,7 @@ function doPost(e) {
     if (body.op === 'entrar') return json(entrarPeloServidor(body));
     if (body.op === 'definir-pin') return json(definirPin(body));   // público, com a prova da senha: cada usuário escolhe o próprio PIN
     const erro = verificaChave(body.chave); if (erro) return erro;
+    if (body.op === 'revisao-salvar') return json(revisaoSalvar(body.item || {}));   // revisão das perguntas: uma linha por pergunta e por pessoa (21/10/2026)
     if (body.op === 'convidar') return json(convidarUsuario(body));   // administrador: manda o e-mail de primeiro acesso
     if (body.op === 'relatorio-equipe') return json(enviaRelatorioEquipe(body.relatorio || {}));   // relatorio da visita (pesquisa com a equipe) por e-mail
     if (body.op === 'responder-relatorio') return json(responderRelatorio(body));   // resposta escrita no app: sai na mesma conversa do e-mail, com o histórico
@@ -121,7 +122,8 @@ function doGet(e) {
       const filtro = o => (!p.unidade || o.unidade === p.unidade) && (!p.rodada || o.rodada === p.rodada);
       return json({ ok: true, novas: novas, aviso: aviso, relatorios: lerAba(ABA_RELATORIOS, COLS_REL).filter(filtro), respostas: lerAba(ABA_RESP_REL, COLS_RESP).filter(filtro) });
     }
-    if (p.op === 'ping') return json({ ok: true, servidor: 'apps-script', versao: 5, abas: Object.keys(ABAS), usuarios: true, historico: true, relatorio: true, outlook: outlookConectado() });
+    if (p.op === 'revisao') return json({ ok: true, itens: lerAba(ABA_REVISAO, COLS_REVISAO) });   // revisão das perguntas: tudo, para todo mundo ver
+    if (p.op === 'ping') return json({ ok: true, servidor: 'apps-script', versao: 6, revisao: true, abas: Object.keys(ABAS), usuarios: true, historico: true, relatorio: true, outlook: outlookConectado() });
     if (p.op === 'historico') {
       const ws = abaHistorico(); const last = ws.getLastRow();
       if (last < 2) return json({ ok: true, itens: [] });
@@ -546,3 +548,27 @@ function protegeCredenciais(novo) {   // no "salvar usuários" do administrador,
 
 /* Conselho desativado (15/10/2026): rode UMA vez pelo editor para esconder a aba da planilha (nada é apagado). */
 function esconderAbaConselho() { const a = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Conselho'); if (a) a.hideSheet(); Logger.log(a ? 'Aba Conselho escondida' : 'Aba Conselho não existe'); }
+
+/* ---------------- revisão das perguntas (pedido do Raphael em 21/10/2026) ----------------
+   Cada pessoa com acesso marca "manter", "mudar o texto" ou "tirar" para cada pergunta das pesquisas e deixa
+   uma observação. Uma linha por pergunta e por pessoa, na aba "RevisaoPerguntas"; marcar de novo substitui a linha. */
+const ABA_REVISAO = 'RevisaoPerguntas';
+const COLS_REVISAO = ['chave_item', 'pesquisa', 'pergunta', 'email', 'nome', 'decisao', 'observacao', 'atualizado_em'];
+function revisaoSalvar(it) {
+  const ch = String(it.chave_item || '').trim(), email = String(it.email || '').trim().toLowerCase();
+  if (!ch || !email) return { ok: false, erro: 'dados' };
+  const dec = ['manter', 'mudar', 'tirar', ''].indexOf(String(it.decisao || '')) >= 0 ? String(it.decisao || '') : '';
+  const obs = String(it.observacao || '').slice(0, 4000);
+  const linha = [ch, String(it.pesquisa || ''), semFormula(String(it.pergunta || '').slice(0, 500)), email, semFormula(String(it.nome || '').slice(0, 120)), dec, semFormula(obs), new Date()];
+  const ws = abaSimples(ABA_REVISAO, COLS_REVISAO);
+  const lock = LockService.getScriptLock(); lock.waitLock(25000);
+  try {
+    const last = ws.getLastRow(); let achou = 0;
+    if (last >= 2) {
+      const vals = ws.getRange(2, 1, last - 1, 4).getValues();
+      for (var i = 0; i < vals.length; i++) if (String(vals[i][0]) === ch && String(vals[i][3]).toLowerCase() === email) { achou = i + 2; break; }
+    }
+    if (achou) ws.getRange(achou, 1, 1, COLS_REVISAO.length).setValues([linha]); else ws.appendRow(linha);
+  } finally { lock.releaseLock(); }
+  return { ok: true };
+}
