@@ -484,7 +484,7 @@
   const horaDoLogin = () => { try { return Number(localStorage.getItem(CHAVE_HORA) || 0); } catch (x) { return 0; } };
   const apaga = () => { try { localStorage.removeItem(CHAVE); localStorage.removeItem(CHAVE_HORA); } catch (x) {} };
 
-  let sessao = null, salvando = false, editando = null;
+  let sessao = null, salvando = false, editando = null, editNome = null, editEmail = null;   /* editNome/editEmail: o que foi digitado no editor, para não se perder ao trocar o papel */
   function semEdicao() {
     const el = $('nota-salvar'); if (!el) return;
     el.innerHTML = '<b>Como isso é guardado.</b> Cadastrar, bloquear, mudar perfil ou trocar uma senha ' +
@@ -999,6 +999,9 @@
       '><span><span class="t">' + t + '</span><span class="d">' + d + '</span></span></label>';
     const marcado = k => (pq.indexOf(k) >= 0 ? ' checked' : '');
     return '<div class="editor-perfil">' +
+      '<span class="rot">Nome e e-mail (para corrigir se foi digitado errado)</span>' +
+      '<div class="grade"><label for="e-nome"><span class="nm">Nome</span><input id="e-nome" type="text" value="' + e(editNome === null ? c.nome : editNome) + '"></label>' +
+      '<label for="e-email"><span class="nm">E-mail</span><input id="e-email" type="email" inputmode="email" value="' + e(editEmail === null ? c.email : editEmail) + '"></label></div>' +
       '<span class="rot">O que ' + e(c.nome.split(' ')[0]) + ' pode fazer</span>' +
       '<div class="papeis">' +
         rad('total', 'Aplica e acompanha — vê tudo, aplica e faz o acompanhamento', 'Todas as pesquisas e unidades: resultados, aplicação e respostas do acompanhamento.') +
@@ -1028,7 +1031,7 @@
     '</div>';
   }
   let editPapel = null, editPq = null, editUn = null;
-  function limpaEdicao() { editando = null; editPapel = null; editPq = null; editUn = null; }
+  function limpaEdicao() { editando = null; editPapel = null; editPq = null; editUn = null; editNome = null; editEmail = null; }
   function leEditor() {
     const papel = (document.querySelector('input[name=e-papel]:checked') || {}).value || 'total';
     if (papel === 'total' || papel === 'gestor') return { papel, pesquisas: ['clientes','equipe','consolidado'], unidades: 'todas' };
@@ -1208,6 +1211,7 @@
 
   document.addEventListener('change', ev => {
     if (ev.target.name === 'e-papel') {   /* so troca o papel: as marcacoes vem do que a pessoa ja tem */
+      const en = document.getElementById('e-nome'), ee = document.getElementById('e-email'); if (en) editNome = en.value; if (ee) editEmail = ee.value;
       editPapel = ev.target.value;
       if (editPapel === 'total' || editPapel === 'gestor') { editPq = ['clientes','equipe','consolidado']; editUn = 'todas'; }
       admin(); return; }
@@ -1322,6 +1326,16 @@
       const falha = t => { if (err) { err.textContent = t; err.hidden = false; } };
       if (!v.pesquisas.length && v.papel !== 'revisor') return falha('Marque pelo menos uma pesquisa.');
       if (v.unidades !== 'todas' && !v.unidades.length) return falha('Marque “Todas as unidades” ou pelo menos uma unidade.');
+      /* nome e e-mail (21/10/2026): para corrigir erro de digitação; a senha é preservada pelo servidor, que casa a conta pelo id */
+      const nNome = (document.getElementById('e-nome') || {}).value, nEmail = norm((document.getElementById('e-email') || {}).value);
+      if (nNome !== undefined) { if (!nNome.trim()) return falha('Escreva o nome da pessoa.'); c.nome = nNome.trim(); }
+      if (nEmail && nEmail !== c.email) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nEmail)) return falha('E-mail inválido.');
+        if (dados.contas.some(x => x !== c && x.email === nEmail)) return falha('Esse e-mail já está cadastrado em outra conta.');
+        const antigo = c.email; c.email = nEmail;
+        if (sessao && sessao === c) guarda(nEmail);   /* corrigiu o próprio e-mail: continua conectado */
+        reg('mudou e-mail', { detalhe: c.nome + ': ' + antigo + ' → ' + nEmail });
+      }
       c.papel = v.papel; c.pesquisas = v.pesquisas; c.unidades = v.unidades;
       limpaEdicao(); admin();
       reg('mudou perfil', { detalhe: c.nome + ' (' + c.email + ') agora e ' + (NOME_PAPEL[c.papel] || c.papel) });
